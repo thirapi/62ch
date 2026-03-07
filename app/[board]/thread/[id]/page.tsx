@@ -91,22 +91,23 @@ export default async function ThreadPage({
 
   return (
     <div className="min-h-screen bg-background text-foreground">
-      <header className="py-2 px-4 border-b flex items-center justify-between">
-        <div className="flex flex-wrap items-center gap-2 sm:gap-4 text-sm sm:text-base">
+      <header className="py-2 px-4 border-b flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 bg-muted/5">
+        <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-base font-mono">
           <Link
             href={`/${boardCode}`}
-            className="text-accent hover:underline font-bold"
+            className="text-accent hover:underline font-bold whitespace-nowrap"
           >
-            [ Kembali ke /{boardCode}/ ]
+            <span className="hidden sm:inline">[ Kembali ke /{boardCode}/ ]</span>
+            <span className="sm:hidden">[ Kembali ]</span>
           </Link>
           <Link
             href={`/${boardCode}?view=catalog`}
-            className="text-accent hover:underline font-bold"
+            className="text-accent hover:underline font-bold whitespace-nowrap"
           >
             [ Katalog ]
           </Link>
         </div>
-        <div className="text-xl font-bold text-accent">
+        <div className="text-base sm:text-xl font-bold text-accent text-center sm:text-right truncate max-w-full">
           /{board.code}/ - {board.name}
         </div>
       </header>

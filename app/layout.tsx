@@ -117,6 +117,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import { NavProvider } from "@/components/nav-provider";
 import { BoardNav } from "@/components/board-nav";
 import { AgeVerificationDialog } from "@/components/age-verification-dialog";
+import { TooltipProvider } from "@/components/ui/tooltip";
 
 export default function RootLayout({
   children,
@@ -140,11 +141,13 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NavProvider>
-            <BoardNav />
-            {children}
-            <Toaster />
-            <Analytics />
-            <AgeVerificationDialog />
+            <TooltipProvider>
+              <BoardNav />
+              {children}
+              <Toaster />
+              <Analytics />
+              <AgeVerificationDialog />
+            </TooltipProvider>
           </NavProvider>
         </ThemeProvider>
       </body>

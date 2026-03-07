@@ -2,11 +2,16 @@ import Link from "next/link";
 import { getBoardList } from "@/lib/actions/home.actions";
 import { cookies } from "next/headers";
 import { lucia } from "@/lib/auth";
-import { logout } from "@/lib/actions/auth.actions";
-
-import { ThemeToggle } from "./theme-toggle";
-import { NavToggle } from "./nav-toggle";
+import { NavControls } from "./nav-controls";
 import { NavWrapper } from "./nav-wrapper";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
+import { Home } from "lucide-react";
+
+import { BoardSwitcher } from "./board-switcher";
 
 export async function BoardNav() {
   const boards = await getBoardList();
@@ -18,53 +23,30 @@ export async function BoardNav() {
 
   return (
     <NavWrapper>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between w-full gap-2 py-1 sm:py-0">
-        <div className="flex items-center gap-1 overflow-x-auto no-scrollbar whitespace-nowrap pb-1 sm:pb-0 border-b sm:border-0 border-muted/20">
-          <span>[</span>
-          <Link href="/" className="px-0.5 hover:underline font-bold">
-            Home
-          </Link>
-          <span className="mx-0.5">/</span>
-          {boards.map((board, index) => (
-            <span key={board.code}>
+      <div className="flex items-center justify-between w-full px-1">
+        <div className="flex items-center gap-1 min-w-0 flex-1 overflow-hidden">
+          <span className="text-muted-foreground/50">[</span>
+          {/* Home Link */}
+          <Tooltip>
+            <TooltipTrigger asChild>
               <Link
-                href={`/${board.code}`}
-                className="px-0.5 hover:underline text-accent"
-                title={board.name}
+                href="/"
+                className="opacity-80 hover:opacity-100 transition-opacity flex-shrink-0"
               >
-                {board.code}
+                <Home className="size-3.5" />
               </Link>
-              {index < boards.length - 1 && <span className="mx-0.5">/</span>}
-            </span>
-          ))}
-          <span>]</span>
+            </TooltipTrigger>
+            <TooltipContent side="bottom">Beranda</TooltipContent>
+          </Tooltip>
+          <span className="text-muted-foreground/50 flex-shrink-0">/</span>
+          
+          <BoardSwitcher boards={boards} />
+          
+          <span className="text-muted-foreground/50 flex-shrink-0">]</span>
         </div>
-        <div className="flex items-center justify-end gap-3 px-1">
-          <NavToggle />
-          <ThemeToggle />
-          <Link href="/rules" className="hover:underline">
-            <span className="hidden sm:inline">[ Peraturan ]</span>
-            <span className="sm:hidden">[ Rules ]</span>
-          </Link>
-          {user && (
-            <>
-              <Link
-                href="/mod"
-                className="hover:underline font-bold text-accent"
-              >
-                [ Mod ]
-              </Link>
-              <form action={logout} className="inline">
-                <button
-                  type="submit"
-                  className="hover:underline cursor-pointer text-inherit font-inherit"
-                >
-                  <span className="hidden sm:inline">[ Sign-out ]</span>
-                  <span className="sm:hidden">[ Out ]</span>
-                </button>
-              </form>
-            </>
-          )}
+
+        <div className="flex items-center pl-4 flex-shrink-0">
+          <NavControls user={user} />
         </div>
       </div>
     </NavWrapper>

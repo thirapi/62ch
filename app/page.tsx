@@ -68,25 +68,26 @@ export default async function HomePage() {
 
       <main className="container mx-auto px-4 py-8 flex-1 max-w-6xl">
         {/* Board List - 4chan style with columns */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8 md:gap-y-10">
           {/* Popkultur */}
           {groupedBoards.popkultur.length > 0 && (
-            <section>
+            <section className="bg-card/30 p-4 rounded-lg border border-border/50 shadow-sm md:bg-transparent md:p-0 md:border-none md:shadow-none">
               <h2 className="text-xl font-bold mb-3 text-accent border-b pb-1">
                 Popkultur
               </h2>
-              <div className="space-y-1 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 md:gap-y-1 text-sm">
                 {groupedBoards.popkultur.map((board) => (
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent"
+                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
                     >
                       <span className="text-accent font-bold">
                         /{board.code}/
                       </span>
-                      {" - "}
-                      <span className="text-foreground">{board.name}</span>
+                      <span className="md:hidden"> - </span>
+                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
+                      <span className="text-foreground md:hidden truncate">{board.name}</span>
                     </Link>
                   </div>
                 ))}
@@ -96,22 +97,23 @@ export default async function HomePage() {
 
           {/* Kekinian */}
           {groupedBoards.kekinian.length > 0 && (
-            <section>
+            <section className="bg-card/30 p-4 rounded-lg border border-border/50 shadow-sm md:bg-transparent md:p-0 md:border-none md:shadow-none">
               <h2 className="text-xl font-bold mb-3 text-accent border-b pb-1">
                 Kekinian
               </h2>
-              <div className="space-y-1 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 md:gap-y-1 text-sm">
                 {groupedBoards.kekinian.map((board) => (
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent"
+                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
                     >
                       <span className="text-accent font-bold">
                         /{board.code}/
                       </span>
-                      {" - "}
-                      <span className="text-foreground">{board.name}</span>
+                      <span className="md:hidden"> - </span>
+                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
+                      <span className="text-foreground md:hidden truncate">{board.name}</span>
                     </Link>
                   </div>
                 ))}
@@ -121,22 +123,23 @@ export default async function HomePage() {
 
           {/* Bebas */}
           {groupedBoards.bebas.length > 0 && (
-            <section>
+            <section className="bg-card/30 p-4 rounded-lg border border-border/50 shadow-sm md:bg-transparent md:p-0 md:border-none md:shadow-none">
               <h2 className="text-xl font-bold mb-3 text-accent border-b pb-1">
                 Bebas
               </h2>
-              <div className="space-y-1 text-sm">
+              <div className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 md:gap-y-1 text-sm">
                 {groupedBoards.bebas.map((board) => (
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent"
+                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
                     >
                       <span className="text-accent font-bold">
                         /{board.code}/
                       </span>
-                      {" - "}
-                      <span className="text-foreground">{board.name}</span>
+                      <span className="md:hidden"> - </span>
+                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
+                      <span className="text-foreground md:hidden truncate">{board.name}</span>
                     </Link>
                   </div>
                 ))}
