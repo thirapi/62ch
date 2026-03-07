@@ -53,16 +53,25 @@ export default async function HomePage() {
   return (
     <div className="min-h-screen flex flex-col bg-background">
       {/* Hero Header */}
-      <header className="py-8 text-center border-b">
-        <div className="container mx-auto px-4">
-          <p className="text-xs text-muted-foreground mb-1">62チャンネル</p>
-          <h1 className="text-3xl sm:text-4xl font-bold">
-            62<span className="text-accent">chan</span>
-          </h1>
+      <header className="relative py-8 text-center border-b overflow-hidden bg-muted/5">
+        {/* Subtle Background Ambient */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_120%,var(--color-accent)_0%,transparent_50%)] opacity-[0.05] pointer-events-none" />
 
-          {/* <p className="text-sm text-muted-foreground">
-            Autismo Sans Frontières
-          </p> */}
+        <div className="container mx-auto px-4 relative">
+          <div className="mb-2 flex justify-center items-center gap-2">
+            <div className="h-px w-3 bg-accent/30" />
+            <p className="text-[10px] font-mono text-accent/70 tracking-[0.2em] uppercase">
+              62チャンネル
+            </p>
+            <div className="h-px w-3 bg-accent/30" />
+          </div>
+
+          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
+            62
+            <span className="text-accent underline decoration-4 decoration-accent/10 underline-offset-4">
+              chan
+            </span>
+          </h1>
         </div>
       </header>
 
@@ -80,14 +89,18 @@ export default async function HomePage() {
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
+                      className="hover:underline hover:text-accent group flex flex-col md:inline text-left"
                     >
-                      <span className="text-accent font-bold">
+                      <span className="text-accent font-bold leading-none">
                         /{board.code}/
                       </span>
-                      <span className="md:hidden"> - </span>
-                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
-                      <span className="text-foreground md:hidden truncate">{board.name}</span>
+                      <span className="text-foreground/90 md:hidden text-[11px] leading-tight mt-0.5 font-medium break-words">
+                        {board.name}
+                      </span>
+                      <span className="text-foreground md:inline hidden md:ml-1">
+                        {" "}
+                        - {board.name}
+                      </span>
                     </Link>
                   </div>
                 ))}
@@ -106,14 +119,18 @@ export default async function HomePage() {
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
+                      className="hover:underline hover:text-accent group flex flex-col md:inline text-left"
                     >
-                      <span className="text-accent font-bold">
+                      <span className="text-accent font-bold leading-none">
                         /{board.code}/
                       </span>
-                      <span className="md:hidden"> - </span>
-                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
-                      <span className="text-foreground md:hidden truncate">{board.name}</span>
+                      <span className="text-foreground/90 md:hidden text-[11px] leading-tight mt-0.5 font-medium break-words">
+                        {board.name}
+                      </span>
+                      <span className="text-foreground md:inline hidden md:ml-1">
+                        {" "}
+                        - {board.name}
+                      </span>
                     </Link>
                   </div>
                 ))}
@@ -132,14 +149,18 @@ export default async function HomePage() {
                   <div key={board.id} className="leading-relaxed">
                     <Link
                       href={`/${board.code}`}
-                      className="hover:underline hover:text-accent group flex items-center gap-2 md:inline md:gap-0"
+                      className="hover:underline hover:text-accent group flex flex-col md:inline text-left"
                     >
-                      <span className="text-accent font-bold">
+                      <span className="text-accent font-bold leading-none">
                         /{board.code}/
                       </span>
-                      <span className="md:hidden"> - </span>
-                      <span className="text-foreground md:inline hidden md:ml-1"> - {board.name}</span>
-                      <span className="text-foreground md:hidden truncate">{board.name}</span>
+                      <span className="text-foreground/90 md:hidden text-[11px] leading-tight mt-0.5 font-medium break-words">
+                        {board.name}
+                      </span>
+                      <span className="text-foreground md:inline hidden md:ml-1">
+                        {" "}
+                        - {board.name}
+                      </span>
                     </Link>
                   </div>
                 ))}
@@ -247,32 +268,93 @@ export default async function HomePage() {
       </footer>
 
       {/* Site Stats - Absolute Bottom */}
-      <div className="border-t py-1">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-wrap justify-center gap-x-4 gap-y-1 text-[10px] font-mono text-muted-foreground/80 whitespace-nowrap uppercase tracking-tighter">
+      <div className="border-t py-2 bg-muted/5 overflow-hidden group">
+        <div className="relative">
+          {/* Mobile: CSS Marquee */}
+          <div className="md:hidden flex whitespace-nowrap">
+            <div className="flex animate-marquee gap-10 items-center text-[10px] font-mono text-muted-foreground/80 pr-10">
+              <span className="shrink-0 uppercase tracking-tight">
+                TOTAL POSTS:{" "}
+                <span className="text-accent font-bold">
+                  {stats.totalPosts.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                POSTS TODAY:{" "}
+                <span className="text-accent font-bold">
+                  {stats.postsToday.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                TOTAL IMAGES:{" "}
+                <span className="text-accent font-bold">
+                  {stats.totalImages.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                ACTIVE THREADS:{" "}
+                <span className="text-accent font-bold">
+                  {stats.activeThreads24h.toLocaleString()}
+                </span>
+              </span>
+            </div>
+            {/* Duplicate for seamless loop */}
+            <div
+              className="flex animate-marquee gap-10 items-center text-[10px] font-mono text-muted-foreground/80 pr-10"
+              aria-hidden="true"
+            >
+              <span className="shrink-0 uppercase tracking-tight">
+                TOTAL POSTS:{" "}
+                <span className="text-accent font-bold">
+                  {stats.totalPosts.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                POSTS TODAY:{" "}
+                <span className="text-accent font-bold">
+                  {stats.postsToday.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                TOTAL IMAGES:{" "}
+                <span className="text-accent font-bold">
+                  {stats.totalImages.toLocaleString()}
+                </span>
+              </span>
+              <span className="shrink-0 uppercase tracking-tight">
+                ACTIVE THREADS:{" "}
+                <span className="text-accent font-bold">
+                  {stats.activeThreads24h.toLocaleString()}
+                </span>
+              </span>
+            </div>
+          </div>
+
+          {/* Desktop: Static & Centered */}
+          <div className="hidden md:flex container mx-auto px-4 justify-center items-center gap-8 text-[10px] font-mono text-muted-foreground/80 uppercase tracking-tight">
             <span>
-              [ Total Posts:{" "}
+              [ TOTAL POSTS:{" "}
               <span className="text-accent font-bold">
                 {stats.totalPosts.toLocaleString()}
               </span>{" "}
               ]
             </span>
             <span>
-              [ Posts Today:{" "}
+              [ POSTS TODAY:{" "}
               <span className="text-accent font-bold">
                 {stats.postsToday.toLocaleString()}
               </span>{" "}
               ]
             </span>
             <span>
-              [ Total Images:{" "}
+              [ TOTAL IMAGES:{" "}
               <span className="text-accent font-bold">
                 {stats.totalImages.toLocaleString()}
               </span>{" "}
               ]
             </span>
             <span>
-              [ Active Threads:{" "}
+              [ ACTIVE THREADS:{" "}
               <span className="text-accent font-bold">
                 {stats.activeThreads24h.toLocaleString()}
               </span>{" "}

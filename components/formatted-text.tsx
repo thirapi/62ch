@@ -26,33 +26,42 @@ export function FormattedText({
   disableEmbeds,
   preview,
 }: FormattedTextProps) {
+  // Normalize and split into lines
+  const rawLines = content.replace(/\r\n/g, "\n").split("\n");
+
   if (preview) {
-    // For previews, we want a continuous string to play nice with line-clamp.
-    // Replace newlines with spaces and trim.
-    const cleanContent = content.replace(/\n+/g, " ").trim();
+    // Process each line, then join with spaces for a continuous preview
+    const processedContent = rawLines
+      .map((line) => line.trim())
+      .filter((line) => line.length > 0)
+      .map((line, i) => (
+        <React.Fragment key={i}>
+          {i > 0 && " "}
+          <TextLine
+            text={line}
+            disableEmbeds={disableEmbeds}
+            preview={preview}
+          />
+        </React.Fragment>
+      ));
+
     return (
       <span className={cn("break-words font-sans", className)}>
-        <TextLine
-          text={cleanContent}
-          disableEmbeds={disableEmbeds}
-          preview={preview}
-        />
+        {processedContent}
       </span>
     );
   }
 
-  const lines = content.replace(/\r\n/g, "\n").split("\n");
-
   return (
     <div className={cn("whitespace-pre-wrap break-words font-sans", className)}>
-      {lines.map((line, i) => (
+      {rawLines.map((line, i) => (
         <React.Fragment key={i}>
           <TextLine
             text={line}
             disableEmbeds={disableEmbeds}
             preview={preview}
           />
-          {i < lines.length - 1 && "\n"}
+          {i < rawLines.length - 1 && "\n"}
         </React.Fragment>
       ))}
     </div>
@@ -74,19 +83,15 @@ function TextLine({
   disableEmbeds?: boolean;
   preview?: boolean;
 }) {
-  // Check for greentext
-  if (text.startsWith(">") && !text.startsWith(">>")) {
-    return <span className="greentext">{text}</span>;
-  }
+  // Check if it's greentext
+  const isPostQuote = /^>>\d+/.test(text);
+  const isGreentext = text.startsWith(">") && !isPostQuote;
 
   // Parse for quotes, spoilers, and URLs
   const parts = [];
   let lastIndex = 0;
 
   // Regex for >>123, [spoiler]...[/spoiler], and URLs
-  // URL regex matches:
-  // - http:// or https:// followed by domain and path
-  // - www. followed by domain and path (without protocol)
   const regex =
     />>(\d+)|\[spoiler\](.*?)\[\/spoiler\]|(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
   let match;
@@ -186,7 +191,13 @@ function TextLine({
     parts.push(text.substring(lastIndex));
   }
 
-  return <>{parts.length > 0 ? parts : text}</>;
+  const result = parts.length > 0 ? parts : text;
+
+  if (isGreentext) {
+    return <span className="greentext">{result}</span>;
+  }
+
+  return <>{result}</>;
 }
 
 function PostQuote({
