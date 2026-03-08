@@ -8,7 +8,7 @@ const { moderationController, createReportUseCase } = container
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
 
-async function checkModeratorAuth() {
+async function getModeratorAuthorizer() {
   const cookieStore = await cookies()
   const sessionId = cookieStore.get(lucia.sessionCookieName)?.value || null
 
@@ -22,14 +22,13 @@ async function checkModeratorAuth() {
     throw new Error("Unauthorized: Invalid session or insufficient permissions")
   }
 
-  return true
+  return user
 }
 
-
-async function handleModerationAction(action: Promise<any>, revalidate: string | null = "/mod") {
+async function handleModerationAction(actionCall: (user: any) => Promise<any>, revalidate: string | null = "/mod") {
   try {
-    await checkModeratorAuth()
-    await action
+    const user = await getModeratorAuthorizer()
+    await actionCall(user)
 
     // Specifically revalidate the requested path (usually /mod)
     if (revalidate) {
@@ -47,35 +46,35 @@ async function handleModerationAction(action: Promise<any>, revalidate: string |
 }
 
 export async function lockThread(threadId: number) {
-  return handleModerationAction(moderationController.lockThread(threadId))
+  return handleModerationAction((user) => moderationController.lockThread(user, threadId))
 }
 
 export async function unlockThread(threadId: number) {
-  return handleModerationAction(moderationController.unlockThread(threadId))
+  return handleModerationAction((user) => moderationController.unlockThread(user, threadId))
 }
 
 export async function pinThread(threadId: number) {
-  return handleModerationAction(moderationController.pinThread(threadId))
+  return handleModerationAction((user) => moderationController.pinThread(user, threadId))
 }
 
 export async function unpinThread(threadId: number) {
-  return handleModerationAction(moderationController.unpinThread(threadId))
+  return handleModerationAction((user) => moderationController.unpinThread(user, threadId))
 }
 
 export async function deleteThread(threadId: number) {
-  return handleModerationAction(moderationController.deleteThread(threadId))
+  return handleModerationAction((user) => moderationController.deleteThread(user, threadId))
 }
 
 export async function deleteReply(replyId: number) {
-  return handleModerationAction(moderationController.deleteReply(replyId))
+  return handleModerationAction((user) => moderationController.deleteReply(user, replyId))
 }
 
 export async function resolveReport(reportId: number) {
-  return handleModerationAction(moderationController.resolveReport(reportId, "moderator"))
+  return handleModerationAction((user) => moderationController.resolveReport(user, reportId, "moderator"))
 }
 
 export async function dismissReport(reportId: number) {
-  return handleModerationAction(moderationController.dismissReport(reportId, "moderator"))
+  return handleModerationAction((user) => moderationController.dismissReport(user, reportId, "moderator"))
 }
 
 export async function createReport(contentType: "thread" | "reply", contentId: number, reason: string) {
@@ -93,8 +92,8 @@ export async function createReport(contentType: "thread" | "reply", contentId: n
 
 export async function getPendingReports() {
   try {
-    await checkModeratorAuth()
-    return await moderationController.getPendingReports()
+    const user = await getModeratorAuthorizer()
+    return await moderationController.getPendingReports(user)
   } catch (error) {
     console.error("Error fetching pending reports:", error)
     return []
@@ -103,8 +102,8 @@ export async function getPendingReports() {
 
 export async function getResolvedReports() {
   try {
-    await checkModeratorAuth()
-    return await moderationController.getResolvedReports()
+    const user = await getModeratorAuthorizer()
+    return await moderationController.getResolvedReports(user)
   } catch (error) {
     console.error("Error fetching resolved reports:", error)
     return []
@@ -112,21 +111,21 @@ export async function getResolvedReports() {
 }
 
 export async function banUser(ipAddress: string, reason?: string, durationHours?: number) {
-  return handleModerationAction(moderationController.banUser(ipAddress, reason, durationHours))
+  return handleModerationAction((user) => moderationController.banUser(user, ipAddress, reason, durationHours))
 }
 
 export async function unbanUser(ipAddress: string) {
-  return handleModerationAction(moderationController.unbanUser(ipAddress))
+  return handleModerationAction((user) => moderationController.unbanUser(user, ipAddress))
 }
 
 export async function markAsNsfw(contentType: "thread" | "reply", contentId: number) {
-  return handleModerationAction(moderationController.markAsNsfw(contentType, contentId))
+  return handleModerationAction((user) => moderationController.markAsNsfw(user, contentType, contentId))
 }
 
 export async function getBans() {
   try {
-    await checkModeratorAuth()
-    return await moderationController.getBans()
+    const user = await getModeratorAuthorizer()
+    return await moderationController.getBans(user)
   } catch (error) {
     console.error("Error fetching bans:", error)
     return []
@@ -134,5 +133,5 @@ export async function getBans() {
 }
 
 export async function updateBan(id: number, reason?: string, durationHours?: number | null) {
-  return handleModerationAction(moderationController.updateBan(id, reason, durationHours))
+  return handleModerationAction((user) => moderationController.updateBan(user, id, reason, durationHours))
 }

@@ -6,6 +6,7 @@ import type { CreateReplyCommand } from "@/lib/entities/reply.entity"
 import type { BanRepository } from "@/lib/repositories/ban.repository"
 import { SequenceService } from "../services/sequence.service"
 import { generateTripcode } from "../utils/tripcode"
+import { hash } from "@node-rs/argon2"
 
 export class ReplyToThreadUseCase {
   constructor(
@@ -23,6 +24,12 @@ export class ReplyToThreadUseCase {
       const ban = await this.banRepository.findByIp(input.ipAddress)
       if (ban) {
         throw new Error(`IP Anda sedang diblokir. Alasan: ${ban.reason || "Tidak disebutkan"}. Berakhir pada: ${ban.expiresAt ? ban.expiresAt.toLocaleString() : "Selamanya"}`)
+      }
+
+      // Business rule: Rate Limit (10 seconds)
+      const lastReply = await this.replyRepository.findLatestByIp(input.ipAddress)
+      if (lastReply && new Date().getTime() - lastReply.createdAt.getTime() < 10000) {
+        throw new Error("Anda memposting terlalu cepat. Harap tunggu 10 detik.")
       }
     }
 
@@ -76,6 +83,12 @@ export class ReplyToThreadUseCase {
       }
     }
 
+    // Hash deletion password if provided
+    let hashedPassword: string | null = null
+    if (input.deletionPassword) {
+      hashedPassword = await hash(input.deletionPassword)
+    }
+
     // Create reply
     const reply = await this.replyRepository.create({
       threadId: input.threadId,
@@ -83,7 +96,7 @@ export class ReplyToThreadUseCase {
       author: cleanedAuthor,
       image: imageUrl,
       imageMetadata: imageMetadata,
-      deletionPassword: input.deletionPassword || null,
+      deletionPassword: hashedPassword,
       isNsfw: input.isNsfw ?? false,
       isSpoiler: input.isSpoiler ?? false,
       postNumber: postNumber,

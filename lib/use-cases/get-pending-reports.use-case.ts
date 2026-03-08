@@ -2,6 +2,7 @@ import type { ReportRepository } from "@/lib/repositories/report.repository"
 import type { ThreadRepository } from "@/lib/repositories/thread.repository"
 import type { ReplyRepository } from "@/lib/repositories/reply.repository"
 import type { BanRepository } from "@/lib/repositories/ban.repository"
+import type { BoardRepository } from "@/lib/repositories/board.repository"
 
 interface ReportWithContent {
   id: number
@@ -16,6 +17,10 @@ interface ReportWithContent {
   isLocked?: boolean
   isPinned?: boolean
   isBanned?: boolean
+  boardCode?: string
+  boardId?: number
+  parentThreadId?: number
+  postNumber?: number
 }
 
 export class GetPendingReportsUseCase {
@@ -24,9 +29,15 @@ export class GetPendingReportsUseCase {
     private threadRepository: ThreadRepository,
     private replyRepository: ReplyRepository,
     private banRepository: BanRepository,
+    private boardRepository: BoardRepository,
   ) { }
 
-  async execute(): Promise<ReportWithContent[]> {
+  async execute(user: any): Promise<ReportWithContent[]> {
+    // Business rule: Check authorization
+    if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+      throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+    }
+
     const reports = await this.reportRepository.findPending()
 
     const reportsWithContent = await Promise.all(
@@ -43,6 +54,7 @@ export class GetPendingReportsUseCase {
 
         if (report.contentType === "thread") {
           const thread = await this.threadRepository.findById(report.contentId)
+          const board = thread ? await this.boardRepository.findById(thread.boardId) : null
           return {
             id: report.id,
             contentType: report.contentType,
@@ -56,9 +68,15 @@ export class GetPendingReportsUseCase {
             isLocked: thread?.isLocked,
             isPinned: thread?.isPinned,
             isBanned,
+            boardCode: board?.code,
+            boardId: board?.id,
+            parentThreadId: thread?.id,
+            postNumber: thread?.postNumber,
           }
         } else {
           const reply = await this.replyRepository.findById(report.contentId)
+          const thread = reply ? await this.threadRepository.findById(reply.threadId) : null
+          const board = thread ? await this.boardRepository.findById(thread.boardId) : null
           return {
             id: report.id,
             contentType: report.contentType,
@@ -70,6 +88,10 @@ export class GetPendingReportsUseCase {
             ipAddress: reply?.ipAddress,
             status: report.status,
             isBanned,
+            boardCode: board?.code,
+            boardId: board?.id,
+            parentThreadId: reply?.threadId,
+            postNumber: reply?.postNumber,
           }
         }
       }),

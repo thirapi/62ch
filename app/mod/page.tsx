@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { ExternalLink } from "lucide-react";
 import {
   Card,
   CardContent,
@@ -60,6 +61,14 @@ export default async function ModPage() {
                       <CardTitle className="text-base">
                         {report.contentType === "thread" ? "Thread" : "Balasan"}{" "}
                         #{report.contentId}
+                        <Link 
+                          href={`/${report.boardCode || 'all'}/thread/${report.parentThreadId}#p${report.postNumber}`}
+                          target="_blank"
+                          className="inline-flex items-center ml-2 text-primary hover:underline"
+                        >
+                          <ExternalLink className="h-3 w-3 mr-1" />
+                          <span className="text-xs">Lihat</span>
+                        </Link>
                       </CardTitle>
                       <CardDescription>
                         {report.reportedAt.toLocaleString()}
@@ -117,14 +126,21 @@ export default async function ModPage() {
                   <TableRow key={report.id}>
                     <TableCell className="font-medium text-xs">
                       <div className="flex flex-col">
-                        <span>
-                          {report.contentType === "thread"
-                            ? "Thread"
-                            : "Balasan"}
-                        </span>
-                        <span className="text-muted-foreground">
-                          #{report.contentId}
-                        </span>
+                        <Link 
+                          href={`/${report.boardCode || 'all'}/thread/${report.parentThreadId}#p${report.postNumber}`}
+                          target="_blank"
+                          className="hover:underline flex flex-col"
+                        >
+                          <span className="text-primary flex items-center gap-1">
+                            {report.contentType === "thread"
+                              ? "Thread"
+                              : "Balasan"}
+                            <ExternalLink className="h-2 w-2" />
+                          </span>
+                          <span className="text-muted-foreground">
+                            #{report.contentId}
+                          </span>
+                        </Link>
                       </div>
                     </TableCell>
                     <TableCell>

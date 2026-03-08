@@ -6,6 +6,7 @@ import type { BanRepository } from "@/lib/repositories/ban.repository"
 import { CreateThreadCommand } from "@/lib/entities/thread.entity"
 import { SequenceService } from "../services/sequence.service"
 import { generateTripcode } from "../utils/tripcode"
+import { hash } from "@node-rs/argon2"
 
 export class CreateThreadUseCase {
   constructor(
@@ -23,6 +24,12 @@ export class CreateThreadUseCase {
       const ban = await this.banRepository.findByIp(input.ipAddress)
       if (ban) {
         throw new Error(`IP Anda sedang diblokir. Alasan: ${ban.reason || "Tidak disebutkan"}. Berakhir pada: ${ban.expiresAt ? ban.expiresAt.toLocaleString() : "Selamanya"}`)
+      }
+
+      // Business rule: Rate Limit (10 seconds)
+      const lastThread = await this.threadRepository.findLatestByIp(input.ipAddress)
+      if (lastThread && new Date().getTime() - lastThread.createdAt.getTime() < 10000) {
+        throw new Error("Anda memposting terlalu cepat. Harap tunggu 10 detik.")
       }
     }
 
@@ -79,8 +86,10 @@ export class CreateThreadUseCase {
     }
 
     // Hash deletion password if provided
-    let hashedPassword = input.deletionPassword ? input.deletionPassword : null // Using plain text for now as per plan for simple implementation, but could use argon2 easily. 
-    // Actually, imageboards usually use the same password for all posts in a session, often stored in plain text or cookies.
+    let hashedPassword: string | null = null
+    if (input.deletionPassword) {
+      hashedPassword = await hash(input.deletionPassword)
+    }
 
     // Create thread
     const thread = await this.threadRepository.create({

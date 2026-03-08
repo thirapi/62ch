@@ -9,7 +9,12 @@ export interface UpdateBanCommand {
 export class UpdateBanUseCase {
     constructor(private banRepository: BanRepository) { }
 
-    async execute(command: UpdateBanCommand): Promise<void> {
+    async execute(user: any, command: UpdateBanCommand): Promise<void> {
+        // Business rule: Check authorization
+        if (!user || user.role !== "admin") {
+            throw new Error("Unauthorized: Hanya Admin yang bisa memperbarui ban")
+        }
+
         let expiresAt: Date | null | undefined
 
         if (command.durationHours === null) {

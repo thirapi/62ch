@@ -9,7 +9,12 @@ export interface BanUserCommand {
 export class BanUserUseCase {
     constructor(private banRepository: BanRepository) { }
 
-    async execute(command: BanUserCommand): Promise<void> {
+    async execute(user: any, command: BanUserCommand): Promise<void> {
+        // Business rule: Check authorization
+        if (!user || user.role !== "admin") {
+            throw new Error("Unauthorized: Hanya Admin yang bisa melakukan ban user")
+        }
+
         if (!command.ipAddress) {
             throw new Error("IP Address is required")
         }

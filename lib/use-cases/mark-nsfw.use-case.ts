@@ -12,7 +12,12 @@ export class MarkNsfwUseCase {
         private replyRepository: ReplyRepository
     ) { }
 
-    async execute(command: MarkNsfwCommand): Promise<void> {
+    async execute(user: any, command: MarkNsfwCommand): Promise<void> {
+        // Business rule: Check authorization
+        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+            throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+        }
+
         if (command.contentType === "thread") {
             await this.threadRepository.updateNsfwStatus(command.contentId, true)
         } else {

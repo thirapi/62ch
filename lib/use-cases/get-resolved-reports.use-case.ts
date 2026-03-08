@@ -2,6 +2,7 @@ import type { ReportRepository } from "@/lib/repositories/report.repository"
 import type { ThreadRepository } from "@/lib/repositories/thread.repository"
 import type { ReplyRepository } from "@/lib/repositories/reply.repository"
 import type { BanRepository } from "@/lib/repositories/ban.repository"
+import type { BoardRepository } from "@/lib/repositories/board.repository"
 
 interface ReportWithContent {
     id: number
@@ -17,6 +18,9 @@ interface ReportWithContent {
     isPinned?: boolean
     isBanned?: boolean
     resolvedAt?: Date
+    boardCode?: string
+    parentThreadId?: number
+    postNumber?: number
 }
 
 export class GetResolvedReportsUseCase {
@@ -25,9 +29,15 @@ export class GetResolvedReportsUseCase {
         private threadRepository: ThreadRepository,
         private replyRepository: ReplyRepository,
         private banRepository: BanRepository,
+        private boardRepository: BoardRepository,
     ) { }
 
-    async execute(): Promise<ReportWithContent[]> {
+    async execute(user: any): Promise<ReportWithContent[]> {
+        // Business rule: Check authorization
+        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+            throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+        }
+
         const reports = await this.reportRepository.findResolved()
 
         const reportsWithContent = await Promise.all(
@@ -44,6 +54,7 @@ export class GetResolvedReportsUseCase {
 
                 if (report.contentType === "thread") {
                     const thread = await this.threadRepository.findById(report.contentId)
+                    const board = thread ? await this.boardRepository.findById(thread.boardId) : null
                     return {
                         id: report.id,
                         contentType: report.contentType,
@@ -58,9 +69,14 @@ export class GetResolvedReportsUseCase {
                         isPinned: thread?.isPinned,
                         isBanned,
                         resolvedAt: report.resolvedAt,
+                        boardCode: board?.code,
+                        parentThreadId: thread?.id,
+                        postNumber: thread?.postNumber,
                     }
                 } else {
                     const reply = await this.replyRepository.findById(report.contentId)
+                    const thread = reply ? await this.threadRepository.findById(reply.threadId) : null
+                    const board = thread ? await this.boardRepository.findById(thread.boardId) : null
                     return {
                         id: report.id,
                         contentType: report.contentType,
@@ -73,6 +89,9 @@ export class GetResolvedReportsUseCase {
                         status: report.status,
                         isBanned,
                         resolvedAt: report.resolvedAt,
+                        boardCode: board?.code,
+                        parentThreadId: reply?.threadId,
+                        postNumber: reply?.postNumber,
                     }
                 }
             }),

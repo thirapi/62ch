@@ -41,6 +41,7 @@ import { SoftDeleteThreadUseCase } from "@/lib/use-cases/soft-delete-thread.use-
 import { UnlockThreadUseCase } from "@/lib/use-cases/unlock-thread.use-case"
 import { UnpinThreadUseCase } from "@/lib/use-cases/unpin-thread.use-case"
 import { SeedBoardLoadTestUseCase } from "@/lib/use-cases/seed-board.use-case"
+import { DeletePostWithPasswordUseCase } from "@/lib/use-cases/delete-post-with-password.use-case"
 
 // Controllers
 import { HomeController } from "@/lib/controllers/home.controller"
@@ -78,8 +79,8 @@ const createThreadUseCase = new CreateThreadUseCase(
 const dismissReportUseCase = new DismissReportUseCase(reportRepository)
 const getBoardListUseCase = new GetBoardListUseCase(boardRepository)
 const getLatestPostsUseCase = new GetLatestPostsUseCase(postRepository)
-const getPendingReportsUseCase = new GetPendingReportsUseCase(reportRepository, threadRepository, replyRepository, banRepository)
-const getResolvedReportsUseCase = new GetResolvedReportsUseCase(reportRepository, threadRepository, replyRepository, banRepository)
+const getPendingReportsUseCase = new GetPendingReportsUseCase(reportRepository, threadRepository, replyRepository, banRepository, boardRepository)
+const getResolvedReportsUseCase = new GetResolvedReportsUseCase(reportRepository, threadRepository, replyRepository, banRepository, boardRepository)
 const getRecentImagesUseCase = new GetRecentImagesUseCase(postRepository)
 const getPostByNumberUseCase = new GetPostByNumberUseCase(postRepository)
 const getSystemStatsUseCase = new GetSystemStatsUseCase(postRepository)
@@ -106,6 +107,7 @@ const unbanUserUseCase = new UnbanUserUseCase(banRepository)
 const markNsfwUseCase = new MarkNsfwUseCase(threadRepository, replyRepository)
 const getBansUseCase = new GetBansUseCase(banRepository)
 const updateBanUseCase = new UpdateBanUseCase(banRepository)
+const deletePostWithPasswordUseCase = new DeletePostWithPasswordUseCase(threadRepository, replyRepository)
 
 const seedBoardLoadTestUseCase = new SeedBoardLoadTestUseCase(
   threadRepository,
@@ -152,5 +154,6 @@ export const container = {
   threadController,
   seedController,
   createReportUseCase,
+  deletePostWithPasswordUseCase,
   boardRepository, // Export repository for actions
 }

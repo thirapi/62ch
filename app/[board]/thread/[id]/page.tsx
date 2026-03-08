@@ -7,6 +7,17 @@ import { GetThreadDetailUseCase } from "@/lib/use-cases/get-thread-detail.use-ca
 import ThreadPageWrapper from "./thread";
 import { footerText } from "@/constants/footer";
 import type { Metadata } from "next";
+import { cookies } from "next/headers";
+import { lucia } from "@/lib/auth";
+
+async function getAuthUser() {
+  const cookieStore = await cookies();
+  const sessionId = cookieStore.get(lucia.sessionCookieName)?.value || null;
+  if (!sessionId) return null;
+  const { session, user } = await lucia.validateSession(sessionId);
+  if (!session) return null;
+  return user;
+}
 
 export const revalidate = 3600; // Cache selama 1 jam, akan di-update instan saat ada balasan baru via revalidatePath
 
@@ -74,7 +85,8 @@ export default async function ThreadPage({
     replyRepository,
   );
 
-  const result = await getThreadDetailUseCase.execute(threadId);
+  const user = await getAuthUser();
+  const result = await getThreadDetailUseCase.execute(threadId, user);
 
   if (!result) {
     notFound();

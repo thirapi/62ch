@@ -15,14 +15,15 @@ export class GetThreadDetailUseCase {
     private replyRepository: ReplyRepository,
   ) { }
 
-  async execute(threadId: number): Promise<ThreadDetail | null> {
+  async execute(threadId: number, user?: any): Promise<ThreadDetail | null> {
+    const isMod = user?.role === "admin" || user?.role === "moderator"
     const thread = await this.threadRepository.findById(threadId)
 
-    if (!thread || thread.isDeleted) {
+    if (!thread || (!isMod && thread.isDeleted)) {
       return null
     }
 
-    const replies = await this.replyRepository.findByThreadId(threadId)
+    const replies = await this.replyRepository.findByThreadId(threadId, isMod)
 
     // Map to UI models to filter out sensitive data (IP, deletionPassword)
     const threadUI: ThreadUI = {

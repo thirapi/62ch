@@ -33,128 +33,128 @@ export class ModerationController {
     private updateBanUseCase: UpdateBanUseCase,
   ) { }
 
-  async lockThread(threadId: number) {
+  async lockThread(user: any, threadId: number) {
     // Input validation only
     if (!threadId) {
       throw new Error("Thread ID is required")
     }
 
     // Call use case
-    await this.lockThreadUseCase.execute(threadId)
+    await this.lockThreadUseCase.execute(user, threadId)
     return { success: true }
   }
 
-  async unlockThread(threadId: number) {
+  async unlockThread(user: any, threadId: number) {
     // Input validation only
     if (!threadId) {
       throw new Error("Thread ID is required")
     }
 
     // Call use case
-    await this.unlockThreadUseCase.execute(threadId)
+    await this.unlockThreadUseCase.execute(user, threadId)
     return { success: true }
   }
 
-  async pinThread(threadId: number) {
+  async pinThread(user: any, threadId: number) {
     // Input validation only
     if (!threadId) {
       throw new Error("Thread ID is required")
     }
 
     // Call use case
-    await this.pinThreadUseCase.execute(threadId)
+    await this.pinThreadUseCase.execute(user, threadId)
     return { success: true }
   }
 
-  async unpinThread(threadId: number) {
+  async unpinThread(user: any, threadId: number) {
     // Input validation only
     if (!threadId) {
       throw new Error("Thread ID is required")
     }
 
     // Call use case
-    await this.unpinThreadUseCase.execute(threadId)
+    await this.unpinThreadUseCase.execute(user, threadId)
     return { success: true }
   }
 
-  async deleteThread(threadId: number) {
+  async deleteThread(user: any, threadId: number) {
     // Input validation only
     if (!threadId) {
       throw new Error("Thread ID is required")
     }
 
     // Call use case
-    const thread = await this.softDeleteThreadUseCase.execute(threadId)
+    const thread = await this.softDeleteThreadUseCase.execute(user, threadId)
     return { success: true, thread }
   }
 
-  async deleteReply(replyId: number) {
+  async deleteReply(user: any, replyId: number) {
     // Input validation only
     if (!replyId) {
       throw new Error("Reply ID is required")
     }
 
     // Call use case
-    const reply = await this.softDeleteReplyUseCase.execute(replyId)
+    const reply = await this.softDeleteReplyUseCase.execute(user, replyId)
     return { success: true, reply }
   }
 
-  async resolveReport(reportId: number, resolvedBy: string) {
+  async resolveReport(user: any, reportId: number, resolvedBy: string) {
     // Input validation only
     if (!reportId) {
       throw new Error("Report ID is required")
     }
 
     // Call use case
-    await this.resolveReportUseCase.execute(reportId, resolvedBy)
+    await this.resolveReportUseCase.execute(user, reportId, resolvedBy)
     return { success: true }
   }
 
-  async dismissReport(reportId: number, resolvedBy: string) {
+  async dismissReport(user: any, reportId: number, resolvedBy: string) {
     // Input validation only
     if (!reportId) {
       throw new Error("Report ID is required")
     }
 
     // Call use case
-    await this.dismissReportUseCase.execute(reportId, resolvedBy)
+    await this.dismissReportUseCase.execute(user, reportId, resolvedBy)
     return { success: true }
   }
 
-  async getPendingReports() {
+  async getPendingReports(user: any) {
     // Call use case
-    return await this.getPendingReportsUseCase.execute()
+    return await this.getPendingReportsUseCase.execute(user)
   }
 
-  async getResolvedReports() {
-    return await this.getResolvedReportsUseCase.execute()
+  async getResolvedReports(user: any) {
+    return await this.getResolvedReportsUseCase.execute(user)
   }
 
-  async banUser(ipAddress: string, reason?: string, durationHours?: number) {
+  async banUser(user: any, ipAddress: string, reason?: string, durationHours?: number) {
     if (!ipAddress) throw new Error("IP Address is required")
-    await this.banUserUseCase.execute({ ipAddress, reason, durationHours })
+    await this.banUserUseCase.execute(user, { ipAddress, reason, durationHours })
     return { success: true }
   }
 
-  async unbanUser(ipAddress: string) {
+  async unbanUser(user: any, ipAddress: string) {
     if (!ipAddress) throw new Error("IP Address is required")
-    await this.unbanUserUseCase.execute(ipAddress)
+    await this.unbanUserUseCase.execute(user, ipAddress)
     return { success: true }
   }
 
-  async markAsNsfw(contentType: "thread" | "reply", contentId: number) {
+  async markAsNsfw(user: any, contentType: "thread" | "reply", contentId: number) {
     if (!contentId) throw new Error("Content ID is required")
-    await this.markNsfwUseCase.execute({ contentType, contentId })
+    await this.markNsfwUseCase.execute(user, { contentType, contentId })
     return { success: true }
   }
 
-  async getBans() {
-    return await this.getBansUseCase.execute()
+  async getBans(user: any) {
+    return await this.getBansUseCase.execute(user)
   }
 
-  async updateBan(id: number, reason?: string, durationHours?: number | null) {
+  async updateBan(user: any, id: number, reason?: string, durationHours?: number | null) {
     if (!id) throw new Error("Ban ID is required")
-    await this.updateBanUseCase.execute({ id, reason, durationHours })
+    await this.updateBanUseCase.execute(user, { id, reason, durationHours })
     return { success: true }
   }
 }

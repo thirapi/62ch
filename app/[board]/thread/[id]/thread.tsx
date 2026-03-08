@@ -107,6 +107,11 @@ export function ThreadClient({
       {/* OP Post */}
       <div id={`p${thread.postNumber}`} className="ib-post mb-12">
         <div className="ib-post-metaline border-b border-muted/20 pb-1">
+          {thread.isDeleted && (
+            <span className="text-[10px] bg-red-500/10 text-red-500 px-1.5 py-0.5 rounded mr-2 font-bold border border-red-500/20">
+              POSTINGAN DIHAPUS
+            </span>
+          )}
           {thread.isPinned && (
             <Pin className="h-3 w-3 text-accent fill-accent" />
           )}
@@ -172,9 +177,14 @@ export function ThreadClient({
           <div
             key={reply.id}
             id={`p${reply.postNumber}`}
-            className="ib-reply border border-muted/20 shadow-sm relative group w-fit max-w-full"
+            className={`ib-reply border border-muted/20 shadow-sm relative group w-fit max-w-full ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
           >
-            <div className="ib-post-metaline px-2 pt-1 border-b border-muted/5 bg-muted/5">
+            <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
+              {reply.isDeleted && (
+                <span className="text-[10px] bg-red-500/10 text-red-500 px-1 mr-1 rounded font-bold border border-red-500/20">
+                  DIHAPUS
+                </span>
+              )}
               <TripcodeDisplay
                 author={reply.author || "Awanama"}
                 className="ib-author"

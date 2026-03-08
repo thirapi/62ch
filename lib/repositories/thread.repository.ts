@@ -83,6 +83,15 @@ export class ThreadRepository {
     return rows.map((row) => this.mapToEntity(row))
   }
 
+  async findLatestByIp(ipAddress: string): Promise<ThreadEntity | null> {
+    const row = await db.query.threads.findFirst({
+      where: eq(threads.ipAddress, ipAddress),
+      orderBy: [desc(threads.createdAt)],
+    })
+
+    return row ? this.mapToEntity(row) : null
+  }
+
   async softDelete(id: number): Promise<void> {
     await db
       .update(threads)

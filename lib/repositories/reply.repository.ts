@@ -50,16 +50,15 @@ export class ReplyRepository {
     return await db.insert(replies).values(values).returning({ id: replies.id })
   }
 
-  async findByThreadId(threadId: number): Promise<ReplyEntity[]> {
+  async findByThreadId(threadId: number, includeDeleted: boolean = false): Promise<ReplyEntity[]> {
+    const condition = includeDeleted 
+      ? eq(replies.threadId, threadId)
+      : and(eq(replies.threadId, threadId), eq(replies.isDeleted, false))
+
     const rows = await db
       .select()
       .from(replies)
-      .where(
-        and(
-          eq(replies.threadId, threadId),
-          eq(replies.isDeleted, false),
-        )
-      )
+      .where(condition)
       .orderBy(asc(replies.createdAt))
 
     return rows.map((row) => this.mapToEntity(row))
@@ -79,6 +78,17 @@ export class ReplyRepository {
       )
 
     return result[0]?.count ?? 0
+  }
+
+  async findLatestByIp(ipAddress: string): Promise<ReplyEntity | null> {
+    const rows = await db
+      .select()
+      .from(replies)
+      .where(eq(replies.ipAddress, ipAddress))
+      .orderBy(desc(replies.createdAt))
+      .limit(1)
+
+    return rows.length > 0 ? this.mapToEntity(rows[0]) : null
   }
 
   async softDelete(id: number): Promise<void> {
