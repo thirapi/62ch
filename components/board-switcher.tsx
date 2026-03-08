@@ -33,11 +33,11 @@ export function BoardSwitcher({ boards }: BoardSwitcherProps) {
           </DropdownMenuTrigger>
           <DropdownMenuContent
             align="start"
-            className="overflow-y-auto font-mono text-[11px]"
+            className="max-h-[70vh] overflow-y-auto font-mono text-[11px]"
           >
             {boards.map((board) => (
               <Link key={board.code} href={`/${board.code}`}>
-                <DropdownMenuItem className="cursor-pointer py-2">
+                <DropdownMenuItem className="cursor-pointer h-[26px] py-0">
                   <span className="font-bold text-accent mr-2">
                     /{board.code}/
                   </span>

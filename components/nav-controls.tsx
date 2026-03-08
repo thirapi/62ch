@@ -91,7 +91,7 @@ export function NavControls({ user }: NavControlsProps) {
           </button>
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="w-64 text-[11px] font-mono">
-          <DropdownMenuLabel className="flex items-center gap-2 py-2 opacity-80">
+          <DropdownMenuLabel className="flex items-center gap-2 h-[26px] py-0 opacity-80">
             <Settings className="size-3.5" />
             Pengaturan
           </DropdownMenuLabel>
@@ -100,7 +100,7 @@ export function NavControls({ user }: NavControlsProps) {
           <DropdownMenuItem
             onClick={togglePosition}
             onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer py-2"
+            className="cursor-pointer h-[26px] py-0"
           >
             <span>Navigasi Melayang</span>
             <span className="ml-auto opacity-50 font-bold">
@@ -113,7 +113,7 @@ export function NavControls({ user }: NavControlsProps) {
               setTheme(resolvedTheme === "dark" ? "light" : "dark")
             }
             onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer py-2"
+            className="cursor-pointer h-[26px] py-0"
           >
             <span>Mode {resolvedTheme === "dark" ? "Terang" : "Gelap"}</span>
           </DropdownMenuItem>
@@ -123,7 +123,7 @@ export function NavControls({ user }: NavControlsProps) {
               <DropdownMenuSeparator />
               <form action={logout}>
                 <button type="submit" className="w-full text-left">
-                  <DropdownMenuItem className="cursor-pointer py-2 text-destructive focus:text-destructive">
+                  <DropdownMenuItem className="cursor-pointer h-[26px] py-0 text-destructive focus:text-destructive">
                     <span>Keluar</span>
                   </DropdownMenuItem>
                 </button>
