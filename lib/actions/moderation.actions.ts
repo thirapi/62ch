@@ -8,7 +8,7 @@ const { moderationController, createReportUseCase } = container
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
 
-async function getModeratorAuthorizer() {
+export async function getModeratorAuthorizer() {
   const cookieStore = await cookies()
   const sessionId = cookieStore.get(lucia.sessionCookieName)?.value || null
 

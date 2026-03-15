@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { ExternalLink, CheckCircle, XCircle } from "lucide-react";
+import { redirect } from "next/navigation";
 import {
   Table,
   TableBody,
@@ -13,6 +14,7 @@ import { Button } from "@/components/ui/button";
 import { ModerationBoardFilter } from "@/components/moderation-board-filter";
 import { 
   getResolvedReports,
+  getModeratorAuthorizer,
 } from "@/lib/actions/moderation.actions";
 import {
   getBoardList,
@@ -26,6 +28,13 @@ export default async function ModHistoryPage({
 }: {
   searchParams: Promise<{ page?: string; board?: string }>;
 }) {
+  // Security Check
+  try {
+    await getModeratorAuthorizer();
+  } catch (error) {
+    redirect("/mod/login");
+  }
+
   const { page = "1", board: boardCode } = await searchParams;
   const currentPage = parseInt(page);
   const limit = 50;

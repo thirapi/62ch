@@ -16,6 +16,11 @@ export default function ModerationLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
+  const isLoginPage = pathname === "/mod/login";
+
+  if (isLoginPage) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen bg-background pb-20">

@@ -1,10 +1,18 @@
-import { getBans } from "@/lib/actions/moderation.actions";
+import { getBans, getModeratorAuthorizer } from "@/lib/actions/moderation.actions";
 import { BanList } from "@/components/ban-list";
 import { ShieldX } from "lucide-react";
+import { redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
 export default async function BansManagementPage() {
+  // Security Check
+  try {
+    await getModeratorAuthorizer();
+  } catch (error) {
+    redirect("/mod/login");
+  }
+
   const bans = await getBans();
 
   return (
