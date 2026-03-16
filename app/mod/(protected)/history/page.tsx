@@ -28,12 +28,7 @@ export default async function ModHistoryPage({
 }: {
   searchParams: Promise<{ page?: string; board?: string }>;
 }) {
-  // Security Check
-  try {
-    await getModeratorAuthorizer();
-  } catch (error) {
-    redirect("/mod/login");
-  }
+
 
   const { page = "1", board: boardCode } = await searchParams;
   const currentPage = parseInt(page);

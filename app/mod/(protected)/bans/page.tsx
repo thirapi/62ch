@@ -6,12 +6,7 @@ import { redirect } from "next/navigation";
 export const dynamic = "force-dynamic";
 
 export default async function BansManagementPage() {
-  // Security Check
-  try {
-    await getModeratorAuthorizer();
-  } catch (error) {
-    redirect("/mod/login");
-  }
+
 
   const bans = await getBans();
 

@@ -18,12 +18,7 @@ export default async function ModPage({
 }: {
   searchParams: Promise<{ page?: string; board?: string }>;
 }) {
-  // Security Check: Redirect to login if user is not authorized
-  try {
-    await getModeratorAuthorizer();
-  } catch (error) {
-    redirect("/mod/login");
-  }
+
 
   const { page = "1", board: boardCode } = await searchParams;
   const currentPage = parseInt(page);
