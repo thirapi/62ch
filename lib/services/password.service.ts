@@ -1,5 +1,4 @@
 import { scrypt, argon2Verify } from "hash-wasm";
-import { encodeBase64, decodeBase64 } from "oslo/encoding";
 
 export interface IPasswordService {
   hash(password: string): Promise<string>;
@@ -43,8 +42,8 @@ export class PasswordService implements IPasswordService {
       outputType: "binary",
     });
 
-    const saltB64 = encodeBase64(salt).replace(/=/g, "");
-    const hashB64 = encodeBase64(hashData).replace(/=/g, "");
+    const saltB64 = this.toBase64(salt).replace(/=/g, "");
+    const hashB64 = this.toBase64(hashData).replace(/=/g, "");
 
     return `${this.SCRYPT_PREFIX}v=0$n=${this.scryptOptions.costFactor},r=${this.scryptOptions.blockSize},p=${this.scryptOptions.parallelism}$${saltB64}$${hashB64}`;
   }
@@ -80,8 +79,8 @@ export class PasswordService implements IPasswordService {
     const r = parseInt(params.match(/r=(\d+)/)?.[1] || "8");
     const p = parseInt(params.match(/p=(\d+)/)?.[1] || "1");
 
-    const salt = decodeBase64(saltB64);
-    const originalHash = decodeBase64(hashB64);
+    const salt = this.fromBase64(saltB64);
+    const originalHash = this.fromBase64(hashB64);
 
     const checkHash = await scrypt({
       password: passwordBytes,
@@ -120,4 +119,22 @@ export class PasswordService implements IPasswordService {
     }
     return result === 0;
   }
+
+  /**
+   * Internal Base64 encoding helper for Cloudflare Workers / Edge runtime.
+   */
+  private toBase64(bytes: Uint8Array): string {
+    const binary = Array.from(bytes).map(b => String.fromCharCode(b)).join("");
+    return btoa(binary);
+  }
+
+  /**
+   * Internal Base64 decoding helper that handles missing padding.
+   */
+  private fromBase64(base64: string): Uint8Array {
+    const padded = base64.padEnd(base64.length + (4 - (base64.length % 4)) % 4, "=");
+    const binary = atob(padded);
+    return Uint8Array.from(binary, c => c.charCodeAt(0));
+  }
 }
+
