@@ -54,17 +54,17 @@ export function ScrollButtons() {
   if (!showTop && !showBottom) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 opacity-50 hover:opacity-100 transition-opacity focus-within:opacity-100 duration-300 pointer-events-none">
+    <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 opacity-80 hover:opacity-100 transition-opacity focus-within:opacity-100 duration-300 pointer-events-none">
       <div className="pointer-events-auto flex flex-col gap-2">
         {showTop && (
           <Button
             variant="outline"
             size="icon"
-            className="rounded bg-card/70 backdrop-blur-sm border-accent/30 hover:bg-accent/10 hover:border-accent hover:text-accent shadow-sm"
+            className="rounded bg-accent/10 backdrop-blur-sm border-accent text-accent hover:bg-accent/20 hover:border-accent hover:text-accent shadow-sm"
             onClick={scrollToTop}
             title="Ke Paling Atas"
           >
-            <ArrowUp className="h-4 w-4 opacity-80" />
+            <ArrowUp className="h-4 w-4" />
             <span className="sr-only">Ke Atas</span>
           </Button>
         )}
@@ -72,11 +72,11 @@ export function ScrollButtons() {
           <Button
             variant="outline"
             size="icon"
-            className="rounded bg-card/70 backdrop-blur-sm border-accent/30 hover:bg-accent/10 hover:border-accent hover:text-accent shadow-sm"
+            className="rounded bg-accent/10 backdrop-blur-sm border-accent text-accent hover:bg-accent/20 hover:border-accent hover:text-accent shadow-sm"
             onClick={scrollToBottom}
             title="Ke Paling Bawah"
           >
-            <ArrowDown className="h-4 w-4 opacity-80" />
+            <ArrowDown className="h-4 w-4" />
             <span className="sr-only">Ke Bawah</span>
           </Button>
         )}
