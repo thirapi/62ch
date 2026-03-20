@@ -32,64 +32,83 @@ export function ExpandableImage({
 
   const isHidden = !showNsfw || !showSpoiler;
 
-  // Helper to parse metadata (taking the filename part)
-  const filename = metadata ? metadata.split(" (")[0] : "image";
+  // Helper to parse metadata
+  let fileInfo = {
+    name: "image.png",
+    size: "",
+    dim: "",
+  };
+
+  if (metadata) {
+    try {
+      const parsed = JSON.parse(metadata);
+      fileInfo.name = parsed.originalName || "image.png";
+      if (parsed.bytes) {
+        const kb = Math.round(parsed.bytes / 1024);
+        fileInfo.size = `${kb} KB`;
+      }
+      if (parsed.width && parsed.height) {
+        fileInfo.dim = `${parsed.width}x${parsed.height}`;
+      }
+    } catch (e) {
+      // Fallback for non-JSON metadata
+      fileInfo.name = metadata.split(" (")[0] || "image";
+    }
+  }
 
   return (
-    <div
-      className={cn(
-        "flex flex-col gap-0.5 mb-1",
-        isExpanded
-          ? "block w-full clear-both"
-          : cn(
-              "w-fit float-left",
-              isOP
-                ? "max-w-[200px] sm:max-w-[300px] mr-4 sm:mr-5 mb-2"
-                : "max-w-[150px] sm:max-w-[250px] mr-3 mb-1",
-            ),
-        className,
-      )}
-    >
+    <>
       {/* Metadata & Actions */}
-      <div className="flex items-center gap-2 text-[10px] text-muted-foreground">
-        <span
+      <div className={cn("flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[10px] text-muted-foreground leading-tight mb-1", className)}>
+        <span className="font-mono opacity-80">File:</span>
+        <a
+          href={src}
+          target="_blank"
+          rel="noreferrer"
           className={cn(
-            "truncate max-w-[150px] sm:max-w-[300px] font-mono opacity-70 hover:opacity-100 transition-opacity cursor-default",
-            isNsfw && "text-destructive font-bold",
-            isSpoiler && "text-yellow-600 dark:text-yellow-500 font-bold",
+            "font-bold hover:underline truncate max-w-[120px] sm:max-w-[200px]",
+            isNsfw ? "text-destructive" : isSpoiler ? "text-yellow-600 dark:text-yellow-500" : "text-accent"
           )}
-          title={metadata}
+          title={fileInfo.name}
         >
-          {isNsfw && `[NSFW] `}
-          {isSpoiler && `[SPOILER] `}
-          {metadata || "image.png"}
+          {fileInfo.name}
+        </a>
+        <span className="font-mono opacity-70">
+          ({fileInfo.size}{fileInfo.size && fileInfo.dim && ", "}{fileInfo.dim})
         </span>
-        <div className="flex items-center gap-1.5">
+        
+        <div className="flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity ml-auto sm:ml-0">
           <button
             onClick={(e) => {
               e.stopPropagation();
               onFullScreen?.();
             }}
-            className="hover:text-accent hover:underline flex items-center gap-0.5"
+            className="hover:text-accent hover:underline"
           >
-            [full-view]
+            [view]
           </button>
           <a
             href={src}
-            target="_blank"
-            rel="noreferrer"
-            className="hover:text-accent hover:underline flex items-center gap-0.5"
+            download={fileInfo.name}
+            className="hover:text-accent hover:underline hidden sm:inline"
           >
-            [source]
+            [save]
           </a>
         </div>
       </div>
 
-      {/* Image Container */}
+      {/* Image Container - Floated when not expanded */}
       <div
         className={cn(
           "relative group cursor-zoom-in overflow-hidden rounded-sm border shadow-sm transition-all duration-300",
-          isExpanded ? "w-full cursor-zoom-out" : "w-fit",
+          isExpanded
+            ? "w-full cursor-zoom-out mb-4 clear-both block"
+            : cn(
+                "float-left mr-4 mb-2",
+                isOP
+                  ? "max-w-[200px] sm:max-w-[300px]"
+                  : "max-w-[150px] sm:max-w-[250px]",
+              ),
         )}
         onClick={() => setIsExpanded(!isExpanded)}
       >
@@ -126,7 +145,7 @@ export function ExpandableImage({
           >
             {!showNsfw ? (
               <div className="border border-destructive bg-black px-4 py-2 text-destructive font-mono text-[12px] font-bold tracking-tight uppercase">
-                [ NSFW CONTENT ]
+                [ NSFW ]
               </div>
             ) : (
               <div className="border border-yellow-500 bg-black px-4 py-2 text-yellow-500 font-mono text-[12px] font-bold tracking-tight uppercase">
@@ -145,6 +164,6 @@ export function ExpandableImage({
           )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
