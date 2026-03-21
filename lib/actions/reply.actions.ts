@@ -1,7 +1,7 @@
 "use server"
 
 import { container } from "@/lib/di/container"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag } from "next/cache"
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
 
@@ -22,6 +22,7 @@ export async function createReply(formData: FormData) {
 
     // Extract and forward request
     const threadId = Number.parseInt(formData.get("threadId") as string)
+    const boardId = Number.parseInt(formData.get("boardId") as string)
     const boardCode = formData.get("boardCode") as string
     const content = formData.get("content") as string
     const author = formData.get("author") as string
@@ -58,9 +59,14 @@ export async function createReply(formData: FormData) {
       capcode: userRole,
     })
 
-    revalidatePath("/")
+    revalidatePath("/", "layout")
     revalidatePath(`/${boardCode}`)
     revalidatePath(`/${boardCode}/thread/${threadId}`)
+    updateTag(`thread-${threadId}`)
+    if (boardId) {
+      updateTag(`board-${boardId}-threads`)
+    }
+    updateTag("stats")
     return { success: true, replyId: result.replyId }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to create reply" }

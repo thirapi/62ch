@@ -1,9 +1,7 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { BoardRepository } from "@/lib/repositories/board.repository";
-import { ThreadRepository } from "@/lib/repositories/thread.repository";
-import { ReplyRepository } from "@/lib/repositories/reply.repository";
-import { GetThreadDetailUseCase } from "@/lib/use-cases/get-thread-detail.use-case";
+import { getThreadDetail } from "@/lib/actions/thread.actions";
+import { getBoardById } from "@/lib/actions/board.actions";
 import ThreadPageWrapper from "./thread";
 import { footerText } from "@/constants/footer";
 import type { Metadata } from "next";
@@ -29,13 +27,7 @@ export async function generateMetadata({
   const { board: boardCode, id } = await params;
   const threadId = Number.parseInt(id);
 
-  const threadRepository = new ThreadRepository();
-  const getThreadDetailUseCase = new GetThreadDetailUseCase(
-    threadRepository,
-    new ReplyRepository(),
-  );
-
-  const result = await getThreadDetailUseCase.execute(threadId);
+  const result = await getThreadDetail(threadId);
 
   if (!result) {
     return {
@@ -78,15 +70,8 @@ export default async function ThreadPage({
   const { board: boardCode, id } = await params;
   const threadId = Number.parseInt(id);
 
-  const threadRepository = new ThreadRepository();
-  const replyRepository = new ReplyRepository();
-  const getThreadDetailUseCase = new GetThreadDetailUseCase(
-    threadRepository,
-    replyRepository,
-  );
-
   const user = await getAuthUser();
-  const result = await getThreadDetailUseCase.execute(threadId, user);
+  const result = await getThreadDetail(threadId);
 
   if (!result) {
     notFound();
@@ -94,8 +79,7 @@ export default async function ThreadPage({
 
   const { thread, replies } = result;
 
-  const boardRepository = new BoardRepository();
-  const board = await boardRepository.findById(thread.boardId);
+  const board = await getBoardById(thread.boardId);
 
   if (!board || board.code !== boardCode) {
     notFound();

@@ -5,10 +5,8 @@ import { Button } from "@/components/ui/button";
 import { ArrowLeft, Pin, Lock, MessageSquare } from "lucide-react";
 import { ThreadForm } from "@/components/thread-form";
 import { FormattedText } from "@/components/formatted-text";
-import { BoardRepository } from "@/lib/repositories/board.repository";
-import { ThreadRepository } from "@/lib/repositories/thread.repository";
-import { ReplyRepository } from "@/lib/repositories/reply.repository";
-import { GetThreadListUseCase } from "@/lib/use-cases/get-thread-list.use-case";
+import { getThreadList } from "@/lib/actions/thread.actions";
+import { getBoardByCode } from "@/lib/actions/board.actions";
 import { BoardViewToggle } from "@/components/board-view-toggle";
 import { BoardSearch } from "@/components/board-search";
 import { CatalogView } from "@/components/catalog-view";
@@ -39,8 +37,7 @@ export async function generateMetadata({
   params: Promise<{ board: string }>;
 }): Promise<Metadata> {
   const { board: boardCode } = await params;
-  const boardRepository = new BoardRepository();
-  const board = await boardRepository.findByCode(boardCode);
+  const board = await getBoardByCode(boardCode);
 
   if (!board) {
     return {
@@ -84,23 +81,15 @@ export default async function BoardPage({
   const limit = 50;
   const offset = (currentPage - 1) * limit;
 
-  const boardRepository = new BoardRepository();
-  const board = await boardRepository.findByCode(boardCode);
+  const board = await getBoardByCode(boardCode);
 
   if (!board) {
     notFound();
   }
 
-  const threadRepository = new ThreadRepository();
-  const getThreadListUseCase = new GetThreadListUseCase(threadRepository);
-
   const user = await getAuthUser();
 
-  let { threads, totalPages } = await getThreadListUseCase.execute(
-    board.id,
-    limit,
-    offset,
-  );
+  let { threads, totalPages } = await getThreadList(board.id, limit, offset);
 
   if (query) {
     const q = query.toLowerCase();
@@ -108,7 +97,7 @@ export default async function BoardPage({
     // Ideally this should be pushed to the repository level for proper pagination with search.
     // For now, we filter the fetched page, which might result in fewer than 'limit' items.
     threads = threads.filter(
-      (t) =>
+      (t: any) =>
         t.subject?.toLowerCase().includes(q) ||
         t.content.toLowerCase().includes(q),
     );
@@ -190,7 +179,7 @@ export default async function BoardPage({
             <CatalogView threads={threads || []} boardCode={boardCode} />
           ) : (
             <div className="divide-y divide-muted/30">
-              {threads?.map((thread) => (
+              {threads?.map((thread: any) => (
                 <div key={thread.id} className="ib-post py-8 first:pt-0">
                   {/* Meta line */}
                   <div className="ib-post-metaline">
@@ -265,7 +254,7 @@ export default async function BoardPage({
                         .reverse()
                         .slice(0, 3)
                         .reverse()
-                        .map((reply) => (
+                        .map((reply: any) => (
                           <div
                             key={reply.id}
                             className="ib-reply shadow-sm border border-muted/20 w-fit max-w-full"

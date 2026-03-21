@@ -1,7 +1,7 @@
 "use server"
 
 import { container } from "@/lib/di/container"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag, cacheTag, cacheLife } from "next/cache"
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
 
@@ -60,26 +60,37 @@ export async function createThread(formData: FormData) {
       capcode: userRole,
     })
 
-    revalidatePath("/")
+    revalidatePath("/", "layout")
     revalidatePath(`/${boardCode}`)
+    updateTag(`board-${boardId}-threads`)
+    updateTag("threads")
+    updateTag("stats")
     return { success: true, threadId: result.threadId }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to create thread" }
   }
 }
 
-export async function getThreadList(boardId: number) {
+export async function getThreadList(boardId: number, limit: number = 50, offset: number = 0) {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag(`board-${boardId}-threads`, "threads");
+  
   try {
-    return await threadController.getThreadList(boardId)
+    return await threadController.getThreadList(boardId, limit, offset);
   } catch (error) {
     console.error(`Error fetching thread list for board ${boardId}:`, error)
-    return []
+    return { threads: [], totalPages: 0 }
   }
 }
 
 export async function getThreadDetail(threadId: number) {
+  'use cache';
+  cacheLife('minutes');
+  cacheTag(`thread-${threadId}`);
+
   try {
-    return await threadController.getThreadDetail(threadId)
+    return await threadController.getThreadDetail(threadId);
   } catch (error) {
     console.error(`Error fetching thread detail for thread ${threadId}:`, error)
     return null

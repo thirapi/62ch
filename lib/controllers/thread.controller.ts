@@ -49,14 +49,14 @@ export class ThreadController {
     return { threadId }
   }
 
-  async getThreadList(boardId: number) {
+  async getThreadList(boardId: number, limit: number = 50, offset: number = 0) {
     // Input validation only
     if (!boardId) {
       throw new Error("Board ID is required")
     }
 
     // Call use case
-    return await this.getThreadListUseCase.execute(boardId)
+    return await this.getThreadListUseCase.execute(boardId, limit, offset)
   }
 
   async getThreadDetail(threadId: number) {

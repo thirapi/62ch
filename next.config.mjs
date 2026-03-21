@@ -10,6 +10,8 @@ const nextConfig = {
   experimental: {
     serverActions: { bodySizeLimit: "10mb" },
     optimizePackageImports: ['lucide-react', 'date-fns', '@radix-ui/react-icons', 'recharts'],
+    dynamicIO: true,
+    cacheComponents: true,
   },
 };
 

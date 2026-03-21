@@ -18,6 +18,7 @@ import { useReply } from "./reply-context";
 
 interface ReplyFormProps {
   threadId: number;
+  boardId: number;
   boardCode: string;
   idPrefix?: string;
   userRole?: string;
@@ -25,6 +26,7 @@ interface ReplyFormProps {
 
 export function ReplyForm({
   threadId,
+  boardId,
   boardCode,
   idPrefix = "",
   userRole,
@@ -66,6 +68,7 @@ export function ReplyForm({
 
     const formData = new FormData(e.currentTarget);
     formData.append("threadId", threadId.toString());
+    formData.append("boardId", boardId.toString());
     formData.append("boardCode", boardCode);
 
     if (state.imageFile) {

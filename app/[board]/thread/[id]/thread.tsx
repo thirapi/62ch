@@ -299,6 +299,7 @@ export function ThreadClient({
           {!thread.isLocked ? (
             <ReplyForm 
               threadId={thread.id} 
+              boardId={thread.boardId}
               boardCode={boardCode} 
               userRole={userRole}
             />
@@ -322,6 +323,7 @@ export function ThreadClient({
 
       <QuickReply
         threadId={thread.id}
+        boardId={thread.boardId}
         boardCode={boardCode}
         isOpen={qrOpen}
         onClose={() => setQrOpen(false)}

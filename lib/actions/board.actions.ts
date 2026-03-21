@@ -1,7 +1,7 @@
 "use server"
 
 import { container } from "@/lib/di/container"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag, cacheTag, cacheLife } from "next/cache"
 import { getModeratorAuthorizer } from "./moderation.actions"
 
 const { boardController } = container
@@ -9,7 +9,13 @@ const { boardController } = container
 export async function getAllBoards() {
   try {
     await getModeratorAuthorizer()
-    return await boardController.getAllBoards()
+    const getCached = async () => {
+      'use cache';
+      cacheLife('hours');
+      cacheTag("boards");
+      return boardController.getAllBoards();
+    };
+    return await getCached();
   } catch (error) {
     console.error("Error fetching boards:", error)
     return []
@@ -19,7 +25,13 @@ export async function getAllBoards() {
 export async function getBoardCategories() {
   try {
     await getModeratorAuthorizer()
-    return await boardController.getBoardCategories()
+    const getCached = async () => {
+      'use cache';
+      cacheLife('hours');
+      cacheTag("categories");
+      return boardController.getBoardCategories();
+    };
+    return await getCached();
   } catch (error) {
     console.error("Error fetching board categories:", error)
     return []
@@ -29,7 +41,13 @@ export async function getBoardCategories() {
 export async function getBoardById(id: number) {
   try {
     await getModeratorAuthorizer()
-    return await boardController.getBoardById(id)
+    const getCached = async (boardId: number) => {
+      'use cache';
+      cacheLife('hours');
+      cacheTag(`board-${boardId}`, "boards");
+      return boardController.getBoardById(boardId);
+    };
+    return await getCached(id);
   } catch (error) {
     console.error(`Error fetching board with ID ${id}:`, error)
     return null
@@ -52,8 +70,9 @@ export async function createBoard(formData: FormData) {
       categoryId,
     })
 
-    revalidatePath("/")
+    revalidatePath("/", "layout")
     revalidatePath("/mod/boards")
+    updateTag("boards")
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to create board" }
@@ -78,9 +97,10 @@ export async function updateBoard(formData: FormData) {
       categoryId,
     })
 
-    revalidatePath("/")
+    revalidatePath("/", "layout")
     revalidatePath("/mod/boards")
     revalidatePath(`/mod/boards/${id}`)
+    updateTag("boards")
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to update board" }
@@ -88,13 +108,29 @@ export async function updateBoard(formData: FormData) {
 }
 
 export async function deleteBoard(id: number) {
-  try {
-    await getModeratorAuthorizer()
-    await boardController.deleteBoard(id)
-    revalidatePath("/")
-    revalidatePath("/mod/boards")
-    return { success: true }
-  } catch (error) {
-    return { success: false, error: error instanceof Error ? error.message : "Failed to delete board" }
+    try {
+      await getModeratorAuthorizer()
+      await boardController.deleteBoard(id)
+      revalidatePath("/", "layout")
+      revalidatePath("/mod/boards")
+      updateTag("boards")
+      return { success: true }
+    } catch (error) {
+      return { success: false, error: error instanceof Error ? error.message : "Failed to delete board" }
+    }
   }
-}
+
+  export async function getBoardByCode(code: string) {
+    try {
+      const getCached = async (boardCode: string) => {
+        'use cache';
+        cacheLife('hours');
+        cacheTag(`board-code-${boardCode}`, "boards");
+        return boardController.getBoardByCode(boardCode);
+      };
+      return await getCached(code);
+    } catch (error) {
+      console.error(`Error fetching board with code ${code}:`, error)
+      return null
+    }
+  }

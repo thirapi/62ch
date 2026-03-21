@@ -1,7 +1,7 @@
 "use server"
 
 import { container } from "@/lib/di/container"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, updateTag, cacheTag, cacheLife } from "next/cache"
 import { getModeratorAuthorizer } from "./moderation.actions"
 
 const { boardCategoryController } = container
@@ -9,7 +9,13 @@ const { boardCategoryController } = container
 export async function getAllCategories() {
   try {
     await getModeratorAuthorizer()
-    return await boardCategoryController.getCategories()
+    const getCached = async () => {
+      'use cache';
+      cacheLife('hours');
+      cacheTag("categories");
+      return boardCategoryController.getCategories();
+    };
+    return await getCached();
   } catch (error) {
     console.error("Error fetching categories:", error)
     return []
@@ -28,9 +34,11 @@ export async function createCategory(formData: FormData) {
       displayOrder,
     })
 
+    revalidatePath("/", "layout")
     revalidatePath("/mod/categories")
     revalidatePath("/mod/boards")
     revalidatePath("/mod/boards/new")
+    updateTag("categories")
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to create category" }
@@ -50,8 +58,10 @@ export async function updateCategory(formData: FormData) {
       displayOrder: isNaN(displayOrder) ? undefined : displayOrder,
     })
 
+    revalidatePath("/", "layout")
     revalidatePath("/mod/categories")
     revalidatePath("/mod/boards")
+    updateTag("categories")
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to update category" }
@@ -62,8 +72,10 @@ export async function deleteCategory(id: number) {
   try {
     await getModeratorAuthorizer()
     await boardCategoryController.deleteCategory(id)
+    revalidatePath("/", "layout")
     revalidatePath("/mod/categories")
     revalidatePath("/mod/boards")
+    updateTag("categories")
     return { success: true }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to delete category" }
@@ -74,7 +86,9 @@ export async function reorderCategoryUp(id: number) {
   try {
     await getModeratorAuthorizer()
     await boardCategoryController.reorderCategory(id, 'up')
+    revalidatePath("/", "layout")
     revalidatePath("/mod/categories")
+    updateTag("categories")
     return { success: true }
   } catch (error) {
     console.error("ReorderUp Error:", error)
@@ -86,7 +100,9 @@ export async function reorderCategoryDown(id: number) {
   try {
     await getModeratorAuthorizer()
     await boardCategoryController.reorderCategory(id, 'down')
+    revalidatePath("/", "layout")
     revalidatePath("/mod/categories")
+    updateTag("categories")
     return { success: true }
   } catch (error) {
     console.error("ReorderDown Error:", error)

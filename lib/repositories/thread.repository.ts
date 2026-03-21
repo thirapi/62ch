@@ -174,48 +174,48 @@ export class ThreadRepository {
 
     const countMap = new Map(counts.map((c) => [c.threadId, c.count]))
 
-    // 3. Fetch latest 3 replies for each thread
-    // Ideally use window functions, but for simplicity and safety with current setup, 
-    // we'll use Promise.all which is fine for small limits (e.g. 50 threads).
+    // 3. Fetch latest 3 replies for ALL threads in one query using a window function
+    // This optimization reduces the number of queries from N+2 to 3.
     const repliesMap = new Map<number, any[]>()
-
-    // We can optimization this further by fetching all candidates in one query if needed, 
-    // but a few parallel queries is better than 1000 serial/parallel N+1 on the whole DB.
-    // For 50 threads, 50 queries is okay-ish to start, but let's try to improve.
-    // Actually, let's keep it simple: Promise.all of findPreviewByThreadId is okay for < 50 items.
-    // But since we are here for efficiency, let's use a window function query if possible.
-    // Constructing the complex mapped entity from raw sql is tedious. 
-    // Let's stick to Promise.all for now as it reuse existing repository logic which is typesafe.
-    // But wait, I can inject ReplyRepository? No, repositories shouldn't depend on each other cyclically.
-    // I should move this logic to UseCase OR duplicate the simple query here.
-
-    // Let's just return the threads and let the UseCase handle the replies fetching EFFICIENTLY
-    // by using the new 'count' map at least.
-
-    // Actually, I'll implement the full fetch here to encapsulate the optimization.
-    // I will rely on a helper to fetch previews or just execute the queries.
-
-    const previews = await Promise.all(
-      threadIds.map(async (id) => {
-        const rows = await db.query.replies.findMany({
-          where: and(
-            eq(replies.threadId, id),
-            eq(replies.isDeleted, false)
-          ),
-          orderBy: [desc(replies.createdAt)],
-          limit: 3
-        });
-        return { id, rows }
+    const sq = db
+      .select({
+        id: replies.id,
+        threadId: replies.threadId,
+        content: replies.content,
+        author: replies.author,
+        createdAt: replies.createdAt,
+        isDeleted: replies.isDeleted,
+        isNsfw: replies.isNsfw,
+        isSpoiler: replies.isSpoiler,
+        image: replies.image,
+        imageMetadata: replies.imageMetadata,
+        deletionPassword: replies.deletionPassword,
+        postNumber: replies.postNumber,
+        ipAddress: replies.ipAddress,
+        capcode: replies.capcode,
+        rn: sql<number>`row_number() over (partition by ${replies.threadId} order by ${replies.createdAt} desc)`.as("rn"),
       })
-    )
+      .from(replies)
+      .where(
+        and(
+          inArray(replies.threadId, threadIds),
+          eq(replies.isDeleted, false)
+        )
+      )
+      .as("sq")
 
-    previews.forEach(p => {
-      // Need to map rows to entities - I'll duplicate the mapToEntity logic or move it to a shared helper?
-      // Since this is inside ThreadRepository, I can't easily access ReplyRepository.mapToEntity.
-      // I will just return raw rows or simplified objects.
-      // Actually, the UseCase expects ReplyUI.
-      // Let's manually map for now.
-      const mapped = p.rows.map(row => ({
+    const allLatestReplies = await db
+      .select()
+      .from(sq)
+      .where(sql`${sq.rn} <= 3`)
+
+    // Group the results back into the map
+    allLatestReplies.forEach((row) => {
+      if (!repliesMap.has(row.threadId)) {
+        repliesMap.set(row.threadId, [])
+      }
+      
+      const mapped = {
         id: row.id,
         threadId: row.threadId,
         content: row.content,
@@ -230,9 +230,15 @@ export class ThreadRepository {
         postNumber: row.postNumber!,
         ipAddress: row.ipAddress,
         capcode: row.capcode
-      }))
-      repliesMap.set(p.id, mapped.reverse()) // Reverse to show chronological order in preview
+      }
+      
+      repliesMap.get(row.threadId)!.push(mapped)
     })
+
+    // Sort replies chronologically for each thread preview
+    for (const [threadId, threadReplies] of repliesMap.entries()) {
+      repliesMap.set(threadId, threadReplies.reverse())
+    }
 
     return threadEntities.map((thread) => ({
       ...thread,

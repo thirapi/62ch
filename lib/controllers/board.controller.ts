@@ -4,6 +4,7 @@ import type { DeleteBoardUseCase } from "@/lib/use-cases/delete-board.use-case"
 import type { GetBoardCategoriesUseCase } from "@/lib/use-cases/get-board-categories.use-case"
 import type { GetBoardListUseCase } from "@/lib/use-cases/get-board-list.use-case"
 import type { GetBoardByIdUseCase } from "@/lib/use-cases/get-board-by-id.use-case"
+import type { GetBoardByCodeUseCase } from "@/lib/use-cases/get-board-by-code.use-case"
 
 export interface CreateBoardRequest {
   code: string
@@ -27,6 +28,7 @@ export class BoardController {
     private deleteBoardUseCase: DeleteBoardUseCase,
     private getBoardListUseCase: GetBoardListUseCase,
     private getBoardByIdUseCase: GetBoardByIdUseCase,
+    private getBoardByCodeUseCase: GetBoardByCodeUseCase,
     private getBoardCategoriesUseCase: GetBoardCategoriesUseCase
   ) { }
 
@@ -44,6 +46,10 @@ export class BoardController {
       throw new Error("Board not found")
     }
     return board
+  }
+
+  async getBoardByCode(code: string) {
+    return await this.getBoardByCodeUseCase.execute(code)
   }
 
   async createBoard(request: CreateBoardRequest) {

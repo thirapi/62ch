@@ -8,6 +8,7 @@ import { Button } from "./ui/button";
 
 interface QuickReplyProps {
   threadId: number;
+  boardId: number;
   boardCode: string;
   isOpen: boolean;
   onClose: () => void;
@@ -17,6 +18,7 @@ interface QuickReplyProps {
 
 export function QuickReply({
   threadId,
+  boardId,
   boardCode,
   isOpen,
   onClose,
@@ -171,6 +173,7 @@ export function QuickReply({
       >
         <ReplyForm 
           threadId={threadId} 
+          boardId={boardId}
           boardCode={boardCode} 
           idPrefix="qr" 
           userRole={userRole}
