@@ -15,6 +15,7 @@ import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldAlert, AlertTriangle } from "lucide-react";
 import { useReply } from "./reply-context";
+import posthog from "posthog-js";
 
 interface ReplyFormProps {
   threadId: number;
@@ -82,6 +83,15 @@ export function ReplyForm({
         setError(null);
         setResetTrigger((prev) => prev + 1); // Trigger image uploader reset
         router.refresh();
+
+        // Track reply creation
+        posthog.capture("reply created", {
+          thread_id: threadId,
+          board_code: boardCode,
+          has_image: !!state.imageFile,
+          is_nsfw: !!state.isNsfw,
+          is_spoiler: !!state.isSpoiler,
+        });
       } else {
         console.error("[ReplyForm] Action failed:", result.error);
         setError(result.error || "Gagal mengirim balasan. Silakan coba lagi.");

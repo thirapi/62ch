@@ -13,6 +13,7 @@ import { ImageUploader } from "./image-uploader";
 import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldAlert, AlertTriangle } from "lucide-react";
+import posthog from "posthog-js";
 
 interface ThreadFormProps {
   boardId: number;
@@ -69,6 +70,14 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
         setIsOpen(false);
         router.push(`/${boardCode}/thread/${result.threadId}`);
         router.refresh();
+        
+        // Track thread creation
+        posthog.capture("thread created", {
+          board_code: boardCode,
+          has_subject: !!formData.get("subject"),
+          is_nsfw: !!formData.get("isNsfw"),
+          is_spoiler: !!formData.get("isSpoiler"),
+        });
       } else {
         // Log detailed error for debugging
         console.error("[ThreadForm] Action failed:", result.error);

@@ -130,6 +130,7 @@ import { BoardNav } from "@/components/board-nav";
 import { AgeVerificationDialog } from "@/components/age-verification-dialog";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ScrollButtons } from "@/components/scroll-buttons";
+import { PostHogProvider } from "./posthog-provider";
 
 export default function RootLayout({
   children,
@@ -146,24 +147,26 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
           />
         ))}
-        <ThemeProvider
-          attribute="class"
-          defaultTheme="system"
-          enableSystem
-          disableTransitionOnChange
-        >
-          <NavProvider>
-            <TooltipProvider>
-              <BoardNav />
-              {children}
-              <Toaster />
-              <SonnerToaster />
-              <Analytics />
-              <AgeVerificationDialog />
-              <ScrollButtons />
-            </TooltipProvider>
-          </NavProvider>
-        </ThemeProvider>
+        <PostHogProvider>
+          <ThemeProvider
+            attribute="class"
+            defaultTheme="system"
+            enableSystem
+            disableTransitionOnChange
+          >
+            <NavProvider>
+              <TooltipProvider>
+                <BoardNav />
+                {children}
+                <Toaster />
+                <SonnerToaster />
+                <Analytics />
+                <AgeVerificationDialog />
+                <ScrollButtons />
+              </TooltipProvider>
+            </NavProvider>
+          </ThemeProvider>
+        </PostHogProvider>
       </body>
     </html>
   );
