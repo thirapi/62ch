@@ -8,6 +8,10 @@ export interface LatestPostEntity {
   boardCode: string
   threadId: number | null
   capcode?: string | null
+  // Preview fields
+  threadSubject?: string | null
+  threadExcerpt?: string | null
+  threadImage?: string | null
 }
 
 export interface RecentImageEntity {
@@ -19,6 +23,9 @@ export interface RecentImageEntity {
   threadId: number
   isNsfw: boolean
   isSpoiler: boolean
+  // Preview fields
+  threadSubject?: string | null
+  threadExcerpt?: string | null
 }
 
 export interface PostInfoEntity {

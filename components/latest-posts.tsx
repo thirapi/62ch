@@ -5,6 +5,7 @@ import Link from "next/link"
 import { FormattedText } from "@/components/formatted-text"
 import { getLatestPosts } from "@/lib/actions/home.actions"
 import type { LatestPostEntity } from "@/lib/entities/post.entity"
+import { ThreadPreview } from "@/components/thread-preview"
 
 interface LatestPostsProps {
   initialPosts: LatestPostEntity[]
@@ -83,30 +84,39 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
       </h2>
       
       <div className="space-y-2 flex-col flex flex-1 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+
         {posts.map((post) => (
-          <Link
-            key={`latest-${post.id}-${post.type}`}
-            href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
-            className="block text-sm hover:bg-accent/5 p-2 rounded transition-colors"
+          <ThreadPreview
+            key={`preview-${post.id}-${post.type}`}
+            subject={post.threadSubject}
+            excerpt={post.threadExcerpt}
+            image={post.threadImage}
+            boardCode={post.boardCode}
           >
-            <div className="flex items-start justify-between gap-2">
-              <div className="min-w-0 flex-1">
-                <div className="font-medium truncate text-xs">
-                  {post.title || (
-                    <span className="text-muted-foreground italic">
-                      {post.type === "thread" ? "Utas" : "Balasan"}
-                    </span>
-                  )}
+            <Link
+              key={`latest-${post.id}-${post.type}`}
+              href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
+              className="block text-sm hover:bg-accent/5 p-2 rounded transition-colors w-full"
+            >
+              <div className="flex items-start justify-between gap-2">
+                <div className="min-w-0 flex-1">
+                  <div className="font-medium truncate text-xs">
+                    {post.title || (
+                      <span className="text-muted-foreground italic">
+                        {post.type === "thread" ? "Utas" : "Balasan"}
+                      </span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                    <FormattedText content={post.excerpt} preview />
+                  </div>
                 </div>
-                <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
-                  <FormattedText content={post.excerpt} preview />
-                </div>
+                <span className="text-[10px] font-mono text-accent font-bold whitespace-nowrap">
+                  /{post.boardCode}/
+                </span>
               </div>
-              <span className="text-[10px] font-mono text-accent font-bold whitespace-nowrap">
-                /{post.boardCode}/
-              </span>
-            </div>
-          </Link>
+            </Link>
+          </ThreadPreview>
         ))}
         
         {/* Loading Indicator & Observer Target */}

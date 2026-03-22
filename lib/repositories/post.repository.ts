@@ -16,6 +16,7 @@ export class PostRepository {
         postNumber: threads.postNumber,
         subject: threads.subject,
         content: threads.content,
+        image: threads.image,
         createdAt: threads.createdAt,
         boardCode: boards.code,
         capcode: threads.capcode,
@@ -46,6 +47,9 @@ export class PostRepository {
         threadId: replies.threadId,
         boardCode: boards.code,
         capcode: replies.capcode,
+        threadSubject: threads.subject,
+        threadContent: threads.content,
+        threadImage: threads.image,
       })
       .from(replies)
       .innerJoin(threads, eq(replies.threadId, threads.id))
@@ -67,6 +71,9 @@ export class PostRepository {
         boardCode: t.boardCode,
         threadId: t.id,
         capcode: t.capcode,
+        threadSubject: t.subject,
+        threadExcerpt: t.content.substring(0, 150),
+        threadImage: t.image,
       })
     }
 
@@ -81,6 +88,9 @@ export class PostRepository {
         boardCode: r.boardCode,
         threadId: r.threadId,
         capcode: r.capcode,
+        threadSubject: r.threadSubject,
+        threadExcerpt: r.threadContent ? r.threadContent.substring(0, 150) : null,
+        threadImage: r.threadImage,
       })
     }
 
@@ -100,6 +110,8 @@ export class PostRepository {
         threadId: threads.id,
         isNsfw: threads.isNsfw,
         isSpoiler: threads.isSpoiler,
+        threadSubject: threads.subject,
+        threadContent: threads.content,
       })
       .from(threads)
       .innerJoin(boards, eq(threads.boardId, boards.id))
@@ -122,6 +134,8 @@ export class PostRepository {
         threadId: replies.threadId,
         isNsfw: replies.isNsfw,
         isSpoiler: replies.isSpoiler,
+        threadSubject: threads.subject,
+        threadContent: threads.content,
       })
       .from(replies)
       .innerJoin(threads, eq(replies.threadId, threads.id))
@@ -148,6 +162,8 @@ export class PostRepository {
         threadId: t.threadId,
         isNsfw: t.isNsfw ?? false,
         isSpoiler: t.isSpoiler ?? false,
+        threadSubject: t.threadSubject,
+        threadExcerpt: t.threadContent ? t.threadContent.substring(0, 150) : null,
       })
     }
 
@@ -161,6 +177,8 @@ export class PostRepository {
         threadId: r.threadId,
         isNsfw: r.isNsfw ?? false,
         isSpoiler: r.isSpoiler ?? false,
+        threadSubject: r.threadSubject,
+        threadExcerpt: r.threadContent ? r.threadContent.substring(0, 150) : null,
       })
     }
 
