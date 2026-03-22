@@ -32,6 +32,8 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
 
+  const [content, setContent] = useState("");
+
   const refreshCaptcha = async () => {
     const data = await getCaptcha();
     setCaptchaQuestion(data.question);
@@ -51,6 +53,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
     const formData = new FormData(e.currentTarget);
     formData.append("boardId", boardId.toString());
     formData.append("boardCode", boardCode);
+    formData.set("content", content); // Use stated content
 
     if (!imageFile || imageFile.size === 0) {
       setError("Anda harus mengunggah gambar untuk membuat thread baru.");
@@ -66,6 +69,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
       if (result.success && result.threadId) {
         formRef.current?.reset();
         setImageFile(null);
+        setContent(""); // Reset content
         setResetTrigger((prev) => prev + 1); // Trigger image uploader reset
         setIsOpen(false);
         router.push(`/${boardCode}/thread/${result.threadId}`);
@@ -98,6 +102,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
     setIsOpen(false);
     setError(null);
     setImageFile(null);
+    setContent(""); // Reset content
     setResetTrigger((prev) => prev + 1); // Also reset when closing
     formRef.current?.reset();
   };
@@ -179,14 +184,22 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
           >
             Pesan
           </Label>
-          <Textarea
-            id="content"
-            name="content"
-            placeholder="Ketik pesan Anda di sini..."
-            required
-            rows={5}
-            className="bg-muted/30 focus-visible:ring-accent resize-y min-h-[120px]"
-          />
+          <div className="relative">
+            <Textarea
+              id="content"
+              name="content"
+              placeholder="Ketik pesan Anda di sini..."
+              required
+              rows={5}
+              maxLength={2000}
+              className="bg-muted/30 focus-visible:ring-accent resize-y min-h-[120px] pr-16"
+              value={content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <div className="absolute bottom-2 right-2 text-[10px] font-mono text-muted-foreground pointer-events-none opacity-50">
+              {content.length}/2000
+            </div>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">

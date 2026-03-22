@@ -161,16 +161,22 @@ export function ReplyForm({
           >
             Balasan
           </Label>
-          <Textarea
-            id={`${prefix}reply-content`}
-            name="content"
-            placeholder="Ketik balasan Anda..."
-            required
-            rows={5}
-            className="text-sm bg-muted/20 focus-visible:ring-accent resize-y"
-            value={state.content}
-            onChange={(e) => setContent(e.target.value)}
-          />
+          <div className="relative">
+            <Textarea
+              id={`${prefix}reply-content`}
+              name="content"
+              placeholder="Ketik balasan Anda..."
+              required
+              rows={5}
+              maxLength={2000}
+              className="text-sm bg-muted/20 focus-visible:ring-accent resize-y pr-16"
+              value={state.content}
+              onChange={(e) => setContent(e.target.value)}
+            />
+            <div className="absolute bottom-2 right-2 text-[10px] font-mono text-muted-foreground pointer-events-none opacity-50">
+              {state.content.length}/2000
+            </div>
+          </div>
         </div>
 
         <div className="space-y-1">

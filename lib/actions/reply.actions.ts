@@ -23,7 +23,11 @@ export async function createReply(formData: FormData) {
     // Extract and forward request
     const threadId = Number.parseInt(formData.get("threadId") as string)
     const boardCode = formData.get("boardCode") as string
-    const content = formData.get("content") as string
+    const rawContent = formData.get("content") as string
+    const content = rawContent.replace(/\r\n/g, "\n")
+    if (content.length > 2000) {
+      throw new Error("Pesan terlalu panjang (maksimum 2000 karakter).")
+    }
     const author = formData.get("author") as string
     const imageFile = formData.get("image") as File | null
     const deletionPassword = formData.get("deletionPassword") as string
