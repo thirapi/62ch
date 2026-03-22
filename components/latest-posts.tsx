@@ -17,6 +17,12 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadingIndicatorRef = useRef<HTMLDivElement | null>(null)
 
+  // Update state when initialPosts changes (e.g. from router.refresh())
+  useEffect(() => {
+    setPosts(initialPosts)
+    setHasMore(initialPosts.length >= 10)
+  }, [initialPosts])
+
   const loadMore = useCallback(async () => {
     if (isLoading || !hasMore || posts.length === 0) return
 

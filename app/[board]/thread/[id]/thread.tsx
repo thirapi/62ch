@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Lock, Pin, RefreshCw } from "lucide-react";
+import { Lock, Pin } from "lucide-react";
 import { ReplyForm } from "@/components/reply-form";
 import { ReportButton } from "@/components/report-button";
 import { ImageLightbox } from "@/components/image-lightbox";
@@ -10,7 +10,6 @@ import { Backlinks } from "@/components/backlinks";
 import { DeletePostButton } from "@/components/delete-post-button";
 import { ThreadUI } from "@/lib/entities/thread.entity";
 import { ReplyUI } from "@/lib/entities/reply.entity";
-import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FormattedDate } from "@/components/formatted-date";
 import { QuickReply } from "@/components/quick-reply";
@@ -130,18 +129,6 @@ export function ThreadClient({
 
   return (
     <>
-      <div className="flex items-center gap-4 mb-8">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => router.refresh()}
-          className="rounded-full shadow-sm"
-        >
-          <RefreshCw className="h-3 w-3 mr-2" />
-          Perbarui (Refresh)
-        </Button>
-      </div>
-
       {/* OP Post */}
       <div id={`p${thread.postNumber}`} className="ib-post mb-12">
         <div className="ib-post-metaline border-b border-muted/20 pb-1">

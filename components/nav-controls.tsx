@@ -12,9 +12,11 @@ import {
   User,
   LogOut,
   Gavel,
+  RefreshCw,
 } from "lucide-react";
 import { useTheme } from "next-themes";
 import { useNav } from "./nav-provider";
+import { useRouter } from "next/navigation";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -38,6 +40,7 @@ interface NavControlsProps {
 export function NavControls({ user }: NavControlsProps) {
   const { resolvedTheme, setTheme } = useTheme();
   const { position, togglePosition } = useNav();
+  const router = useRouter();
   const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
@@ -51,6 +54,22 @@ export function NavControls({ user }: NavControlsProps) {
   return (
     <div className="flex items-center gap-3">
       <span className="text-muted-foreground/50">[</span>
+      
+      {/* Refresh Button */}
+      <Tooltip>
+        <TooltipTrigger asChild>
+          <button
+            onClick={() => router.refresh()}
+            className="opacity-80 hover:opacity-100 transition-opacity cursor-pointer p-0.5"
+            title="Segarkan halaman (Refresh)"
+          >
+            <RefreshCw className="size-3.5" />
+          </button>
+        </TooltipTrigger>
+        <TooltipContent side="bottom">Segarkan halaman</TooltipContent>
+      </Tooltip>
+      <span className="text-muted-foreground/50">/</span>
+
       {/* Rules Link */}
       <Tooltip>
         <TooltipTrigger asChild>
