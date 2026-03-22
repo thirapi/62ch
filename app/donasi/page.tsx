@@ -26,10 +26,10 @@ export default function DonasiPage() {
               Mengapa Berdonasi?
             </h2>
             <div className="space-y-3 text-sm leading-relaxed text-muted-foreground">
-              <p>
-                62chan dijalankan secara mandiri, dan saat ini butuh sekitar{" "}
-                <b>$9/bulan (~150 ribuan)</b> untuk biaya server.
-              </p>
+<p>
+  62chan dijalankan secara mandiri, dan biaya server saat ini berkisar sekitar{" "}
+  <b>$5–$10/bulan (~80–160 ribuan)</b>, tergantung traffic.
+</p>
               <p>
                 Bantuan Anda sangat berarti untuk memastikan website ini terus
                 online.
