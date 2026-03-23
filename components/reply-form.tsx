@@ -135,7 +135,7 @@ export function ReplyForm({
           <div className="space-y-1">
             <Label
               htmlFor={`${prefix}reply-author`}
-              className="text-[10px] font-bold uppercase opacity-60"
+              className="text-[10px] font-bold opacity-60"
             >
               Nama
             </Label>
@@ -152,7 +152,7 @@ export function ReplyForm({
           <div className="space-y-1 md:col-span-2">
             <Label
               htmlFor={`${prefix}reply-deletionPassword`}
-              className="text-[10px] font-bold uppercase opacity-60"
+              className="text-[10px] font-bold opacity-60"
             >
               Sandi Penghapusan
             </Label>
@@ -172,7 +172,7 @@ export function ReplyForm({
         <div className="space-y-1">
           <Label
             htmlFor={`${prefix}reply-content`}
-            className="text-[10px] font-bold uppercase opacity-60"
+            className="text-[10px] font-bold opacity-60"
           >
             Balasan
           </Label>
@@ -197,7 +197,7 @@ export function ReplyForm({
         <div className="space-y-1">
           <Label
             htmlFor={`${prefix}reply-captcha`}
-            className="text-[10px] font-bold uppercase opacity-60"
+            className="text-[10px] font-bold opacity-60"
           >
             Verifikasi: {captchaQuestion}
           </Label>

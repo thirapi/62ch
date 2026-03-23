@@ -138,7 +138,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   return (
     <div className="bg-card border-2 border-accent/20 rounded-xl overflow-hidden shadow-2xl animate-in slide-in-from-top-4 duration-300">
       <div className="bg-accent/5 px-6 py-3 border-b border-accent/10 flex items-center justify-between">
-        <span className="font-bold text-sm tracking-wide uppercase text-accent">
+        <span className="font-bold text-sm tracking-wide text-accent">
           Mode: Posting Thread Baru
         </span>
         <Button
@@ -163,7 +163,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
           <div className="space-y-1.5">
             <Label
               htmlFor="author"
-              className="text-xs font-bold uppercase opacity-70"
+              className="text-xs font-bold opacity-70"
             >
               Nama
             </Label>
@@ -178,7 +178,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
           <div className="space-y-1.5">
             <Label
               htmlFor="subject"
-              className="text-xs font-bold uppercase opacity-70"
+              className="text-xs font-bold opacity-70"
             >
               Subjek
             </Label>
@@ -195,7 +195,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
         <div className="space-y-1.5">
           <Label
             htmlFor="content"
-            className="text-xs font-bold uppercase opacity-70"
+            className="text-xs font-bold opacity-70"
           >
             Pesan
           </Label>
@@ -220,7 +220,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 items-end">
           <div className="space-y-4">
             <div className="space-y-1.5">
-              <Label className="text-xs font-bold uppercase opacity-70">
+              <Label className="text-xs font-bold opacity-70">
                 Gambar <span className="text-accent">(WAJIB)</span>
               </Label>
               <ImageUploader
@@ -268,7 +268,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
             <div className="space-y-1.5">
               <Label
                 htmlFor="deletionPassword"
-                className="text-xs font-bold uppercase opacity-70"
+                className="text-xs font-bold opacity-70"
               >
                 Sandi Penghapusan
               </Label>
@@ -285,7 +285,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
             <div className="space-y-1.5">
               <Label
                 htmlFor="captcha"
-                className="text-xs font-bold uppercase opacity-70"
+                className="text-xs font-bold opacity-70"
               >
                 Verifikasi: {captchaQuestion}
               </Label>
