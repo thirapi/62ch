@@ -70,7 +70,7 @@ export function NavControls({ user }: NavControlsProps) {
   }
 
   return (
-    <div className="flex items-center gap-3">
+    <div className="flex items-center gap-1.5 sm:gap-3">
       <span className="text-muted-foreground/50">[</span>
       
       {/* Refresh Button */}
@@ -109,19 +109,19 @@ export function NavControls({ user }: NavControlsProps) {
       </Tooltip>
       <span className="text-muted-foreground/50">/</span>
 
-      {/* Rules Link */}
+      {/* Rules Link - Hidden on mobile, moved to dropdown */}
       <Tooltip>
         <TooltipTrigger asChild>
           <Link
             href="/rules"
-            className="opacity-80 hover:opacity-100 transition-opacity"
+            className="opacity-80 hover:opacity-100 transition-opacity hidden sm:inline"
           >
             <Gavel className="size-3.5" />
           </Link>
         </TooltipTrigger>
         <TooltipContent side="bottom">Peraturan</TooltipContent>
       </Tooltip>
-      <span className="text-muted-foreground/50">/</span>
+      <span className="text-muted-foreground/50 hidden sm:inline">/</span>
 
       {/* Admin/Mod Link if user exists */}
       {user && (
@@ -153,6 +153,15 @@ export function NavControls({ user }: NavControlsProps) {
             <Settings className="size-3.5" />
             Pengaturan
           </DropdownMenuLabel>
+          
+          <DropdownMenuItem asChild className="cursor-pointer h-[26px] py-0 sm:hidden focus:text-accent">
+            <Link href="/rules" className="flex items-center gap-2 w-full">
+              <Gavel className="size-3.5" />
+              <span>Peraturan</span>
+            </Link>
+          </DropdownMenuItem>
+          <DropdownMenuSeparator className="sm:hidden" />
+          
           <DropdownMenuSeparator />
 
           <DropdownMenuItem

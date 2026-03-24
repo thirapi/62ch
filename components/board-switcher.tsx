@@ -27,9 +27,9 @@ export function BoardSwitcher({ boards }: BoardSwitcherProps) {
       <div className="flex sm:hidden items-center">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
-            <button className="flex items-center gap-1 px-2 py-1 hover:bg-accent/10 rounded-md transition-colors text-accent font-bold cursor-pointer">
+            <button className="flex items-center gap-1 px-1.5 py-1 hover:bg-accent/10 rounded-md transition-colors text-accent font-bold cursor-pointer text-[10px] sm:text-[11px]">
               <LayoutGrid className="size-3.5" />
-              <span>Daftar Boards</span>
+              <span>Boards</span>
               <ChevronDown className="size-3 opacity-50" />
             </button>
           </DropdownMenuTrigger>
