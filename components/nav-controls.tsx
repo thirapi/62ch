@@ -33,7 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { logout } from "@/lib/actions/auth.actions";
 
 interface NavControlsProps {
@@ -53,6 +53,13 @@ export function NavControls({ user }: NavControlsProps) {
   const { toggleWatcher, watchedThreads } = useThreadWatcher();
   const router = useRouter();
   const [mounted, setMounted] = useState(false);
+  const [isPending, startTransition] = useTransition();
+
+  const handleRefresh = () => {
+    startTransition(() => {
+      router.refresh();
+    });
+  };
 
   useEffect(() => {
     setMounted(true);
@@ -70,11 +77,11 @@ export function NavControls({ user }: NavControlsProps) {
       <Tooltip>
         <TooltipTrigger asChild>
           <button
-            onClick={() => router.refresh()}
+            onClick={handleRefresh}
             className="opacity-80 hover:opacity-100 transition-opacity cursor-pointer p-0.5"
             title="Segarkan halaman (Refresh)"
           >
-            <RefreshCw className="size-3.5" />
+            <RefreshCw className={cn("size-3.5", isPending && "animate-spin")} />
           </button>
         </TooltipTrigger>
         <TooltipContent side="bottom">Segarkan halaman</TooltipContent>

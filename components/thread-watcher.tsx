@@ -25,6 +25,7 @@ export function ThreadWatcher() {
   } = useThreadWatcher();
   
   const [isMinimized, setIsMinimized] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const [position, setPosition] = useState({ x: 20, y: 80 });
   const [isDragging, setIsDragging] = useState(false);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
@@ -123,10 +124,18 @@ export function ThreadWatcher() {
             variant="ghost"
             size="icon"
             className="h-6 w-6"
-            onClick={() => refresh()}
+            onClick={async () => {
+              setIsRefreshing(true);
+              try {
+                await refresh();
+              } finally {
+                setTimeout(() => setIsRefreshing(false), 500); // Small delay for UX
+              }
+            }}
             title="Refresh"
+            disabled={isRefreshing}
           >
-            <RotateCw className="h-3 w-3" />
+            <RotateCw className={cn("h-3 w-3", isRefreshing && "animate-spin")} />
           </Button>
           <Button
             variant="ghost"
