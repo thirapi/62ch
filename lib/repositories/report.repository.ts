@@ -40,14 +40,8 @@ export class ReportRepository {
     return rows.map((row) => this.mapToEntity(row))
   }
 
-  async findPendingPaged(limit: number, offset: number, boardId?: number): Promise<ReportEntity[]> {
-    const whereClause = boardId 
-      ? sql`status = 'pending' AND (
-          (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND threads.board_id = ${boardId}))
-          OR
-          (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND threads.board_id = ${boardId}))
-        )`
-      : eq(reports.status, "pending")
+  async findPendingPaged(limit: number, offset: number, boardId?: number | number[]): Promise<ReportEntity[]> {
+    const whereClause = this.getBoardFilterSql(boardId, sql`status = 'pending'`)
 
     const rows = await db
       .select()
@@ -57,21 +51,11 @@ export class ReportRepository {
       .limit(limit)
       .offset(offset)
 
-    return rows.map(this.mapToEntity)
+    return rows.map((row) => this.mapToEntity(row))
   }
 
-  async countPending(boardId?: number): Promise<number> {
-    let whereClause = sql`status = 'pending'`
-    
-    if (boardId) {
-      whereClause = sql`
-        status = 'pending' AND (
-          (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND threads.board_id = ${boardId}))
-          OR
-          (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND threads.board_id = ${boardId}))
-        )
-      `
-    }
+  async countPending(boardId?: number | number[]): Promise<number> {
+    const whereClause = this.getBoardFilterSql(boardId, sql`status = 'pending'`)
 
     const [row] = await db
       .select({ count: sql<number>`count(*)` })
@@ -90,14 +74,8 @@ export class ReportRepository {
     return rows.map((row) => this.mapToEntity(row))
   }
 
-  async findResolvedPaged(limit: number, offset: number, boardId?: number): Promise<ReportEntity[]> {
-    const whereClause = boardId 
-      ? sql`status != 'pending' AND (
-          (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND threads.board_id = ${boardId}))
-          OR
-          (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND threads.board_id = ${boardId}))
-        )`
-      : or(eq(reports.status, "resolved"), eq(reports.status, "dismissed"))
+  async findResolvedPaged(limit: number, offset: number, boardId?: number | number[]): Promise<ReportEntity[]> {
+    const whereClause = this.getBoardFilterSql(boardId, sql`status != 'pending'`)
 
     const rows = await db
       .select()
@@ -110,14 +88,8 @@ export class ReportRepository {
     return rows.map((row) => this.mapToEntity(row))
   }
 
-  async countResolved(boardId?: number): Promise<number> {
-    const whereClause = boardId 
-      ? sql`status != 'pending' AND (
-          (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND threads.board_id = ${boardId}))
-          OR
-          (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND threads.board_id = ${boardId}))
-        )`
-      : or(eq(reports.status, "resolved"), eq(reports.status, "dismissed"))
+  async countResolved(boardId?: number | number[]): Promise<number> {
+    const whereClause = this.getBoardFilterSql(boardId, sql`status != 'pending'`)
 
     const result = await db
       .select({ count: sql<number>`cast(count(*) as int)` })
@@ -131,7 +103,11 @@ export class ReportRepository {
     id: number,
     status: "resolved" | "dismissed",
     resolvedBy: string,
+    boardId?: number | number[],
   ): Promise<void> {
+    const baseCondition = eq(reports.id, id);
+    const whereClause = this.getBoardFilterSql(boardId, baseCondition);
+
     await db
       .update(reports)
       .set({
@@ -139,15 +115,19 @@ export class ReportRepository {
         resolvedAt: new Date(),
         resolvedBy,
       })
-      .where(eq(reports.id, id))
+      .where(whereClause)
   }
 
   async updateStatusBulk(
     ids: number[],
     status: "resolved" | "dismissed",
     resolvedBy: string,
+    boardId?: number | number[],
   ): Promise<void> {
     if (ids.length === 0) return
+    const baseCondition = inArray(reports.id, ids);
+    const whereClause = this.getBoardFilterSql(boardId, baseCondition);
+
     await db
       .update(reports)
       .set({
@@ -155,7 +135,7 @@ export class ReportRepository {
         resolvedAt: new Date(),
         resolvedBy,
       })
-      .where(inArray(reports.id, ids))
+      .where(whereClause)
   }
 
   private mapToEntity(row: typeof reports.$inferSelect): ReportEntity {
@@ -169,5 +149,36 @@ export class ReportRepository {
       resolvedAt: row.resolvedAt ?? undefined,
       resolvedBy: row.resolvedBy ?? undefined,
     }
+  }
+
+  private getBoardFilterSql(boardId: number | number[] | undefined, baseCondition: ReturnType<typeof sql>) {
+    if (boardId === undefined) {
+      if (typeof baseCondition === "object" && baseCondition !== null && "queryChunks" in baseCondition) {
+        if ((baseCondition as any).queryChunks[0] === "status != 'pending'") {
+           return or(eq(reports.status, "resolved"), eq(reports.status, "dismissed"));
+        }
+      }
+      return baseCondition; // Used for count queries or basic status
+    }
+
+    if (Array.isArray(boardId)) {
+      if (boardId.length === 0) {
+        return sql`1 = 0`; // No boards to filter = return empty results
+      }
+      
+      const bdCondition = sql`threads.board_id IN (${sql.join(boardId.map(id => sql`${id}`), sql`, `)})`;
+      return sql`${baseCondition} AND (
+        (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND ${bdCondition}))
+        OR
+        (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND ${bdCondition}))
+      )`;
+    }
+
+    // Single boardId logic
+    return sql`${baseCondition} AND (
+      (content_type = 'thread' AND EXISTS (SELECT 1 FROM threads WHERE threads.id = reports.content_id AND threads.board_id = ${boardId}))
+      OR
+      (content_type = 'reply' AND EXISTS (SELECT 1 FROM replies JOIN threads ON replies.thread_id = threads.id WHERE replies.id = reports.content_id AND threads.board_id = ${boardId}))
+    )`;
   }
 }

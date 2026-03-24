@@ -20,6 +20,7 @@ import {
   getBoardList,
 } from "@/lib/actions/home.actions";
 import { cn } from "@/lib/utils";
+import { HistoryDetailDialog } from "@/components/history-detail-dialog";
 
 export const dynamic = "force-dynamic";
 
@@ -45,14 +46,14 @@ export default async function ModHistoryPage({
   return (
     <div className="space-y-10">
       <header className="mb-0">
-        <h1 className="text-3xl font-bold tracking-tight">Riwayat Penanganan</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Daftar laporan yang telah diproses oleh tim moderator
+        <h1 className="text-2xl font-bold tracking-tight">Riwayat Penanganan</h1>
+        <p className="text-xs text-muted-foreground mt-1 mb-4 opacity-70">
+          Daftar laporan yang telah ditindaklanjuti secara permanen
         </p>
       </header>
 
       {/* Board Filter Section */}
-      <section className="bg-card/30 p-4 rounded-xl border border-dashed border-muted-foreground/20">
+      <section className="bg-muted/30 p-4 rounded-xl border border-border/50">
         <ModerationBoardFilter 
           boards={boards as any} 
           selectedBoardCode={boardCode}
@@ -67,7 +68,8 @@ export default async function ModHistoryPage({
               <TableHead className="w-[150px]">Konten</TableHead>
               <TableHead>Alasan / Isi Laporan</TableHead>
               <TableHead className="w-[120px]">Status</TableHead>
-              <TableHead className="text-right">Waktu Penyelesaian</TableHead>
+              <TableHead className="w-[180px]">Waktu</TableHead>
+              <TableHead className="w-[60px]">Aksi</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -76,8 +78,10 @@ export default async function ModHistoryPage({
                 <TableCell className="font-medium text-xs">
                   <div className="flex flex-col gap-1">
                     <div className="flex items-center gap-1.5">
-                       <Badge variant="outline" className="text-[10px] h-4 px-1 uppercase">{report.contentType}</Badge>
-                       {report.boardCode && <Badge variant="secondary" className="text-[10px] h-4 border-none bg-primary/10 text-primary">/{report.boardCode}/</Badge>}
+                       <Badge variant="outline" className="text-[10px] font-medium px-1.5 h-4 rounded-full border-muted-foreground/20">
+                         {report.contentType === "thread" ? "Thread" : "Reply"}
+                       </Badge>
+                       {report.boardCode && <Badge variant="secondary" className="text-[10px] h-4 border-none bg-primary/10 text-primary px-1.5 rounded-full">/{report.boardCode}/</Badge>}
                     </div>
                     <Link 
                        href={`/${report.boardCode || 'all'}/thread/${report.parentThreadId}#p${report.postNumber}`}
@@ -90,11 +94,11 @@ export default async function ModHistoryPage({
                   </div>
                 </TableCell>
                 <TableCell>
-                  <div className="max-w-[400px] space-y-1">
-                    <p className="text-sm font-bold truncate">
+                  <div className="max-w-[400px] py-1 space-y-0.5">
+                    <p className="text-sm font-semibold truncate leading-tight" title={report.reason}>
                       {report.reason}
                     </p>
-                    <p className="text-xs text-muted-foreground line-clamp-1 italic">
+                    <p className="text-[11px] text-muted-foreground line-clamp-1 italic opacity-60 leading-normal" title={report.content}>
                       "{report.content}"
                     </p>
                   </div>
@@ -103,19 +107,22 @@ export default async function ModHistoryPage({
                   <Badge
                     variant="secondary"
                     className={cn(
-                      "text-[10px] font-bold border-none",
+                      "text-[10px] font-medium border-none px-2 rounded-full",
                       report.status === "resolved" 
                         ? "bg-green-500/10 text-green-600 dark:text-green-400" 
-                        : "bg-orange-500/10 text-orange-600 dark:text-orange-400"
+                        : "bg-amber-500/10 text-amber-600 dark:text-amber-400"
                     )}
                   >
-                    {report.status === "resolved" ? "DISETUJUI" : "DIABAIKAN"}
+                    {report.status === "resolved" ? "Disetujui" : "Diabaikan"}
                   </Badge>
                 </TableCell>
-                <TableCell className="text-right text-[11px] text-muted-foreground font-mono">
+                <TableCell className="text-[11px] text-muted-foreground">
                   {report.resolvedAt
                     ? new Date(report.resolvedAt).toLocaleString()
                     : "-"}
+                </TableCell>
+                <TableCell>
+                  <HistoryDetailDialog report={report} />
                 </TableCell>
               </TableRow>
             ))}
@@ -123,9 +130,13 @@ export default async function ModHistoryPage({
               <TableRow>
                 <TableCell
                   colSpan={4}
-                  className="h-40 text-center text-muted-foreground italic"
+                  className="h-64 text-center"
                 >
-                  Belum ada laporan yang diselesaikan di kriteria ini
+                  <div className="flex flex-col items-center justify-center space-y-2 opacity-40">
+                    <CheckCircle className="h-10 w-10 mb-2" />
+                    <p className="text-lg font-semibold">Belum ada riwayat</p>
+                    <p className="text-sm">Silakan selesaikan beberapa laporan terlebih dahulu</p>
+                  </div>
                 </TableCell>
               </TableRow>
             )}

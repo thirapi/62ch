@@ -38,13 +38,25 @@ export class GetResolvedReportsUseCase {
         const { limit = 50, offset = 0, boardId } = options
 
         // Business rule: Check authorization
-        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
-            throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+        if (!user || (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor")) {
+            throw new Error("Unauthorized: Pelaku bukan admin, moderator, atau janitor")
+        }
+
+        let filterBoardId = boardId as number | number[] | undefined;
+        if (user.role === "janitor") {
+            const janitorBoards: number[] = user.janitorBoards || [];
+            if (boardId) {
+                if (!janitorBoards.includes(boardId)) {
+                    return { reports: [], total: 0 }; // No access
+                }
+            } else {
+                filterBoardId = janitorBoards;
+            }
         }
 
         const [reports, total] = await Promise.all([
-            this.reportRepository.findResolvedPaged(limit, offset, boardId),
-            this.reportRepository.countResolved(boardId)
+            this.reportRepository.findResolvedPaged(limit, offset, filterBoardId),
+            this.reportRepository.countResolved(filterBoardId)
         ])
 
         if (reports.length === 0) {

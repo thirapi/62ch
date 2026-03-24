@@ -30,6 +30,7 @@ interface ModActionsProps {
   isLocked?: boolean;
   isPinned?: boolean;
   isBanned?: boolean;
+  onSuccess?: () => void;
 }
 
 export function ModActions({
@@ -40,6 +41,7 @@ export function ModActions({
   isLocked,
   isPinned,
   isBanned,
+  onSuccess,
 }: ModActionsProps) {
   const [isProcessing, setIsProcessing] = useState(false);
   const [isBanDialogOpen, setIsBanDialogOpen] = useState(false);
@@ -117,6 +119,7 @@ export function ModActions({
           title: "Sukses",
           description: "Tindakan berhasil diselesaikan",
         });
+        if (onSuccess) onSuccess();
         router.refresh();
       } else {
         toast({
@@ -234,7 +237,7 @@ export function ModActions({
         Tandai NSFW
       </Button>
 
-      {ipAddress && (
+      {/* {ipAddress && (
         <Button
           variant="destructive"
           size="sm"
@@ -245,7 +248,7 @@ export function ModActions({
           <ShieldAlert className="h-4 w-4 mr-2" />
           Quick Spam (Ban+Del)
         </Button>
-      )}
+      )} */}
 
       {ipAddress && (
         <BanDialog

@@ -5,8 +5,8 @@ export class GetBansUseCase {
 
     async execute(user: any): Promise<BanEntity[]> {
         // Business rule: Check authorization
-        if (!user || (user.role !== "admin" && user.role !== "moderator")) {
-            throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+        if (!user || (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor")) {
+            throw new Error("Unauthorized: Pelaku bukan admin, moderator, atau janitor")
         }
         return await this.banRepository.findAll()
     }

@@ -11,8 +11,8 @@ export class BanUserUseCase {
 
     async execute(user: any, command: BanUserCommand): Promise<void> {
         // Business rule: Check authorization
-        if (!user || user.role !== "admin") {
-            throw new Error("Unauthorized: Hanya Admin yang bisa melakukan ban user")
+        if (!user || (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor")) {
+            throw new Error("Unauthorized: Pelaku bukan admin, moderator, atau janitor")
         }
 
         if (!command.ipAddress) {

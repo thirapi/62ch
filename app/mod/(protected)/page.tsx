@@ -35,17 +35,15 @@ export default async function ModPage({
 
   return (
     <div className="space-y-10">
-      <header className="mb-0 flex flex-col md:flex-row md:items-end justify-between gap-4">
-        <div className="space-y-1">
-          <h1 className="text-3xl font-bold tracking-tight">Antrian Laporan</h1>
-          <p className="text-sm text-muted-foreground">
-            Tinjau dan tindak lanjuti laporan konten yang masuk secara real-time
-          </p>
-        </div>
+      <header className="mb-0">
+        <h1 className="text-2xl font-bold tracking-tight">Antrian Laporan</h1>
+        <p className="text-xs text-muted-foreground mt-1 mb-4 opacity-70">
+          Tinjau dan ambil tindakan terhadap laporan dari pengguna
+        </p>
       </header>
 
       {/* Board Filter Section */}
-      <section className="bg-card/30 p-4 rounded-xl border border-dashed border-muted-foreground/20">
+      <section className="bg-muted/30 p-4 rounded-xl border border-border/50">
         <ModerationBoardFilter 
           boards={boards as any} 
           selectedBoardCode={boardCode}

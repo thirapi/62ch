@@ -22,10 +22,23 @@ export async function getModeratorAuthorizer() {
     throw new Error("Unauthorized: Invalid session")
   }
 
-  if (user.role !== "admin" && user.role !== "moderator") {
+  if (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor") {
     throw new Error("Unauthorized: insufficient permissions")
   }
 
+  const enrichedUser = { ...user, janitorBoards: [] as number[] }
+  if (user.role === "janitor") {
+    enrichedUser.janitorBoards = await container.boardJanitorRepository.getJanitorBoards(user.id)
+  }
+
+  return enrichedUser
+}
+
+export async function getAdminOrModeratorAuthorizer() {
+  const user = await getModeratorAuthorizer()
+  if (user.role === "janitor") {
+    throw new Error("Unauthorized: insufficient permissions")
+  }
   return user
 }
 

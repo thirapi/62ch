@@ -2,13 +2,13 @@
 
 import { container } from "@/lib/di/container"
 import { revalidatePath } from "next/cache"
-import { getModeratorAuthorizer } from "./moderation.actions"
+import { getAdminOrModeratorAuthorizer } from "./moderation.actions"
 
 const { boardCategoryController } = container
 
 export async function getAllCategories() {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     return await boardCategoryController.getCategories()
   } catch (error) {
     console.error("Error fetching categories:", error)
@@ -18,7 +18,7 @@ export async function getAllCategories() {
 
 export async function createCategory(formData: FormData) {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     const name = formData.get("name") as string
     const displayOrderRaw = formData.get("displayOrder")
     const displayOrder = displayOrderRaw ? Number.parseInt(displayOrderRaw as string) : undefined
@@ -39,7 +39,7 @@ export async function createCategory(formData: FormData) {
 
 export async function updateCategory(formData: FormData) {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     const id = Number.parseInt(formData.get("id") as string)
     const name = formData.get("name") as string
     const displayOrder = Number.parseInt(formData.get("displayOrder") as string)
@@ -60,7 +60,7 @@ export async function updateCategory(formData: FormData) {
 
 export async function deleteCategory(id: number) {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     await boardCategoryController.deleteCategory(id)
     revalidatePath("/mod/categories")
     revalidatePath("/mod/boards")
@@ -72,7 +72,7 @@ export async function deleteCategory(id: number) {
 
 export async function reorderCategoryUp(id: number) {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     await boardCategoryController.reorderCategory(id, 'up')
     revalidatePath("/mod/categories")
     return { success: true }
@@ -84,7 +84,7 @@ export async function reorderCategoryUp(id: number) {
 
 export async function reorderCategoryDown(id: number) {
   try {
-    await getModeratorAuthorizer()
+    await getAdminOrModeratorAuthorizer()
     await boardCategoryController.reorderCategory(id, 'down')
     revalidatePath("/mod/categories")
     return { success: true }

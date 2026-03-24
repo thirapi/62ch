@@ -15,6 +15,7 @@ import { Trash2, Edit2, ShieldCheck } from "lucide-react";
 import { unbanUser, updateBan } from "@/lib/actions/moderation.actions";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/navigation";
+import { cn } from "@/lib/utils";
 import {
   Dialog,
   DialogContent,
@@ -64,7 +65,7 @@ export function BanList({ initialBans }: BanListProps) {
     try {
       const result = await unbanUser(banToDelete.ipAddress);
       if (result.success) {
-        toast({ title: "Berhasil", description: "Cekal telah dihapus." });
+        toast({ title: "Berhasil", description: "Blokir telah dihapus." });
         setBanToDelete(null);
         router.refresh();
       } else {
@@ -93,7 +94,7 @@ export function BanList({ initialBans }: BanListProps) {
       const durationHours = editDuration ? Number.parseInt(editDuration) : null;
       const result = await updateBan(editBan.id, editReason, durationHours);
       if (result.success) {
-        toast({ title: "Berhasil", description: "Data cekal diperbarui." });
+        toast({ title: "Berhasil", description: "Data blokir diperbarui." });
         setEditBan(null);
         router.refresh();
       } else {
@@ -121,15 +122,15 @@ export function BanList({ initialBans }: BanListProps) {
   };
 
   return (
-    <div className="rounded-md border bg-card">
+    <div className="rounded-xl border bg-card shadow-sm overflow-hidden">
       <Table>
-        <TableHeader>
+        <TableHeader className="bg-muted/50">
           <TableRow>
-            <TableHead>Alamat IP</TableHead>
+            <TableHead className="w-[180px]">Alamat IP</TableHead>
             <TableHead>Alasan</TableHead>
-            <TableHead>Berakhir Pada</TableHead>
-            <TableHead>Dibuat</TableHead>
-            <TableHead className="text-right">Aksi</TableHead>
+            <TableHead className="w-[200px]">Berakhir</TableHead>
+            <TableHead className="w-[120px]">Dibuat</TableHead>
+            <TableHead className="text-right w-[100px]">Aksi</TableHead>
           </TableRow>
         </TableHeader>
         <TableBody>
@@ -137,11 +138,11 @@ export function BanList({ initialBans }: BanListProps) {
             const isExpired =
               ban.expiresAt && new Date(ban.expiresAt) < new Date();
             return (
-              <TableRow key={ban.id} className={isExpired ? "opacity-50" : ""}>
-                <TableCell className="font-mono font-bold">
+              <TableRow key={ban.id} className={cn("hover:bg-muted/30 transition-colors", isExpired && "opacity-50")}>
+                <TableCell className="font-mono font-semibold text-sm tracking-tight text-primary/80">
                   {ban.ipAddress}
                   {isExpired && (
-                    <Badge variant="outline" className="ml-2 text-[10px]">
+                    <Badge variant="outline" className="ml-2 text-[9px] h-4 rounded-full border-amber-500/20 text-amber-600 bg-amber-500/5">
                       Expired
                     </Badge>
                   )}
@@ -149,21 +150,21 @@ export function BanList({ initialBans }: BanListProps) {
                 <TableCell className="max-w-[200px] truncate">
                   {ban.reason || "-"}
                 </TableCell>
-                <TableCell>
+                <TableCell className="text-xs text-muted-foreground">
                   {ban.expiresAt ? (
-                    <span className="text-xs">
+                    <span>
                       {new Date(ban.expiresAt).toLocaleString()}
                     </span>
                   ) : (
                     <Badge
-                      variant="destructive"
-                      className="bg-red-600/10 text-red-600 border-red-600/20"
+                      variant="secondary"
+                      className="bg-amber-500/10 text-amber-700 dark:text-amber-400 border-none rounded-full px-2 font-medium text-[10px]"
                     >
                       Permanen
                     </Badge>
                   )}
                 </TableCell>
-                <TableCell className="text-xs text-muted-foreground">
+                <TableCell className="text-[11px] text-muted-foreground/60">
                   {new Date(ban.createdAt).toLocaleDateString()}
                 </TableCell>
                 <TableCell className="text-right space-x-2">
@@ -192,9 +193,12 @@ export function BanList({ initialBans }: BanListProps) {
             <TableRow>
               <TableCell
                 colSpan={5}
-                className="h-24 text-center text-muted-foreground italic"
+                className="h-40 text-center"
               >
-                Cekal list kosong.
+                <div className="flex flex-col items-center justify-center space-y-2 opacity-30 italic">
+                  <ShieldCheck className="h-10 w-10 mb-2" />
+                  <p className="text-sm">Tidak ada IP yang sedang diblokir</p>
+                </div>
               </TableCell>
             </TableRow>
           )}
@@ -207,7 +211,7 @@ export function BanList({ initialBans }: BanListProps) {
       >
         <DialogContent>
           <DialogHeader>
-            <DialogTitle>Edit Data Cekal</DialogTitle>
+            <DialogTitle>Edit Data Blokir</DialogTitle>
           </DialogHeader>
           <div className="grid gap-4 py-4">
             <div className="grid gap-2">
@@ -254,11 +258,11 @@ export function BanList({ initialBans }: BanListProps) {
       >
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Hapus Cekal IP?</AlertDialogTitle>
+            <AlertDialogTitle>Buka Blokir IP?</AlertDialogTitle>
             <AlertDialogDescription>
               Tindakan ini akan menghapus IP{" "}
               <strong className="font-mono">{banToDelete?.ipAddress}</strong>{" "}
-              dari daftar cekal. Pengguna tersebut akan dapat memposting
+              dari daftar blokir. Pengguna tersebut akan dapat memposting
               kembali.
             </AlertDialogDescription>
           </AlertDialogHeader>
@@ -272,7 +276,7 @@ export function BanList({ initialBans }: BanListProps) {
               }}
               disabled={isProcessing}
             >
-              {isProcessing ? "Memproses..." : "Hapus Cekal"}
+              {isProcessing ? "Memproses..." : "Buka Blokir"}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

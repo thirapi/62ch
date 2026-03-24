@@ -9,6 +9,8 @@ import { ReportRepository } from "@/lib/repositories/report.repository"
 import { ThreadRepository } from "@/lib/repositories/thread.repository"
 import { BanRepository } from "@/lib/repositories/ban.repository"
 import { BoardCategoryRepository } from "@/lib/repositories/board-category.repository"
+import { BoardJanitorRepository } from "@/lib/repositories/board-janitor.repository"
+import { UserRepository } from "@/lib/repositories/user.repository"
 
 // Services
 import { CloudinaryService } from "@/lib/services/cloudinary.service"
@@ -57,6 +59,11 @@ import { UpdateBoardCategoryUseCase } from "@/lib/use-cases/update-board-categor
 import { DeleteBoardCategoryUseCase } from "@/lib/use-cases/delete-board-category.use-case"
 import { GetBoardCategoriesUseCase } from "@/lib/use-cases/get-board-categories.use-case"
 import { ReorderBoardCategoryUseCase } from "@/lib/use-cases/reorder-board-category.use-case"
+import { GetJanitorsUseCase } from "@/lib/use-cases/get-janitors.use-case"
+import { CreateJanitorUseCase } from "@/lib/use-cases/create-janitor.use-case"
+import { AssignBoardToJanitorUseCase } from "@/lib/use-cases/assign-board-to-janitor.use-case"
+import { UnassignBoardFromJanitorUseCase } from "@/lib/use-cases/unassign-board-from-janitor.use-case"
+import { DeleteJanitorUseCase } from "@/lib/use-cases/delete-janitor.use-case"
 
 // Controllers
 import { HomeController } from "@/lib/controllers/home.controller"
@@ -67,6 +74,7 @@ import { ReplyController } from "@/lib/controllers/reply.controller"
 import { ReportController } from "@/lib/controllers/report.controller"
 import { ThreadController } from "@/lib/controllers/thread.controller"
 import { SeedController } from "@/lib/controllers/seed.controller"
+import { JanitorController } from "@/lib/controllers/janitor.controller"
 import { SequenceService } from "../services/sequence.service"
 
 // Instantiate Repositories
@@ -78,6 +86,8 @@ const reportRepository = new ReportRepository()
 const threadRepository = new ThreadRepository()
 const banRepository = new BanRepository()
 const categoryRepository = new BoardCategoryRepository()
+const boardJanitorRepository = new BoardJanitorRepository()
+const userRepository = new UserRepository()
 
 // Instantiate Services
 const cloudinaryService = new CloudinaryService()
@@ -128,7 +138,7 @@ const replyToThreadUseCase = new ReplyToThreadUseCase(
 )
 
 const resolveReportUseCase = new ResolveReportUseCase(reportRepository)
-const softDeleteReplyUseCase = new SoftDeleteReplyUseCase(replyRepository)
+const softDeleteReplyUseCase = new SoftDeleteReplyUseCase(replyRepository, threadRepository)
 const softDeleteThreadUseCase = new SoftDeleteThreadUseCase(threadRepository)
 const unlockThreadUseCase = new UnlockThreadUseCase(threadRepository)
 const unpinThreadUseCase = new UnpinThreadUseCase(threadRepository)
@@ -154,6 +164,12 @@ const seedBoardLoadTestUseCase = new SeedBoardLoadTestUseCase(
   replyRepository,
   sequenceService
 )
+
+const getJanitorsUseCase = new GetJanitorsUseCase(boardJanitorRepository)
+const createJanitorUseCase = new CreateJanitorUseCase(userRepository, passwordService)
+const assignBoardToJanitorUseCase = new AssignBoardToJanitorUseCase(boardJanitorRepository)
+const unassignBoardFromJanitorUseCase = new UnassignBoardFromJanitorUseCase(boardJanitorRepository)
+const deleteJanitorUseCase = new DeleteJanitorUseCase(userRepository)
 
 // Instantiate Controllers
 const homeController = new HomeController(
@@ -201,6 +217,13 @@ const boardCategoryController = new BoardCategoryController(
   reorderBoardCategoryUseCase
 )
 const seedController = new SeedController(seedBoardLoadTestUseCase)
+const janitorController = new JanitorController(
+  getJanitorsUseCase,
+  createJanitorUseCase,
+  assignBoardToJanitorUseCase,
+  unassignBoardFromJanitorUseCase,
+  deleteJanitorUseCase
+)
 
 // Export container
 export const container = {
@@ -216,4 +239,6 @@ export const container = {
   deletePostWithPasswordUseCase,
   boardRepository, // Export repository for actions
   categoryRepository,
+  boardJanitorRepository,
+  janitorController,
 }

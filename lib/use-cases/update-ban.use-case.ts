@@ -11,8 +11,8 @@ export class UpdateBanUseCase {
 
     async execute(user: any, command: UpdateBanCommand): Promise<void> {
         // Business rule: Check authorization
-        if (!user || user.role !== "admin") {
-            throw new Error("Unauthorized: Hanya Admin yang bisa memperbarui ban")
+        if (!user || (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor")) {
+            throw new Error("Unauthorized: Pelaku bukan admin, moderator, atau janitor")
         }
 
         let expiresAt: Date | null | undefined

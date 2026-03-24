@@ -143,28 +143,28 @@ export function ModerationDashboard({
                 checked={selectedIds.length === initialPendingReports.length && initialPendingReports.length > 0}
                 onCheckedChange={selectAll}
             />
-            <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none">
-              Pilih ({selectedIds.length})
+            <label htmlFor="select-all" className="text-sm font-medium cursor-pointer select-none text-muted-foreground hover:text-foreground transition-colors">
+              Terpilih {selectedIds.length}
             </label>
           </div>
           
-          <div className="h-4 w-px bg-border hidden md:block" />
+          <div className="h-4 w-px bg-border/60 hidden md:block" />
 
-          <div className="flex items-center bg-muted rounded-md p-0.5">
+          <div className="flex items-center bg-muted/50 border border-border/20 rounded-lg p-1">
              <Button 
                 variant={isCompact ? "ghost" : "secondary"} 
-                size="icon-sm" 
+                size="icon" 
                 onClick={() => setIsCompact(false)}
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 title="Tampilan Detail"
              >
                 <LayoutGrid className="h-3.5 w-3.5" />
              </Button>
              <Button 
                 variant={isCompact ? "secondary" : "ghost"} 
-                size="icon-sm" 
+                size="icon" 
                 onClick={() => setIsCompact(true)}
-                className="h-7 w-7"
+                className="h-7 w-7 rounded-md"
                 title="Tampilan Kompak"
              >
                 <LayoutList className="h-3.5 w-3.5" />
@@ -172,13 +172,13 @@ export function ModerationDashboard({
           </div>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-3">
           {selectedIds.length > 0 && (
-            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2">
+            <div className="flex items-center gap-2 animate-in fade-in slide-in-from-right-2 duration-300">
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 border-green-500/50 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20"
+                className="h-8 border-green-500/30 text-green-600 hover:bg-green-50 dark:hover:bg-green-950/20 rounded-full px-4"
                 onClick={() => handleBulkAction("resolve")}
                 disabled={isProcessing}
               >
@@ -188,7 +188,7 @@ export function ModerationDashboard({
               <Button 
                 variant="outline" 
                 size="sm" 
-                className="h-8 border-orange-500/50 text-orange-600 hover:bg-orange-50 dark:hover:bg-orange-950/20"
+                className="h-8 border-amber-500/30 text-amber-600 hover:bg-amber-50 dark:hover:bg-amber-950/20 rounded-full px-4"
                 onClick={() => handleBulkAction("dismiss")}
                 disabled={isProcessing}
               >
@@ -197,8 +197,8 @@ export function ModerationDashboard({
               </Button>
             </div>
           )}
-          <Badge variant="outline" className="ml-2 font-mono">
-             {pendingTotal} Laporan
+          <Badge variant="secondary" className="bg-primary/5 text-primary border-primary/10 px-3 py-1 font-medium">
+             {pendingTotal} Laporan Pending
           </Badge>
         </div>
       </div>
@@ -233,23 +233,23 @@ export function ModerationDashboard({
                  <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-1">
                        <div className="flex items-center gap-2 overflow-hidden">
-                          <Badge 
+                           <Badge 
                             variant="outline" 
                             className={cn(
-                              "text-[9px] uppercase font-black px-1 h-4 border-muted-foreground/30",
-                              activeReportId === report.id ? "text-primary border-primary/30" : "text-muted-foreground"
+                              "text-[10px] font-medium px-2 h-4 rounded-full border-muted-foreground/20",
+                              activeReportId === report.id ? "text-primary border-primary/20 bg-primary/5" : "text-muted-foreground"
                             )}
                           >
-                            {report.contentType}
+                            {report.contentType === "thread" ? "Thread" : "Reply"}
                           </Badge>
                           <span className={cn(
-                            "text-[11px] font-mono",
-                            activeReportId === report.id ? "text-primary/70" : "text-muted-foreground"
+                            "text-[11px] font-mono opacity-60",
+                            activeReportId === report.id ? "text-primary" : "text-muted-foreground"
                           )}>
-                            #{report.contentId}
+                            ID {report.contentId}
                           </span>
                           {report.reason.includes("[AI DETECTION]") && (
-                            <Badge variant="outline" className="text-[9px] h-4 bg-orange-500/10 text-orange-600 border-orange-500/30 gap-1 px-1">
+                            <Badge variant="outline" className="text-[10px] h-4 bg-amber-500/5 text-amber-600 border-amber-500/20 gap-1 px-2 rounded-full font-medium">
                               <Bot className="h-2.5 w-2.5" /> AI
                             </Badge>
                           )}
@@ -258,12 +258,12 @@ export function ModerationDashboard({
                             <Badge variant="secondary" className="text-[10px] h-4 bg-primary/10 text-primary border-none">/{report.boardCode}/</Badge>
                           )}
                        </div>
-                       <span className={cn(
-                         "text-[10px] whitespace-nowrap",
-                         activeReportId === report.id ? "text-primary/70" : "text-muted-foreground"
-                       )}>
-                         {new Date(report.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                       </span>
+                        <span className={cn(
+                          "text-[10px] whitespace-nowrap opacity-60",
+                          activeReportId === report.id ? "text-primary" : "text-muted-foreground"
+                        )}>
+                          {new Date(report.reportedAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </span>
                     </div>
 
 
@@ -298,10 +298,12 @@ export function ModerationDashboard({
           ))}
 
           {initialPendingReports.length === 0 && (
-            <div className="py-20 text-center text-muted-foreground border-2 border-dashed rounded-xl">
-              <MessageSquare className="h-10 w-10 mx-auto mb-3 opacity-20" />
-              <p className="text-lg font-medium opacity-50">Antrian Bersih!</p>
-              <p className="text-sm opacity-40">Tidak ada laporan yang perlu ditangani saat ini.</p>
+            <div className="py-24 text-center text-muted-foreground border border-dashed rounded-2xl bg-muted/10">
+              <div className="bg-muted/40 h-16 w-16 rounded-full flex items-center justify-center mx-auto mb-4 border border-border/40">
+                <MessageSquare className="h-8 w-8 opacity-20" />
+              </div>
+              <p className="text-xl font-semibold tracking-tight text-foreground/80">Antrian Kosong</p>
+              <p className="text-sm opacity-60 mt-1 max-w-[250px] mx-auto">Semua laporan telah diselesaikan. Kerja bagus!</p>
             </div>
           )}
 
@@ -344,23 +346,26 @@ export function ModerationDashboard({
         {/* Action Panel (Split View) */}
         {activeReportId && activeReport && (
           <div className="sticky top-24 h-[calc(100vh-120px)] animate-in slide-in-from-right-4 duration-300">
-             <Card className="h-full flex flex-col shadow-2xl border-primary/20">
-                <CardHeader className="pb-3 border-b bg-muted/30">
-                   <div className="flex items-center justify-between">
-                      <CardTitle className="text-lg flex items-center gap-2">
-                         Detail Laporan
-                         <Badge variant="outline">#{activeReport.id}</Badge>
-                      </CardTitle>
-                      <Button variant="ghost" size="icon-sm" onClick={() => setActiveReportId(null)}>
-                         <XCircle className="h-4 w-4" />
-                      </Button>
+             <Card className="max-h-full flex flex-col shadow-2xl border-primary/20 p-0 overflow-hidden gap-0">
+                <div className="flex items-center justify-between h-12 px-4 border-b bg-muted/30">
+                   <div className="flex items-center gap-2">
+                      <span className="text-sm font-semibold tracking-tight">Detail Laporan</span>
+                      <Badge variant="secondary" className="text-[10px] h-4 px-1.5 font-mono opacity-70">#{activeReport.id}</Badge>
                    </div>
-                </CardHeader>
-                <CardContent className="flex-1 overflow-y-auto pt-6 space-y-6">
+                   <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-7 w-7 rounded-full hover:bg-background shadow-none" 
+                      onClick={() => setActiveReportId(null)}
+                   >
+                      <XCircle className="h-4 w-4 text-muted-foreground/60" />
+                   </Button>
+                </div>
+                <CardContent className="flex-1 overflow-y-auto pt-4 space-y-5">
                    {/* Context & Content */}
                    <section>
-                      <h4 className="text-[10px] uppercase font-black text-muted-foreground mb-3 flex items-center">
-                        <MessageSquare className="h-3 w-3 mr-1" /> Konten Dilaporkan
+                      <h4 className="text-xs font-semibold text-muted-foreground/80 mb-3 flex items-center gap-2">
+                        <MessageSquare className="h-3.5 w-3.5" /> Konten yang dilaporkan
                       </h4>
                       <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
                          {activeReport.image && (
@@ -380,9 +385,9 @@ export function ModerationDashboard({
                               {activeReport.content}
                             </p>
                          </div>
-                         <div className="pt-2 flex items-center justify-between border-t border-muted-foreground/10 text-[10px] text-muted-foreground italic">
-                            <span>Author: {activeReport.author}</span>
-                            <span>ID Post: {activeReport.postNumber}</span>
+                         <div className="pt-3 flex items-center gap-4 border-t border-border/30 text-[10px] text-muted-foreground font-medium">
+                            <span className="bg-muted px-2 py-0.5 rounded">Penulis: {activeReport.author}</span>
+                            <span className="bg-muted px-2 py-0.5 rounded">ID: {activeReport.postNumber}</span>
                          </div>
                       </div>
                       <Link 
@@ -396,27 +401,27 @@ export function ModerationDashboard({
 
                    {/* User Info */}
                    <section>
-                      <h4 className="text-[10px] uppercase font-black text-muted-foreground mb-2 flex items-center">
-                        <History className="h-3 w-3 mr-1" /> Metadata Pelaku
+                      <h4 className="text-xs font-semibold text-muted-foreground/80 mb-3 flex items-center gap-2">
+                        <History className="h-3.5 w-3.5" /> Metadata Konten
                       </h4>
                       <div className="grid grid-cols-2 gap-2">
-                         <div className="bg-muted/50 p-2 rounded border border-muted-foreground/10">
-                            <span className="block text-[9px] text-muted-foreground uppercase">IP Address</span>
-                            <span className="text-xs font-mono font-bold">{activeReport.ipAddress || "Unknown"}</span>
-                         </div>
-                         <div className="bg-muted/50 p-2 rounded border border-muted-foreground/10">
-                            <span className="block text-[9px] text-muted-foreground uppercase">Status Ban</span>
-                            <Badge variant={activeReport.isBanned ? "destructive" : "secondary"} className="text-[10px] h-4 mt-0.5">
-                              {activeReport.isBanned ? "Sedang Diblokir" : "Aktif"}
+                          <div className="bg-muted/30 p-3 rounded-xl border border-border/40">
+                            <span className="block text-[10px] text-muted-foreground font-medium mb-1">IP Address</span>
+                            <span className="text-xs font-mono font-bold tracking-tight">{activeReport.ipAddress || "Unknown"}</span>
+                          </div>
+                          <div className="bg-muted/30 p-3 rounded-xl border border-border/40">
+                            <span className="block text-[10px] text-muted-foreground font-medium mb-1">Status Cekal</span>
+                            <Badge variant={activeReport.isBanned ? "destructive" : "secondary"} className="text-[10px] font-medium px-2 h-5 rounded-full">
+                              {activeReport.isBanned ? "Terblokir" : "Aktif"}
                             </Badge>
-                         </div>
+                          </div>
                       </div>
                    </section>
 
                    {/* Quick Actions Integration */}
-                   <section className="pt-4 border-t sticky bottom-0 bg-card pb-4">
-                      <h4 className="text-[10px] uppercase font-black text-muted-foreground mb-3 flex items-center">
-                        <ShieldAlert className="h-3 w-3 mr-1" /> Kendali Moderasi
+                   <section className="pt-4 border-t sticky bottom-0 bg-card pb-3">
+                      <h4 className="text-xs font-semibold text-muted-foreground/80 mb-4 flex items-center gap-2">
+                        <ShieldAlert className="h-3.5 w-3.5" /> Kendali Moderasi
                       </h4>
                       <ModActions
                         reportId={activeReport.id}
@@ -426,6 +431,9 @@ export function ModerationDashboard({
                         isLocked={activeReport.isLocked}
                         isPinned={activeReport.isPinned}
                         isBanned={activeReport.isBanned}
+                        onSuccess={() => {
+                          setActiveReportId(null);
+                        }}
                       />
                    </section>
                 </CardContent>

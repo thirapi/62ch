@@ -28,7 +28,7 @@ declare module "lucia" {
 	}
 
 	interface DatabaseUserAttributes {
-		role: "admin" | "moderator";
+		role: "admin" | "moderator" | "janitor";
 		email: string;
 	}
 }
