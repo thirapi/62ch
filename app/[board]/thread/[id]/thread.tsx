@@ -21,6 +21,8 @@ import { useThreadWatcher } from "@/components/thread-watcher-provider";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
+import { useHiding } from "@/hooks/use-hiding";
+import { X, Plus } from "lucide-react";
 
 interface ThreadClientProps {
   thread: ThreadUI;
@@ -41,6 +43,7 @@ export function ThreadClient({
   const router = useRouter();
   const { state, setContent } = useReply();
   const { watchedThreads, watchThread, unwatchThread, markAsRead } = useThreadWatcher();
+  const { isThreadHidden, isReplyHidden, hideThread, hideReply, unhideThread, unhideReply, isLoaded } = useHiding();
 
   const isWatched = watchedThreads.some(t => t.id === thread.id);
 
@@ -236,69 +239,100 @@ export function ThreadClient({
 
       {/* Replies */}
       <div className="space-y-4 mb-12 ml-0 sm:ml-8 lg:ml-12 border-l-2 border-muted/10 pl-4 sm:pl-8">
-        {replies.map((reply) => (
-          <div
-            key={reply.id}
-            id={`p${reply.postNumber}`}
-            className={`ib-reply border border-muted/20 shadow-sm relative group w-fit max-w-full ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
-          >
-            <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
-              {reply.isDeleted && (
-                <span className="text-[10px] bg-red-500/10 text-red-500 px-1 mr-1 rounded font-bold border border-red-500/20">
-                  DIHAPUS
-                </span>
-              )}
-              <div className="flex items-baseline gap-1">
-                <TripcodeDisplay
-                  author={reply.author || "Awanama"}
-                  className="ib-author"
-                  hideTrip={!!reply.capcode}
-                />
-                <CapcodeMarker type={reply.capcode} />
-              </div>
-              {reply.posterId && (
-                <span className="text-[10px] bg-muted px-1 rounded text-muted-foreground ml-1 font-mono">
-                  ID: {reply.posterId}
-                </span>
-              )}
-              <span className="text-muted-foreground opacity-70 text-xs">
-                <FormattedDate date={reply.createdAt} />
-              </span>
-              <span
-                className="ib-post-number font-bold cursor-pointer hover:underline"
-                onClick={() => handleQuote(reply.postNumber)}
+        {replies.map((reply) => {
+          const hidden = isLoaded && isReplyHidden(reply.id);
+          
+          if (hidden) {
+            return (
+              <div 
+                key={reply.id} 
+                className="ib-reply border border-muted/20 shadow-sm w-fit max-w-full"
               >
-                No.{reply.postNumber}
-              </span>
+                <div className="px-2 bg-muted/5 flex items-center gap-1 text-[10px] text-muted-foreground opacity-80">
+                  <button 
+                    onClick={() => unhideReply(reply.id)}
+                    className="hover:underline font-bold"
+                    title="Tampilkan kembali"
+                  >
+                    <span>[Tampilkan Balasan No.{reply.postNumber}]</span>
+                  </button>
+                </div>
+              </div>
+            );
+          }
 
-              <div className="flex items-center gap-1 ml-auto opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
-                <DeletePostButton
-                  postId={reply.id}
-                  postType="reply"
-                  boardCode={boardCode}
-                />
-                <ReportButton contentType="reply" contentId={reply.id} />
+          return (
+            <div
+              key={reply.id}
+              id={`p${reply.postNumber}`}
+              className={`ib-reply border border-muted/20 shadow-sm relative group w-fit max-w-full ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
+            >
+              <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
+                {reply.isDeleted && (
+                  <span className="text-[10px] bg-red-500/10 text-red-500 px-1 mr-1 rounded font-bold border border-red-500/20">
+                    DIHAPUS
+                  </span>
+                )}
+                <div className="flex items-baseline gap-1">
+                  <TripcodeDisplay
+                    author={reply.author || "Awanama"}
+                    className="ib-author"
+                    hideTrip={!!reply.capcode}
+                  />
+                  <CapcodeMarker type={reply.capcode} />
+                </div>
+                {reply.posterId && (
+                  <span className="text-[10px] bg-muted px-1 rounded text-muted-foreground ml-1 font-mono">
+                    ID: {reply.posterId}
+                  </span>
+                )}
+                <span className="text-muted-foreground opacity-70 text-xs">
+                  <FormattedDate date={reply.createdAt} />
+                </span>
+                <span
+                  className="ib-post-number font-bold cursor-pointer hover:underline"
+                  onClick={() => handleQuote(reply.postNumber)}
+                >
+                  No.{reply.postNumber}
+                </span>
+
+                <button
+                  onClick={() => hideReply(reply.id)}
+                  className="text-[11px] hover:underline flex items-center gap-1 text-muted-foreground ml-1 opacity-100 lg:opacity-0 lg:group-hover:opacity-100"
+                  title="Sembunyikan post"
+                >
+                  [X]
+                </button>
+
+                <div className="flex items-center gap-1 ml-auto opacity-100 lg:opacity-0 lg:group-hover:opacity-100 transition-opacity">
+                  <DeletePostButton
+                    postId={reply.id}
+                    postType="reply"
+                    boardCode={boardCode}
+                  />
+                  <ReportButton contentType="reply" contentId={reply.id} />
+                </div>
+              </div>
+
+              <div className="p-3 block overflow-hidden">
+                {reply.image && (
+                  <ExpandableImage
+                    src={reply.image}
+                    alt="Reply image"
+                    metadata={reply.imageMetadata || undefined}
+                    isNsfw={reply.isNsfw}
+                    isSpoiler={reply.isSpoiler}
+                    onFullScreen={() => handleImageClick(reply.image!)}
+                  />
+                )}
+                <div className="whitespace-pre-wrap break-words leading-relaxed text-sm lg:text-base">
+                  <FormattedText content={reply.content} />
+                  <Backlinks links={getBacklinks(reply.postNumber)} />
+                </div>
               </div>
             </div>
-
-            <div className="p-3 block overflow-hidden">
-              {reply.image && (
-                <ExpandableImage
-                  src={reply.image}
-                  alt="Reply image"
-                  metadata={reply.imageMetadata || undefined}
-                  isNsfw={reply.isNsfw}
-                  isSpoiler={reply.isSpoiler}
-                  onFullScreen={() => handleImageClick(reply.image!)}
-                />
-              )}
-              <div className="whitespace-pre-wrap break-words leading-relaxed text-sm lg:text-base">
-                <FormattedText content={reply.content} />
-                <Backlinks links={getBacklinks(reply.postNumber)} />
-              </div>
-            </div>
-          </div>
-        ))}
+          );
+        })}
 
         {replies.length === 0 && (
           <div className="py-12 text-center text-muted-foreground italic border border-dashed rounded-lg">
