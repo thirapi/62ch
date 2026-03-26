@@ -153,7 +153,9 @@ export default function RootLayout({
               <TooltipProvider>
                 <ThreadWatcherProvider>
                   <BoardNav />
-                  {children}
+                  <div className="flex-1 w-full overflow-x-clip min-h-0">
+                    {children}
+                  </div>
                   <Toaster />
                   <SonnerToaster />
                   <ThreadWatcher />

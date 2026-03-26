@@ -281,7 +281,10 @@ function PostQuote({
           </Link>
         )}
       </HoverCardTrigger>
-      <HoverCardContent className="w-[calc(100vw-2rem)] sm:w-80 p-0 overflow-hidden border-accent/20 bg-card shadow-xl">
+      <HoverCardContent 
+        className="w-[calc(100vw-1rem)] sm:w-80 p-0 overflow-hidden border-accent/20 bg-card shadow-xl"
+        collisionPadding={10}
+      >
         {isLoading ? (
           <div className="p-4 text-xs text-muted-foreground animate-pulse">
             Memuat post...

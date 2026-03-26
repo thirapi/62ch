@@ -243,7 +243,7 @@ export function ThreadClient({
             return (
               <div 
                 key={reply.id} 
-                className="ib-reply border border-muted/20 shadow-sm table max-w-none"
+                className="ib-reply border border-muted/20 shadow-sm sm:table block w-fit max-w-full"
               >
                 <div className="px-2 bg-muted/5 flex items-center gap-1 text-[10px] text-muted-foreground opacity-80">
                   <button 
@@ -259,14 +259,14 @@ export function ThreadClient({
           }
 
           return (
-            <div className="flex items-start gap-1">
+            <div key={reply.id} className="flex items-start gap-1">
               <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
                 &gt;&gt;
               </span>
               <div
                 key={reply.id}
                 id={`p${reply.postNumber}`}
-                className={`ib-reply border border-muted/20 shadow-sm relative group table max-w-none ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
+                className={`ib-reply border border-muted/20 shadow-sm relative group sm:table block w-fit max-w-full ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
               >
                 <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
                   {reply.isDeleted && (
@@ -332,7 +332,7 @@ export function ThreadClient({
             <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
               &gt;&gt;
             </span>
-            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 rounded-lg table max-w-none">
+            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 rounded-lg sm:table block w-fit max-w-full">
               Belum ada balasan. Jadilah yang pertama memberikan tanggapan!
             </div>
           </div>

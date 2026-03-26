@@ -134,7 +134,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground min-h-screen flex flex-col;
   }
 }
 
@@ -173,7 +173,7 @@
   }
 
   .ib-reply {
-    @apply bg-muted/20 border-l-2 border-muted pl-4 py-2 my-2 rounded-r-md max-w-4xl min-w-[300px];
+    @apply bg-muted/20 border-l border-muted pl-3 sm:pl-4 py-2 my-1 sm:my-2 rounded-r-md max-w-full sm:max-w-4xl min-w-0 sm:min-w-[300px];
     background-color: color-mix(in oklch, var(--muted), transparent 40%);
   }
 

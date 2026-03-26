@@ -54,7 +54,7 @@ export function ScrollButtons() {
   if (!showTop && !showBottom) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-[90] flex flex-col gap-2 opacity-80 hover:opacity-100 transition-opacity focus-within:opacity-100 duration-300 pointer-events-none">
+    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-[90] flex flex-col gap-2 opacity-80 hover:opacity-100 transition-opacity focus-within:opacity-100 duration-300 pointer-events-none">
       <div className="pointer-events-auto flex flex-col gap-2">
         {showTop && (
           <Button
