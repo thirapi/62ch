@@ -134,7 +134,7 @@ export default async function ThreadPage({
         </div>
       </header>
 
-      <main className="mx-auto px-4 md:px-8 py-8 w-full max-w-6xl">
+      <main className="mx-auto px-4 md:px-8 py-8 w-full max-w-none">
         <ThreadPageWrapper
           thread={thread}
           replies={replies || []}

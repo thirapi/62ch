@@ -112,7 +112,7 @@ export function ExpandableImage({
                 "float-left mr-4 mb-2",
                 isOP
                   ? "max-w-[200px] sm:max-w-[300px]"
-                  : "max-w-[150px] sm:max-w-[250px]",
+                  : "max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px]",
               ),
         )}
         onClick={() => setIsExpanded(!isExpanded)}
@@ -121,7 +121,7 @@ export function ExpandableImage({
           src={
             isExpanded
               ? src
-              : getThumbnailUrl(src, isOP ? 300 : 250, isOP ? 300 : 250, "fit", !autoPlayGif)
+              : getThumbnailUrl(src, isOP ? 300 : 180, isOP ? 300 : 180, "fit", !autoPlayGif)
           }
           alt={alt}
           className={cn(
@@ -133,7 +133,7 @@ export function ExpandableImage({
                   "object-contain",
                   isOP
                     ? "max-w-[200px] max-h-[200px] sm:max-w-[300px] sm:max-h-[300px]"
-                    : "max-w-[150px] max-h-[150px] sm:max-w-[250px] sm:max-h-[250px]",
+                    : "max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px]",
                 ),
           )}
         />

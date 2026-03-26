@@ -218,7 +218,7 @@ export function ThreadClient({
           </div>
         </div>
 
-        <div className="mt-4 block overflow-hidden">
+        <div className="mt-4 block">
           {thread.image && (
             <ExpandableImage
               src={thread.image}
@@ -238,7 +238,7 @@ export function ThreadClient({
       </div>
 
       {/* Replies */}
-      <div className="space-y-4 mb-12 ml-0 sm:ml-8 lg:ml-12 border-l-2 border-muted/10 pl-4 sm:pl-8">
+      <div className="space-y-4 mb-12">
         {replies.map((reply) => {
           const hidden = isLoaded && isReplyHidden(reply.id);
           
@@ -246,7 +246,7 @@ export function ThreadClient({
             return (
               <div 
                 key={reply.id} 
-                className="ib-reply border border-muted/20 shadow-sm w-fit max-w-full"
+                className="ib-reply border border-muted/20 shadow-sm table max-w-none"
               >
                 <div className="px-2 bg-muted/5 flex items-center gap-1 text-[10px] text-muted-foreground opacity-80">
                   <button 
@@ -265,7 +265,7 @@ export function ThreadClient({
             <div
               key={reply.id}
               id={`p${reply.postNumber}`}
-              className={`ib-reply border border-muted/20 shadow-sm relative group w-fit max-w-full ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
+              className={`ib-reply border border-muted/20 shadow-sm relative group table max-w-none ${reply.isDeleted ? 'opacity-70 grayscale-[50%]' : ''}`}
             >
               <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
                 {reply.isDeleted && (

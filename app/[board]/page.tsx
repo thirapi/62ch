@@ -173,7 +173,7 @@ export default async function BoardPage({
           "mx-auto pb-2 flex-1 w-full",
           isCatalog
             ? "px-6 md:px-12 lg:px-20 max-w-none"
-            : "px-4 md:px-8 max-w-6xl",
+            : "px-4 md:px-8 max-w-none",
         )}
       >
         <div className="flex flex-col items-center mb-12">

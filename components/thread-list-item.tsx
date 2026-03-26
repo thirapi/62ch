@@ -117,7 +117,7 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
       </div>
 
       {/* Content area */}
-      <div className="mt-2 block overflow-hidden">
+      <div className="mt-2 block">
         {thread.image && (
           <ExpandableImage
             src={thread.image}
@@ -132,8 +132,56 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
           <FormattedText content={thread.content} />
         </div>
 
+        {/* Reply Previews - Moved inside to allow flow around OP image */}
+        {thread.replies && thread.replies.length > 0 && (
+          <div className="mt-4 space-y-3">
+            {thread.replies
+              .slice()
+              .reverse()
+              .slice(0, 3)
+              .reverse()
+              .map((reply: any) => (
+                <div
+                  key={reply.id}
+                  className="ib-reply shadow-sm border border-muted/20 table max-w-none"
+                >
+                  <div className="ib-post-metaline text-xs px-2 pt-1 border-b border-muted/5 bg-muted/5">
+                    <div className="flex items-baseline gap-1">
+                      <TripcodeDisplay
+                        author={reply.author || "Awanama"}
+                        className="ib-author"
+                        hideTrip={!!reply.capcode}
+                      />
+                      <CapcodeMarker type={reply.capcode} />
+                    </div>
+                    <span className="text-muted-foreground opacity-70">
+                      <FormattedDate date={reply.createdAt} />
+                    </span>
+                    <span className="ib-post-number opacity-80">
+                      No.{reply.postNumber}
+                    </span>
+                  </div>
+                  <div className="p-2 block overflow-hidden">
+                    {reply.image && (
+                      <ExpandableImage
+                        src={reply.image}
+                        alt="Reply thumbnail"
+                        metadata={reply.imageMetadata || undefined}
+                        isNsfw={reply.isNsfw}
+                        isSpoiler={reply.isSpoiler}
+                      />
+                    )}
+                    <div className="text-sm leading-snug">
+                      <FormattedText content={reply.content} />
+                    </div>
+                  </div>
+                </div>
+              ))}
+          </div>
+        )}
+
         {thread.replyCount > (thread.replies?.length || 0) && (
-          <div className="mt-4 text-xs text-muted-foreground italic clear-both">
+          <div className="mt-4 text-xs text-muted-foreground italic lg:clear-none clear-both">
             {thread.replyCount - (thread.replies?.length || 0)}{" "}
             balasan diabaikan.
             <Link
@@ -144,55 +192,8 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
             </Link>
           </div>
         )}
+        <div className="clear-both" />
       </div>
-
-      {/* Reply Previews */}
-      {thread.replies && thread.replies.length > 0 && (
-        <div className="mt-4 space-y-3 ml-4 sm:ml-12 max-w-5xl">
-          {thread.replies
-            .slice()
-            .reverse()
-            .slice(0, 3)
-            .reverse()
-            .map((reply: any) => (
-              <div
-                key={reply.id}
-                className="ib-reply shadow-sm border border-muted/20 w-fit max-w-full"
-              >
-                <div className="ib-post-metaline text-xs px-2 pt-1 border-b border-muted/5 bg-muted/5">
-                  <div className="flex items-baseline gap-1">
-                    <TripcodeDisplay
-                      author={reply.author || "Awanama"}
-                      className="ib-author"
-                      hideTrip={!!reply.capcode}
-                    />
-                    <CapcodeMarker type={reply.capcode} />
-                  </div>
-                  <span className="text-muted-foreground opacity-70">
-                    <FormattedDate date={reply.createdAt} />
-                  </span>
-                  <span className="ib-post-number opacity-80">
-                    No.{reply.postNumber}
-                  </span>
-                </div>
-                <div className="p-2 block overflow-hidden">
-                  {reply.image && (
-                    <ExpandableImage
-                      src={reply.image}
-                      alt="Reply thumbnail"
-                      metadata={reply.imageMetadata || undefined}
-                      isNsfw={reply.isNsfw}
-                      isSpoiler={reply.isSpoiler}
-                    />
-                  )}
-                  <div className="text-sm leading-snug">
-                    <FormattedText content={reply.content} />
-                  </div>
-                </div>
-              </div>
-            ))}
-        </div>
-      )}
     </div>
   );
 }

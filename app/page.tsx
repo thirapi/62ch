@@ -71,11 +71,11 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-<header
-  className="relative py-12 text-center overflow-hidden 
+      <header
+        className="relative py-12 text-center overflow-hidden 
              bg-gradient-to-b from-accent/15 to-transparent 
              dark:from-accent/5 dark:to-transparent"
->
+      >
         <div className="container mx-auto px-4 relative">
           <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
             62
