@@ -116,9 +116,15 @@
   --color-sidebar-ring: var(--sidebar-ring);
 
   @keyframes marquee {
-    from { transform: translateX(0); }
-    to { transform: translateX(-50%); }
+    from {
+      transform: translateX(0);
+    }
+
+    to {
+      transform: translateX(-50%);
+    }
   }
+
   --animate-marquee: marquee 25s linear infinite;
 }
 
@@ -126,6 +132,7 @@
   * {
     @apply border-border outline-ring/50;
   }
+
   body {
     @apply bg-background text-foreground;
   }
@@ -175,12 +182,22 @@
   }
 
   .custom-scrollbar {
-    scrollbar-width: thin;
-    scrollbar-color: var(--muted-foreground) transparent;
+    -ms-overflow-style: none;
   }
 
   .custom-scrollbar::-webkit-scrollbar {
-    width: 6px;
+    width: 5px;
+    height: 5px;
+  }
+
+  .custom-scrollbar::-webkit-scrollbar-button,
+  .custom-scrollbar::-webkit-scrollbar-button:start,
+  .custom-scrollbar::-webkit-scrollbar-button:end,
+  .custom-scrollbar::-webkit-scrollbar-button:vertical:increment,
+  .custom-scrollbar::-webkit-scrollbar-button:vertical:decrement {
+    display: none !important;
+    height: 0 !important;
+    width: 0 !important;
   }
 
   .custom-scrollbar::-webkit-scrollbar-track {
@@ -188,8 +205,7 @@
   }
 
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background-color: var(--muted-foreground);
+    background-color: color-mix(in oklch, var(--muted-foreground), transparent 55%);
     border-radius: 20px;
-    opacity: 0.5;
   }
 }

@@ -9,19 +9,22 @@ import { ThreadPreview } from "@/components/thread-preview"
 
 interface LatestPostsProps {
   initialPosts: LatestPostEntity[]
+  isMobile: boolean
 }
 
-export function LatestPosts({ initialPosts }: LatestPostsProps) {
+export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
   const [posts, setPosts] = useState<LatestPostEntity[]>(initialPosts)
   const [isLoading, setIsLoading] = useState(false)
-  const [hasMore, setHasMore] = useState(initialPosts.length >= 10) // Assume limit is 10
+  
+  const LIMIT = isMobile ? 10 : 15
+  const [hasMore, setHasMore] = useState(initialPosts.length >= LIMIT)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadingIndicatorRef = useRef<HTMLDivElement | null>(null)
 
   // Update state when initialPosts changes (e.g. from router.refresh())
   useEffect(() => {
     setPosts(initialPosts)
-    setHasMore(initialPosts.length >= 10)
+    setHasMore(initialPosts.length >= LIMIT)
   }, [initialPosts])
 
   const loadMore = useCallback(async () => {
@@ -38,7 +41,7 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
       
       if (newPosts && newPosts.length > 0) {
         setPosts((prev) => [...prev, ...newPosts])
-        setHasMore(newPosts.length === 10)
+        setHasMore(newPosts.length === LIMIT)
       } else {
         setHasMore(false)
       }
@@ -79,11 +82,12 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
 
   return (
     <section className="lg:col-span-5 flex flex-col h-full">
-      <h2 className="text-lg font-bold mb-3 text-accent border-b pb-1">
+      <h2 className="text-lg font-semibold mb-3 text-accent border-b pb-1">
         Postingan Terbaru
       </h2>
       
-      <div className="space-y-2 flex-col flex flex-1 overflow-y-auto max-h-[600px] pr-2 custom-scrollbar">
+      <div className="relative flex-1">
+        <div className="space-y-0.5 flex-col flex overflow-y-auto max-h-[440px] sm:max-h-[642px] pr-2 custom-scrollbar">
 
         {posts.map((post) => (
           <ThreadPreview
@@ -98,18 +102,18 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
             <Link
               key={`latest-${post.id}-${post.type}`}
               href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
-              className="block text-sm hover:bg-accent/5 p-2 rounded transition-colors w-full"
+              className="block text-sm hover:bg-accent/5 px-2 py-0.5 rounded transition-colors w-full"
             >
               <div className="flex items-start justify-between gap-2">
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium truncate text-xs">
+                  <div className="font-medium truncate text-[11px] leading-tight">
                     {post.title || (
                       <span className="text-muted-foreground italic">
                         {post.type === "thread" ? "Utas" : "Balasan"}
                       </span>
                     )}
                   </div>
-                  <div className="text-xs text-muted-foreground line-clamp-2 mt-0.5">
+                  <div className="text-[11px] text-muted-foreground line-clamp-2 leading-snug mt-0.5">
                     <FormattedText content={post.excerpt} preview />
                   </div>
                 </div>
@@ -138,6 +142,10 @@ export function LatestPosts({ initialPosts }: LatestPostsProps) {
             [ Akhir dari postingan terbaru ]
           </div>
         )}
+        </div>
+
+        {/* Fade gradient hint */}
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent" />
       </div>
     </section>
   )
