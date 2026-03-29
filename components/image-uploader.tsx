@@ -120,7 +120,7 @@ export function ImageUploader({
               <div className="text-sm text-center">
                 <span className="font-medium">Klik untuk mengunggah</span>
                 <p className="text-xs mt-1">
-                  PNG, JPG, GIF hingga {maxSizeMB}MB
+                  PNG, JPG, GIF, WebP hingga {maxSizeMB}MB
                 </p>
               </div>
             </button>
