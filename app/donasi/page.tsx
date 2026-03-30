@@ -4,6 +4,9 @@ import { formatCurrency } from "@/lib/utils";
 export const metadata: Metadata = {
   title: "Donasi",
   description: "Dukung operasional 62chan dan pantau milestone donasi kami.",
+  alternates: {
+    canonical: "https://62chan.qzz.io/donasi",
+  },
 };
 
 interface Milestone {

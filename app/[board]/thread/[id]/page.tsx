@@ -58,9 +58,14 @@ export async function generateMetadata({
     .replace(/\n/g, " ")
     .replace(/>/g, "");
 
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "");
+
   return {
     title: `${title} - /${boardCode}/`,
     description: cleanDescription,
+    alternates: {
+      canonical: `${baseUrl}/${boardCode}/thread/${id}`,
+    },
     openGraph: {
       title: `${title} | /${boardCode}/ | 62chan`,
       description: cleanDescription,
@@ -111,8 +116,83 @@ export default async function ThreadPage({
     notFound();
   }
 
+  const title =
+    thread.subject ||
+    thread.content.substring(0, 50).replace(/\n/g, " ") + "...";
+  const cleanDescription = thread.content
+    .substring(0, 160)
+    .replace(/\n/g, " ")
+    .replace(/>/g, "");
+
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "");
+
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "DiscussionForumPosting",
+    "headline": title,
+    "description": cleanDescription,
+    "articleBody": thread.content,
+    "author": {
+      "@type": "Person",
+      "name": thread.author || "Anonymous"
+    },
+    "datePublished": thread.createdAt,
+    "dateModified": thread.bumpedAt || thread.createdAt,
+    "image": thread.image || `${baseUrl}/opengraph-image`,
+    "interactionStatistic": {
+      "@type": "InteractionCounter",
+      "interactionType": "https://schema.org/ReplyAction",
+      "userInteractionCount": replies.length,
+    },
+    "publisher": {
+      "@type": "Organization",
+      "name": "62chan",
+      "logo": {
+        "@type": "ImageObject",
+        "url": `${baseUrl}/opengraph-image`
+      }
+    },
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/${boardCode}/thread/${id}`
+    }
+  };
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": `/${boardCode}/ - ${board.name}`,
+        "item": `${baseUrl}/${boardCode}`
+      },
+      {
+        "@type": "ListItem",
+        "position": 3,
+        "name": title,
+        "item": `${baseUrl}/${boardCode}/thread/${id}`
+      }
+    ]
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd).replace(/</g, "\\u003c") }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
       <header className="py-2 px-4 border-b flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-4 bg-muted/5">
         <div className="flex items-center gap-2 sm:gap-4 text-xs sm:text-base font-mono">
           <Link

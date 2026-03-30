@@ -22,6 +22,9 @@ export const metadata: Metadata = {
   title: "62chan",
   description:
     "62chan: Forum papan gambar (imageboard) anonim Indonesia. Beritahu kami jika Anda menemukan masalah yang disebabkan oleh pembaruan sistem di /tlg/",
+  alternates: {
+    canonical: "https://62chan.qzz.io",
+  },
 };
 
 export const revalidate = 60; // Cache halaman selama 60 detik

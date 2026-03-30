@@ -162,7 +162,7 @@ function TextLine({
             href={url}
             className="url-link"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer ugc"
           >
             {url}
           </a>,
@@ -189,7 +189,7 @@ function TextLine({
             href={fullUrl}
             className="url-link"
             target="_blank"
-            rel="noopener noreferrer"
+            rel="noopener noreferrer ugc"
           >
             {url}
           </a>,

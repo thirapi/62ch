@@ -3,6 +3,9 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Peraturan & Ketentuan",
   description: "Daftar peraturan dan ketentuan penggunaan layanan 62chan.",
+  alternates: {
+    canonical: "https://62chan.qzz.io/rules",
+  },
 };
 
 export default function RulesPage() {

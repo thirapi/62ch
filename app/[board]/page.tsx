@@ -68,6 +68,9 @@ export async function generateMetadata({
         board.description || `Papan /${board.code}/ - ${board.name} di 62chan.`,
       images: ["/opengraph-image"],
     },
+    alternates: {
+      canonical: `${(process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "")}/${board.code}`,
+    },
   };
 }
 
@@ -152,8 +155,37 @@ export default async function BoardPage({
     return null;
   };
 
+  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "");
+
+  const breadcrumbJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {
+        "@type": "ListItem",
+        "position": 1,
+        "name": "Home",
+        "item": baseUrl
+      },
+      {
+        "@type": "ListItem",
+        "position": 2,
+        "name": `/${board.code}/ - ${board.name}`,
+        "item": `${baseUrl}/${board.code}`
+      }
+    ],
+    "mainEntityOfPage": {
+      "@type": "WebPage",
+      "@id": `${baseUrl}/${board.code}`
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+      />
       <header className="py-6 px-4 text-center border-b mb-8 flex flex-col items-center">
         <h1 className="text-2xl sm:text-3xl font-bold text-accent mb-1 tracking-tight truncate max-w-full">
           /{board.code}/ - {board.name}

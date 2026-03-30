@@ -6,7 +6,7 @@ export const revalidate = 3600; // Revalidate every hour
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Force HTTPS as per user request
-    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.my.id").replace(/\/$/, "");
+    const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "");
 
     // 1. Homepage & Static Pages
     const routes = [

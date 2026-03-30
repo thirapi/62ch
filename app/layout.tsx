@@ -17,7 +17,7 @@ export const metadata: Metadata = {
   description:
     "62chan adalah forum papan gambar (imageboard) anonim Indonesia. Di 62chan, kamu bisa diskusi bebas anonim soal anime, teknologi, budaya pop, meme, dan topik lainnya.",
   applicationName: "62chan",
-  authors: [{ name: "62chan", url: "https://62chan.my.id" }],
+  authors: [{ name: "62chan", url: "https://62chan.qzz.io" }],
   generator: "62chan",
   robots: {
     index: true,
@@ -31,7 +31,7 @@ export const metadata: Metadata = {
     "papan gambar",
     "forum anonim",
     "forum indonesia",
-    "4chan indonesia",
+    "62chan indonesia",
     "komunitas wibu",
     "diskusi bebas",
     "asf",
@@ -49,15 +49,15 @@ export const metadata: Metadata = {
     telephone: false,
   },
   metadataBase: new URL(
-    process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.my.id",
+    process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io",
   ),
   alternates: {
-    canonical: "https://62chan.my.id",
+    // Canonical will be handled by individual pages to avoid indexing everything to home
   },
   openGraph: {
     type: "website",
     locale: "id_ID",
-    url: "https://62chan.my.id",
+    url: "https://62chan.qzz.io",
     siteName: "62chan",
     title: "62chan - Papan Gambar Anonim Indonesia",
     description:
@@ -101,12 +101,12 @@ const jsonLd = [
     "@type": "WebSite",
     name: "62chan",
     alternateName: ["Enam Dua Chan", "62 chan", "Enampuluhdua Chan"],
-    url: "https://62chan.my.id",
+    url: "https://62chan.qzz.io",
     potentialAction: {
       "@type": "SearchAction",
       target: {
         "@type": "EntryPoint",
-        urlTemplate: "https://62chan.my.id/search?q={search_term_string}",
+        urlTemplate: "https://62chan.qzz.io/search?q={search_term_string}",
       },
       "query-input": "required name=search_term_string",
     },
@@ -116,8 +116,8 @@ const jsonLd = [
     "@type": "Organization",
     name: "62chan",
     alternateName: ["Enam Dua Chan", "62 chan"],
-    url: "https://62chan.my.id",
-    logo: "https://62chan.my.id/opengraph-image",
+    url: "https://62chan.qzz.io",
+    logo: "https://62chan.qzz.io/opengraph-image",
     description:
       "62chan adalah forum papan gambar (imageboard) anonim Indonesia untuk diskusi bebas anonim.",
     sameAs: [],
@@ -141,6 +141,15 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="id" suppressHydrationWarning>
+      <head>
+        {jsonLd.map((schema, i) => (
+          <script
+            key={i}
+            type="application/ld+json"
+            dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }}
+          />
+        ))}
+      </head>
       <body className={`font-sans antialiased`}>
         <PostHogProvider>
           <ThemeProvider
@@ -166,13 +175,7 @@ export default function RootLayout({
               </TooltipProvider>
             </NavProvider>
           </ThemeProvider>
-          {jsonLd.map((schema, i) => (
-            <script
-              key={i}
-              type="application/ld+json"
-              dangerouslySetInnerHTML={{ __html: JSON.stringify(schema) }}
-            />
-          ))}
+
         </PostHogProvider>
       </body>
     </html>
