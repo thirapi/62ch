@@ -12,6 +12,7 @@ import { GetThreadListUseCase } from "@/lib/use-cases/get-thread-list.use-case";
 import { BoardViewToggle } from "@/components/board-view-toggle";
 import { BoardSearch } from "@/components/board-search";
 import { CatalogView } from "@/components/catalog-view";
+import { BoardSort } from "@/components/board-sort";
 import { cn } from "@/lib/utils";
 import { FormattedDate } from "@/components/formatted-date";
 import { ExpandableImage } from "@/components/expandable-image";
@@ -79,10 +80,24 @@ export default async function BoardPage({
   searchParams,
 }: {
   params: Promise<{ board: string }>;
-  searchParams: Promise<{ view?: string; q?: string; page?: string }>;
+  searchParams: Promise<{
+    view?: string;
+    q?: string;
+    page?: string;
+    sort?: string;
+  }>;
 }) {
   const { board: boardCode } = await params;
-  const { view = "list", q: query = "", page = "1" } = await searchParams;
+  const {
+    view = "list",
+    q: query = "",
+    page = "1",
+    sort = "bump",
+  } = await searchParams;
+
+  // Sorting safety guard
+  const validSorts = ["bump", "new", "replies", "images"];
+  const sortBy = validSorts.includes(sort) ? (sort as "bump" | "new" | "replies" | "images") : "bump";
 
   const currentPage = Math.max(1, Number.parseInt(page) || 1);
   const limit = 50;
@@ -104,6 +119,7 @@ export default async function BoardPage({
     board.id,
     limit,
     offset,
+    sortBy,
   );
 
   if (query) {
@@ -119,7 +135,7 @@ export default async function BoardPage({
   }
 
   const isCatalog = view === "catalog";
- 
+
   const CapcodeMarker = ({
     type,
     className,
@@ -155,49 +171,48 @@ export default async function BoardPage({
     return null;
   };
 
-  const baseUrl = (process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io").replace(/\/$/, "");
+  const baseUrl = (
+    process.env.NEXT_PUBLIC_BASE_URL || "https://62chan.qzz.io"
+  ).replace(/\/$/, "");
 
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
-    "itemListElement": [
+    itemListElement: [
       {
         "@type": "ListItem",
-        "position": 1,
-        "name": "Home",
-        "item": baseUrl
+        position: 1,
+        name: "Home",
+        item: baseUrl,
       },
       {
         "@type": "ListItem",
-        "position": 2,
-        "name": `/${board.code}/ - ${board.name}`,
-        "item": `${baseUrl}/${board.code}`
-      }
+        position: 2,
+        name: `/${board.code}/ - ${board.name}`,
+        item: `${baseUrl}/${board.code}`,
+      },
     ],
-    "mainEntityOfPage": {
+    mainEntityOfPage: {
       "@type": "WebPage",
-      "@id": `${baseUrl}/${board.code}`
-    }
+      "@id": `${baseUrl}/${board.code}`,
+    },
   };
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c"),
+        }}
       />
-      <header className="py-6 px-4 text-center border-b mb-8 flex flex-col items-center">
-        <h1 className="text-2xl sm:text-3xl font-bold text-accent mb-1 tracking-tight truncate max-w-full">
+      <header className="py-12 px-4 text-center border-b mb-8 flex flex-col items-center bg-muted/5">
+        <h1 className="text-3xl sm:text-4xl font-bold text-accent mb-2 tracking-tight truncate max-w-full">
           /{board.code}/ - {board.name}
         </h1>
-        <p className="text-xs sm:text-sm text-muted-foreground italic mb-4 max-w-xl line-clamp-2">
+        <p className="text-sm sm:text-base text-muted-foreground italic max-w-2xl line-clamp-2">
           {board.description}
         </p>
-
-        <div className="flex flex-col sm:flex-row items-center gap-3 w-full max-w-md sm:max-w-none justify-center">
-          <BoardSearch />
-          <BoardViewToggle />
-        </div>
       </header>
 
       <main
@@ -210,27 +225,37 @@ export default async function BoardPage({
       >
         <div className="flex flex-col items-center mb-12">
           <div className="w-full max-w-2xl">
-            <ThreadForm 
-              boardId={board.id} 
-              boardCode={board.code} 
+            <ThreadForm
+              boardId={board.id}
+              boardCode={board.code}
               userRole={user?.role}
             />
           </div>
         </div>
 
-        <div className="border-t pt-4">
+        <div className="pt-2">
+          {/* Board Navigation Bar - Top */}
+          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 py-2 border-y font-mono text-xs">
+            <div className="flex items-center gap-2">
+              <BoardSearch />
+
+              <BoardViewToggle />
+            </div>
+            <BoardSort />
+          </div>
+
           {isCatalog ? (
             <CatalogView threads={threads || []} boardCode={boardCode} />
           ) : (
             <div className="divide-y divide-muted/30">
               {threads?.map((thread) => (
-                <ThreadListItem 
-                  key={thread.id} 
-                  thread={thread} 
-                  boardCode={boardCode} 
+                <ThreadListItem
+                  key={thread.id}
+                  thread={thread}
+                  boardCode={boardCode}
                 />
               ))}
-              
+
               {threads?.length === 0 && (
                 <div className="py-20 text-center text-muted-foreground italic">
                   {query

@@ -133,19 +133,29 @@ export class ThreadRepository {
     boardId: number,
     limit: number = 50,
     offset: number = 0,
+    sortBy: "bump" | "new" | "replies" | "images" = "bump"
   ): Promise<
     (ThreadEntity & { replyCount: number; imageCount: number; replies: any[] })[]
   > {
     // 1. Fetch threads
+    const orderBy = [];
+    
+    // Always keep pinned threads at the top for list view
+    orderBy.push(desc(threads.isPinned));
+
+    if (sortBy === "new") {
+      orderBy.push(desc(threads.createdAt));
+    } else {
+      // Default to bump
+      orderBy.push(desc(threads.bumpedAt));
+    }
+
     const threadsRows = await db.query.threads.findMany({
       where: and(
         eq(threads.boardId, boardId),
         eq(threads.isDeleted, false),
       ),
-      orderBy: [
-        desc(threads.isPinned),
-        desc(threads.bumpedAt),
-      ],
+      orderBy,
       limit,
       offset,
     })

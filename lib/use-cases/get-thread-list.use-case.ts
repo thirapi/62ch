@@ -18,9 +18,10 @@ export class GetThreadListUseCase {
     boardId: number,
     limit: number = 50,
     offset: number = 0,
+    sortBy: "bump" | "new" | "replies" | "images" = "bump"
   ): Promise<{ threads: ThreadWithReplyCount[]; totalPages: number }> {
     const [threads, totalCount] = await Promise.all([
-      this.threadRepository.getThreadsWithPreviews(boardId, limit, offset),
+      this.threadRepository.getThreadsWithPreviews(boardId, limit, offset, sortBy),
       this.threadRepository.countByBoardId(boardId),
     ])
 
