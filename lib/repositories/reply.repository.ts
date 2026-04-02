@@ -58,12 +58,34 @@ export class ReplyRepository {
       : and(eq(replies.threadId, threadId), eq(replies.isDeleted, false))
 
     const rows = await db
-      .select()
+      .select({
+        id: replies.id,
+        threadId: replies.threadId,
+        content: replies.content,
+        author: replies.author,
+        image: replies.image,
+        imageMetadata: replies.imageMetadata,
+        isDeleted: replies.isDeleted,
+        isNsfw: replies.isNsfw,
+        isSpoiler: replies.isSpoiler,
+        createdAt: replies.createdAt,
+        postNumber: replies.postNumber,
+        ipAddress: replies.ipAddress,
+        capcode: replies.capcode,
+      })
       .from(replies)
       .where(condition)
       .orderBy(asc(replies.createdAt))
 
-    return rows.map((row) => this.mapToEntity(row))
+    return rows.map((row) => ({
+      ...row,
+      author: row.author ?? "Awanama",
+      createdAt: row.createdAt!,
+      isDeleted: row.isDeleted ?? false,
+      isNsfw: row.isNsfw ?? false,
+      isSpoiler: row.isSpoiler ?? false,
+      postNumber: row.postNumber!,
+    }))
   }
 
   async countByThreadId(threadId: number): Promise<number> {

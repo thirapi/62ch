@@ -15,7 +15,7 @@ export class PostRepository {
         id: threads.id,
         postNumber: threads.postNumber,
         subject: threads.subject,
-        content: threads.content,
+        excerpt: sql<string>`left(${threads.content}, 200)`,
         image: threads.image,
         createdAt: threads.createdAt,
         boardCode: boards.code,
@@ -44,13 +44,13 @@ export class PostRepository {
       .select({
         id: replies.id,
         postNumber: replies.postNumber,
-        content: replies.content,
+        excerpt: sql<string>`left(${replies.content}, 200)`,
         createdAt: replies.createdAt,
         threadId: replies.threadId,
         boardCode: boards.code,
         capcode: replies.capcode,
         threadSubject: threads.subject,
-        threadContent: threads.content,
+        threadExcerpt: sql<string>`left(${threads.content}, 150)`,
         threadImage: threads.image,
         isNsfw: replies.isNsfw,
         isSpoiler: replies.isSpoiler,
@@ -72,13 +72,13 @@ export class PostRepository {
         postNumber: t.postNumber as number,
         type: "thread",
         title: t.subject,
-        excerpt: t.content.substring(0, 200),
+        excerpt: t.excerpt,
         createdAt: t.createdAt!,
         boardCode: t.boardCode,
         threadId: t.id,
         capcode: t.capcode,
         threadSubject: t.subject,
-        threadExcerpt: t.content.substring(0, 150),
+        threadExcerpt: t.excerpt.substring(0, 150),
         threadImage: t.image,
         isNsfw: t.isNsfw ?? false,
         isSpoiler: t.isSpoiler ?? false,
@@ -91,13 +91,13 @@ export class PostRepository {
         postNumber: r.postNumber as number,
         type: "reply",
         title: null,
-        excerpt: r.content.substring(0, 200),
+        excerpt: r.excerpt,
         createdAt: r.createdAt!,
         boardCode: r.boardCode,
         threadId: r.threadId,
         capcode: r.capcode,
         threadSubject: r.threadSubject,
-        threadExcerpt: r.threadContent ? r.threadContent.substring(0, 150) : null,
+        threadExcerpt: r.threadExcerpt,
         threadImage: r.threadImage,
         isNsfw: (r.isNsfw || r.threadIsNsfw) ?? false,
         isSpoiler: (r.isSpoiler || r.threadIsSpoiler) ?? false,
@@ -121,7 +121,7 @@ export class PostRepository {
         isNsfw: threads.isNsfw,
         isSpoiler: threads.isSpoiler,
         threadSubject: threads.subject,
-        threadContent: threads.content,
+        threadExcerpt: sql<string>`left(${threads.content}, 150)`,
       })
       .from(threads)
       .innerJoin(boards, eq(threads.boardId, boards.id))
@@ -145,7 +145,7 @@ export class PostRepository {
         isNsfw: replies.isNsfw,
         isSpoiler: replies.isSpoiler,
         threadSubject: threads.subject,
-        threadContent: threads.content,
+        threadExcerpt: sql<string>`left(${threads.content}, 150)`,
       })
       .from(replies)
       .innerJoin(threads, eq(replies.threadId, threads.id))
@@ -173,7 +173,7 @@ export class PostRepository {
         isNsfw: t.isNsfw ?? false,
         isSpoiler: t.isSpoiler ?? false,
         threadSubject: t.threadSubject,
-        threadExcerpt: t.threadContent ? t.threadContent.substring(0, 150) : null,
+        threadExcerpt: t.threadExcerpt,
       })
     }
 
@@ -188,7 +188,7 @@ export class PostRepository {
         isNsfw: r.isNsfw ?? false,
         isSpoiler: r.isSpoiler ?? false,
         threadSubject: r.threadSubject,
-        threadExcerpt: r.threadContent ? r.threadContent.substring(0, 150) : null,
+        threadExcerpt: r.threadExcerpt,
       })
     }
 
@@ -289,82 +289,59 @@ export class PostRepository {
   async getSystemStats(): Promise<SystemStatsEntity> {
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
-    const [threadCount] = await db.select({ value: count() }).from(threads).where(eq(threads.isDeleted, false))
-    const [replyCount] = await db.select({ value: count() }).from(replies).where(eq(replies.isDeleted, false))
-
-    const [threadsToday] = await db
-      .select({ value: count() })
-      .from(threads)
-      .where(
-        and(
-          gt(threads.createdAt, twentyFourHoursAgo),
-          eq(threads.isDeleted, false)
+    try {
+      const [
+        totalRes,
+        threadsTodayRes,
+        repliesTodayRes,
+        imagesRes,
+        replyImagesRes,
+        activeThreadsRes
+      ] = await Promise.allSettled([
+        // 1. Total - Pakai estimasi (Instan)
+        db.execute(sql`
+          SELECT (reltuples::bigint) as count FROM pg_class WHERE relname = 'threads'
+          UNION ALL
+          SELECT (reltuples::bigint) as count FROM pg_class WHERE relname = 'replies'
+        `),
+        // 2. Threads Today
+        db.select({ value: count() }).from(threads).where(and(gt(threads.createdAt, twentyFourHoursAgo), eq(threads.isDeleted, false))),
+        // 3. Replies Today
+        db.select({ value: count() }).from(replies).where(and(gt(replies.createdAt, twentyFourHoursAgo), eq(replies.isDeleted, false))),
+        // 3. Total Gambar (Hitung postingan yang punya gambar)
+        db.select({ value: count() }).from(threads).where(and(isNotNull(threads.image), eq(threads.isDeleted, false))),
+        db.select({ value: count() }).from(replies).where(and(isNotNull(replies.image), eq(replies.isDeleted, false))),
+        // 4. Active Threads (Gabungkan dua query select secara legal di Drizzle)
+        db.select({ value: count() }).from(
+          db.select({ threadId: threads.id }).from(threads).where(and(gt(threads.createdAt, twentyFourHoursAgo), eq(threads.isDeleted, false)))
+          .union(
+            db.select({ threadId: replies.threadId }).from(replies).where(and(gt(replies.createdAt, twentyFourHoursAgo), eq(replies.isDeleted, false)))
+          ).as('active_ids')
         )
-      )
+      ])
 
-    const [repliesToday] = await db
-      .select({ value: count() })
-      .from(replies)
-      .where(
-        and(
-          gt(replies.createdAt, twentyFourHoursAgo),
-          eq(replies.isDeleted, false)
-        )
-      )
+      const totalPosts = totalRes.status === 'fulfilled' 
+        ? (totalRes.value as any).reduce((acc: number, row: any) => acc + Number(row.count || 0), 0)
+        : 0
 
-    const [threadImages] = await db
-      .select({ value: count() })
-      .from(threads)
-      .where(
-        and(
-          isNotNull(threads.image),
-          eq(threads.isDeleted, false)
-        )
-      )
+      const postsToday = (threadsTodayRes.status === 'fulfilled' ? Number(threadsTodayRes.value[0].value) : 0) + 
+                         (repliesTodayRes.status === 'fulfilled' ? Number(repliesTodayRes.value[0].value) : 0)
+      
+      const totalImages = (imagesRes.status === 'fulfilled' ? Number(imagesRes.value[0].value) : 0) + 
+                          (replyImagesRes.status === 'fulfilled' ? Number(replyImagesRes.value[0].value) : 0)
 
-    const [replyImages] = await db
-      .select({ value: count() })
-      .from(replies)
-      .where(
-        and(
-          isNotNull(replies.image),
-          eq(replies.isDeleted, false)
-        )
-      )
+      const activeCountRow = activeThreadsRes.status === 'fulfilled' ? (activeThreadsRes.value[0] as any) : null
+      const activeCount = Number(activeCountRow?.value || 0)
 
-    // Active Threads: Unique thread IDs that had activity (created or replied to) in last 24h
-    // Only count threads that are not deleted
-    const tActive = await db
-      .select({ id: threads.id })
-      .from(threads)
-      .where(
-        and(
-          gt(threads.createdAt, twentyFourHoursAgo),
-          eq(threads.isDeleted, false)
-        )
-      )
-
-    const rActive = await db
-      .select({ threadId: replies.threadId })
-      .from(replies)
-      .innerJoin(threads, eq(replies.threadId, threads.id)) // Ensure parent thread not deleted too
-      .where(
-        and(
-          gt(replies.createdAt, twentyFourHoursAgo),
-          eq(replies.isDeleted, false),
-          eq(threads.isDeleted, false)
-        )
-      )
-
-    const activeThreadIds = new Set()
-    tActive.forEach((t) => activeThreadIds.add(t.id))
-    rActive.forEach((r) => activeThreadIds.add(r.threadId))
-
-    return {
-      totalPosts: Number(threadCount.value) + Number(replyCount.value),
-      postsToday: Number(threadsToday.value) + Number(repliesToday.value),
-      totalImages: Number(threadImages.value) + Number(replyImages.value),
-      activeThreads24h: activeThreadIds.size,
+      return {
+        totalPosts,
+        postsToday,
+        totalImages,
+        activeThreads24h: activeCount,
+      }
+    } catch (error) {
+      console.error("Error in getSystemStats:", error)
+      return { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 }
     }
   }
 }

@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { threads, replies } from "@/lib/db/schema"
-import { eq, desc, and, sql, inArray } from "drizzle-orm"
+import { asc, eq, desc, and, sql, inArray } from "drizzle-orm"
 import type { ThreadEntity, CreateThreadInput } from "@/lib/entities/thread.entity"
 
 export class ThreadRepository {
@@ -60,29 +60,91 @@ export class ThreadRepository {
     return row ? this.mapToEntity(row) : null
   }
 
-  async findByBoardId(boardId: number): Promise<ThreadEntity[]> {
-    const rows = await db.query.threads.findMany({
-      where: and(
-        eq(threads.boardId, boardId),
-        eq(threads.isDeleted, false),
-      ),
-      orderBy: [
-        desc(threads.isPinned),
-        desc(threads.bumpedAt),
-      ],
+  async findByIdWithPassword(id: number): Promise<ThreadEntity | null> {
+    const row = await db.query.threads.findFirst({
+      where: eq(threads.id, id),
     })
 
-    return rows.map((row) => this.mapToEntity(row))
+    return row ? this.mapToEntity(row) : null
+  }
+
+  async findByBoardId(boardId: number): Promise<ThreadEntity[]> {
+    const rows = await db
+      .select({
+        id: threads.id,
+        boardId: threads.boardId,
+        subject: threads.subject,
+        content: threads.content,
+        author: threads.author,
+        image: threads.image,
+        imageMetadata: threads.imageMetadata,
+        isPinned: threads.isPinned,
+        isLocked: threads.isLocked,
+        isDeleted: threads.isDeleted,
+        isNsfw: threads.isNsfw,
+        isSpoiler: threads.isSpoiler,
+        createdAt: threads.createdAt,
+        bumpedAt: threads.bumpedAt,
+        postNumber: threads.postNumber,
+        ipAddress: threads.ipAddress,
+        capcode: threads.capcode,
+      })
+      .from(threads)
+      .where(and(eq(threads.boardId, boardId), eq(threads.isDeleted, false)))
+      .orderBy(desc(threads.isPinned), desc(threads.bumpedAt))
+
+    return rows.map((row) => ({
+      ...row,
+      author: row.author ?? "Awanama",
+      createdAt: row.createdAt!,
+      bumpedAt: row.bumpedAt!,
+      postNumber: row.postNumber!,
+      isPinned: row.isPinned ?? false,
+      isLocked: row.isLocked ?? false,
+      isDeleted: row.isDeleted ?? false,
+      isNsfw: row.isNsfw ?? false,
+      isSpoiler: row.isSpoiler ?? false,
+    }))
   }
 
   async findLatest(limit: number): Promise<ThreadEntity[]> {
-    const rows = await db.query.threads.findMany({
-      where: eq(threads.isDeleted, false),
-      orderBy: [desc(threads.createdAt)],
-      limit,
-    })
+    const rows = await db
+      .select({
+        id: threads.id,
+        boardId: threads.boardId,
+        subject: threads.subject,
+        content: threads.content,
+        author: threads.author,
+        image: threads.image,
+        imageMetadata: threads.imageMetadata,
+        isPinned: threads.isPinned,
+        isLocked: threads.isLocked,
+        isDeleted: threads.isDeleted,
+        isNsfw: threads.isNsfw,
+        isSpoiler: threads.isSpoiler,
+        createdAt: threads.createdAt,
+        bumpedAt: threads.bumpedAt,
+        postNumber: threads.postNumber,
+        ipAddress: threads.ipAddress,
+        capcode: threads.capcode,
+      })
+      .from(threads)
+      .where(eq(threads.isDeleted, false))
+      .orderBy(desc(threads.createdAt))
+      .limit(limit)
 
-    return rows.map((row) => this.mapToEntity(row))
+    return rows.map((row) => ({
+      ...row,
+      author: row.author ?? "Awanama",
+      createdAt: row.createdAt!,
+      bumpedAt: row.bumpedAt!,
+      postNumber: row.postNumber!,
+      isPinned: row.isPinned ?? false,
+      isLocked: row.isLocked ?? false,
+      isDeleted: row.isDeleted ?? false,
+      isNsfw: row.isNsfw ?? false,
+      isSpoiler: row.isSpoiler ?? false,
+    }))
   }
 
   async findLatestByIp(ipAddress: string): Promise<ThreadEntity | null> {
@@ -137,35 +199,46 @@ export class ThreadRepository {
   ): Promise<
     (ThreadEntity & { replyCount: number; imageCount: number; replies: any[] })[]
   > {
-    // 1. Fetch threads
+    // 1. Fetch threads with specific columns only (exclude deletionPassword)
     const orderBy = [];
-    
-    // Always keep pinned threads at the top for list view
     orderBy.push(desc(threads.isPinned));
-
     if (sortBy === "new") {
       orderBy.push(desc(threads.createdAt));
     } else {
-      // Default to bump
       orderBy.push(desc(threads.bumpedAt));
     }
 
-    const threadsRows = await db.query.threads.findMany({
-      where: and(
-        eq(threads.boardId, boardId),
-        eq(threads.isDeleted, false),
-      ),
-      orderBy,
-      limit,
-      offset,
-    })
+    const threadsRows = await db
+      .select({
+        id: threads.id,
+        boardId: threads.boardId,
+        subject: threads.subject,
+        content: threads.content,
+        author: threads.author,
+        image: threads.image,
+        imageMetadata: threads.imageMetadata,
+        isPinned: threads.isPinned,
+        isLocked: threads.isLocked,
+        isDeleted: threads.isDeleted,
+        isNsfw: threads.isNsfw,
+        isSpoiler: threads.isSpoiler,
+        createdAt: threads.createdAt,
+        bumpedAt: threads.bumpedAt,
+        postNumber: threads.postNumber,
+        ipAddress: threads.ipAddress,
+        capcode: threads.capcode,
+      })
+      .from(threads)
+      .where(and(eq(threads.boardId, boardId), eq(threads.isDeleted, false)))
+      .orderBy(...orderBy)
+      .limit(limit)
+      .offset(offset)
 
     if (threadsRows.length === 0) {
       return []
     }
 
     const threadIds = threadsRows.map((t) => t.id)
-    const threadEntities = threadsRows.map((row) => this.mapToEntity(row))
 
     // 2. Fetch reply counts in one query
     const counts = await db
@@ -175,84 +248,82 @@ export class ThreadRepository {
         imageCount: sql<number>`cast(count(${replies.image}) as int)`,
       })
       .from(replies)
-      .where(
-        and(
-          inArray(replies.threadId, threadIds),
-          eq(replies.isDeleted, false),
-        ),
-      )
+      .where(and(inArray(replies.threadId, threadIds), eq(replies.isDeleted, false)))
       .groupBy(replies.threadId)
 
     const countMap = new Map(counts.map((c) => [c.threadId, c]))
 
-    // 3. Fetch latest 3 replies for each thread
-    // Ideally use window functions, but for simplicity and safety with current setup, 
-    // we'll use Promise.all which is fine for small limits (e.g. 50 threads).
-    const repliesMap = new Map<number, any[]>()
-
-    // We can optimization this further by fetching all candidates in one query if needed, 
-    // but a few parallel queries is better than 1000 serial/parallel N+1 on the whole DB.
-    // For 50 threads, 50 queries is okay-ish to start, but let's try to improve.
-    // Actually, let's keep it simple: Promise.all of findPreviewByThreadId is okay for < 50 items.
-    // But since we are here for efficiency, let's use a window function query if possible.
-    // Constructing the complex mapped entity from raw sql is tedious. 
-    // Let's stick to Promise.all for now as it reuse existing repository logic which is typesafe.
-    // But wait, I can inject ReplyRepository? No, repositories shouldn't depend on each other cyclically.
-    // I should move this logic to UseCase OR duplicate the simple query here.
-
-    // Let's just return the threads and let the UseCase handle the replies fetching EFFICIENTLY
-    // by using the new 'count' map at least.
-
-    // Actually, I'll implement the full fetch here to encapsulate the optimization.
-    // I will rely on a helper to fetch previews or just execute the queries.
-
-    const previews = await Promise.all(
-      threadIds.map(async (id) => {
-        const rows = await db.query.replies.findMany({
-          where: and(
-            eq(replies.threadId, id),
-            eq(replies.isDeleted, false)
-          ),
-          orderBy: [desc(replies.createdAt)],
-          limit: 3
-        });
-        return { id, rows }
+    // 3. Optimized: Fetch latest 3 replies for ALL threads in one query using window function
+    // This solves the N+1 problem (was 50+ queries, now just 1)
+    const latestReplies = await db
+      .select({
+        id: replies.id,
+        threadId: replies.threadId,
+        content: replies.content,
+        author: replies.author,
+        image: replies.image,
+        imageMetadata: replies.imageMetadata,
+        isDeleted: replies.isDeleted,
+        isNsfw: replies.isNsfw,
+        isSpoiler: replies.isSpoiler,
+        createdAt: replies.createdAt,
+        postNumber: replies.postNumber,
+        ipAddress: replies.ipAddress,
+        capcode: replies.capcode,
       })
-    )
+      .from(replies)
+      .innerJoin(
+        sql`(
+          SELECT id, ROW_NUMBER() OVER (PARTITION BY thread_id ORDER BY created_at DESC) as rn
+          FROM ${replies}
+          WHERE thread_id IN (${sql.join(threadIds, sql`, `)}) AND is_deleted = false
+        ) as ranked_replies`,
+        eq(replies.id, sql`ranked_replies.id`)
+      )
+      .where(sql`ranked_replies.rn <= 3`)
+      .orderBy(asc(replies.createdAt))
 
-    previews.forEach(p => {
-      // Need to map rows to entities - I'll duplicate the mapToEntity logic or move it to a shared helper?
-      // Since this is inside ThreadRepository, I can't easily access ReplyRepository.mapToEntity.
-      // I will just return raw rows or simplified objects.
-      // Actually, the UseCase expects ReplyUI.
-      // Let's manually map for now.
-      const mapped = p.rows.map(row => ({
-        id: row.id,
-        threadId: row.threadId,
-        content: row.content,
+    // Group replies by threadId
+    const repliesMap = new Map<number, any[]>()
+    latestReplies.forEach((row) => {
+      if (!repliesMap.has(row.threadId)) {
+        repliesMap.set(row.threadId, [])
+      }
+      repliesMap.get(row.threadId)!.push({
+        ...row,
         author: row.author ?? "Awanama",
         createdAt: row.createdAt!,
         isDeleted: row.isDeleted ?? false,
-        isNsfw: row.isNsfw ?? false,
-        isSpoiler: row.isSpoiler ?? false,
-        image: row.image,
-        imageMetadata: row.imageMetadata,
-        deletionPassword: row.deletionPassword,
-        postNumber: row.postNumber!,
-        ipAddress: row.ipAddress,
-        capcode: row.capcode
-      }))
-      repliesMap.set(p.id, mapped.reverse()) // Reverse to show chronological order in preview
+      })
     })
 
-    return threadEntities.map((thread) => {
-      const c = countMap.get(thread.id);
+    // 4. Map final entities
+    return threadsRows.map((row) => {
+      const c = countMap.get(row.id)
+      const threadReplies = repliesMap.get(row.id) || []
+      
       return {
-        ...thread,
+        id: row.id,
+        boardId: row.boardId,
+        subject: row.subject,
+        content: row.content,
+        author: row.author ?? "Awanama",
+        createdAt: row.createdAt!,
+        isPinned: row.isPinned ?? false,
+        isLocked: row.isLocked ?? false,
+        isDeleted: row.isDeleted ?? false,
+        isNsfw: row.isNsfw ?? false,
+        isSpoiler: row.isSpoiler ?? false,
+        bumpedAt: row.bumpedAt!,
+        image: row.image,
+        imageMetadata: row.imageMetadata,
+        postNumber: row.postNumber!,
+        ipAddress: row.ipAddress,
+        capcode: row.capcode,
         replyCount: c?.replyCount || 0,
-        imageCount: (c?.imageCount || 0) + (thread.image ? 1 : 0),
-        replies: repliesMap.get(thread.id) || [],
-      };
+        imageCount: (c?.imageCount || 0) + (row.image ? 1 : 0),
+        replies: threadReplies,
+      }
     })
   }
 
