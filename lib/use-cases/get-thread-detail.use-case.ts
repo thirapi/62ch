@@ -35,6 +35,7 @@ export class GetThreadDetailUseCase {
       createdAt: thread.createdAt,
       isPinned: thread.isPinned,
       isLocked: thread.isLocked,
+      isArchived: thread.isArchived,
       isDeleted: thread.isDeleted,
       isNsfw: thread.isNsfw,
       isSpoiler: thread.isSpoiler,
