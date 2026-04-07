@@ -127,7 +127,7 @@ const jsonLd = [
 import { ThemeProvider } from "@/components/theme-provider";
 import { NavProvider } from "@/components/nav-provider";
 import { BoardNav } from "@/components/board-nav";
-import { AgeVerificationDialog } from "@/components/age-verification-dialog";
+import { AgeVerificationProvider } from "@/components/age-verification-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ScrollButtons } from "@/components/scroll-buttons";
 import { PostHogProvider } from "./posthog-provider";
@@ -159,20 +159,21 @@ export default function RootLayout({
             disableTransitionOnChange
           >
             <NavProvider>
-              <TooltipProvider>
-                <ThreadWatcherProvider>
-                  <BoardNav />
-                  <div className="flex-1 w-full overflow-x-clip min-h-0">
-                    {children}
-                  </div>
-                  <Toaster />
-                  <SonnerToaster />
-                  <ThreadWatcher />
-                  <Analytics />
-                  <AgeVerificationDialog />
-                  <ScrollButtons />
-                </ThreadWatcherProvider>
-              </TooltipProvider>
+              <AgeVerificationProvider>
+                <TooltipProvider>
+                  <ThreadWatcherProvider>
+                    <BoardNav />
+                    <div className="flex-1 w-full overflow-x-clip min-h-0">
+                      {children}
+                    </div>
+                    <Toaster />
+                    <SonnerToaster />
+                    <ThreadWatcher />
+                    <Analytics />
+                    <ScrollButtons />
+                  </ThreadWatcherProvider>
+                </TooltipProvider>
+              </AgeVerificationProvider>
             </NavProvider>
           </ThemeProvider>
 

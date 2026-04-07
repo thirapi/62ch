@@ -11,6 +11,15 @@ interface BoardLinkProps {
   title?: string;
 }
 
+import { VerifiedLink } from "./verified-link";
+
+interface BoardLinkProps {
+  boardCode: string;
+  children: ReactNode;
+  className?: string;
+  title?: string;
+}
+
 export function BoardLink({ boardCode, children, className, title }: BoardLinkProps) {
   const { defaultBoardView } = useNav();
 
@@ -19,8 +28,8 @@ export function BoardLink({ boardCode, children, className, title }: BoardLinkPr
     : `/${boardCode}`;
 
   return (
-    <Link href={url} className={className} title={title}>
+    <VerifiedLink href={url} className={className} title={title}>
       {children}
-    </Link>
+    </VerifiedLink>
   );
 }

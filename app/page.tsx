@@ -17,6 +17,7 @@ import { SiteFooter } from "@/components/site-footer";
 import { RecentImage } from "@/components/recent-image";
 import type { Metadata } from "next";
 import { BoardEntity, BoardCategoryEntity } from "@/lib/entities/board.entity";
+import { VerifiedLink } from "@/components/verified-link";
 
 export const metadata: Metadata = {
   title: "62chan",
@@ -150,7 +151,7 @@ export default async function HomePage() {
                         isNsfw={image.isNsfw}
                         isSpoiler={image.isSpoiler}
                       >
-                        <Link
+                        <VerifiedLink
                           key={`${image.id}-${image.imageUrl}`}
                           href={`/${image.boardCode}/thread/${image.threadId}#p${image.postNumber}`}
                           className="group"
@@ -161,7 +162,7 @@ export default async function HomePage() {
                             isSpoiler={image.isSpoiler}
                             boardCode={image.boardCode}
                           />
-                        </Link>
+                        </VerifiedLink>
                       </ThreadPreview>
                     ))}
                   </div>

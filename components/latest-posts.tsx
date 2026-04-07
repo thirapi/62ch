@@ -6,6 +6,7 @@ import { FormattedText } from "@/components/formatted-text"
 import { getLatestPosts } from "@/lib/actions/home.actions"
 import type { LatestPostEntity } from "@/lib/entities/post.entity"
 import { ThreadPreview } from "@/components/thread-preview"
+import { VerifiedLink } from "@/components/verified-link"
 
 interface LatestPostsProps {
   initialPosts: LatestPostEntity[]
@@ -99,7 +100,7 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
             isNsfw={post.isNsfw}
             isSpoiler={post.isSpoiler}
           >
-            <Link
+            <VerifiedLink
               key={`latest-${post.id}-${post.type}`}
               href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
               className="block text-sm hover:bg-accent/5 px-2 py-0.5 rounded transition-colors w-full"
@@ -121,7 +122,7 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
                   /{post.boardCode}/
                 </span>
               </div>
-            </Link>
+            </VerifiedLink>
           </ThreadPreview>
         ))}
         
