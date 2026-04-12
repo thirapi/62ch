@@ -29,20 +29,20 @@ export function BoardSearch() {
 
   return (
     <div className="relative w-full sm:max-w-sm">
-      <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+      <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
       <Input
         type="text"
-        placeholder="Cari thread..."
-        className="pl-8 pr-8 h-9"
+        placeholder="Cari OP..."
+        className="pl-7 pr-7 h-8 text-xs rounded-sm"
         value={value}
         onChange={(e) => setValue(e.target.value)}
       />
       {value && (
         <button
           onClick={() => setValue("")}
-          className="absolute right-2.5 top-2.5 hover:text-foreground text-muted-foreground"
+          className="absolute right-2 top-1/2 -translate-y-1/2 hover:text-foreground text-muted-foreground"
         >
-          <X className="h-4 w-4" />
+          <X className="h-3.5 w-3.5" />
         </button>
       )}
     </div>

@@ -17,7 +17,7 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
   const [posts, setPosts] = useState<LatestPostEntity[]>(initialPosts)
   const [isLoading, setIsLoading] = useState(false)
   
-  const LIMIT = isMobile ? 10 : 15
+  const LIMIT = isMobile ? 20 : 25
   const [hasMore, setHasMore] = useState(initialPosts.length >= LIMIT)
   const observerRef = useRef<IntersectionObserver | null>(null)
   const loadingIndicatorRef = useRef<HTMLDivElement | null>(null)
@@ -105,22 +105,26 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
               href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
               className="block text-sm hover:bg-accent/5 px-2 py-0.5 rounded transition-colors w-full"
             >
-              <div className="flex items-start justify-between gap-2">
+              <div className="flex items-start gap-1">
                 <div className="min-w-0 flex-1">
-                  <div className="font-medium truncate text-[11px] leading-tight">
-                    {post.title || (
-                      <span className="text-muted-foreground italic">
-                        {post.type === "thread" ? "Utas" : "Balasan"}
+                  <div className="text-[11px] text-muted-foreground line-clamp-2 leading-snug">
+                    <span className="text-[10px] font-mono font-bold text-accent mr-1">
+                      /{post.boardCode}/:
+                    </span>
+                    {post.title ? (
+                      <span className="font-medium text-foreground mr-1">
+                        {post.title}
+                      </span>
+                    ) : (
+                      <span className="text-muted-foreground/70 italic mr-1 text-[10px]">
+                        [{post.type === "thread" ? "Utas" : "Balasan"}]
                       </span>
                     )}
-                  </div>
-                  <div className="text-[11px] text-muted-foreground line-clamp-2 leading-snug mt-0.5">
-                    <FormattedText content={post.excerpt} preview />
+                    <span className="opacity-90">
+                      <FormattedText content={post.excerpt} preview />
+                    </span>
                   </div>
                 </div>
-                <span className="text-[10px] font-mono text-accent font-bold whitespace-nowrap">
-                  /{post.boardCode}/
-                </span>
               </div>
             </VerifiedLink>
           </ThreadPreview>

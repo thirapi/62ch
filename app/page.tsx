@@ -57,7 +57,7 @@ export default async function HomePage() {
   const userAgent = headerList.get("user-agent") || "";
   const isMobile = /mobile/i.test(userAgent);
 
-  const postsLimit = isMobile ? 10 : 15;
+  const postsLimit = isMobile ? 20 : 25;
   const imagesLimit = isMobile ? 8 : 12;
 
   const [boards, categories, latestPosts, recentImages, stats] =

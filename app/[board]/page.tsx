@@ -238,13 +238,14 @@ export default async function BoardPage({
 
         <div className="pt-2">
           {/* Board Navigation Bar - Top */}
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4 mb-4 py-2 border-y font-mono text-xs">
-            <div className="flex items-center gap-2">
+          <div className="flex flex-row items-center justify-between gap-2 mb-4 py-2 border-y font-mono text-xs w-full">
+            <div className="flex-1">
               <BoardSearch />
-
+            </div>
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              <BoardSort />
               <BoardViewToggle />
             </div>
-            <BoardSort />
           </div>
 
           {isCatalog ? (

@@ -20,24 +20,24 @@ export function BoardViewToggle() {
   };
 
   return (
-    <div className="flex items-center gap-1 bg-muted p-1 rounded-md">
+    <div className="flex items-center gap-0.5 bg-muted/50 p-0.5 rounded-sm border border-muted h-8">
       <Button
         variant={view === "list" ? "secondary" : "ghost"}
-        size="sm"
-        className="h-7 px-2"
+        size="icon"
+        className="h-full w-7 rounded-sm"
         onClick={() => setView("list")}
+        title="Mode Daftar"
       >
-        <List className="h-4 w-4 mr-1" />
-        Daftar
+        <List className="h-3.5 w-3.5" />
       </Button>
       <Button
         variant={view === "catalog" ? "secondary" : "ghost"}
-        size="sm"
-        className="h-7 px-2"
+        size="icon"
+        className="h-full w-7 rounded-sm"
         onClick={() => setView("catalog")}
+        title="Mode Katalog"
       >
-        <Grid className="h-4 w-4 mr-1" />
-        Katalog
+        <Grid className="h-3.5 w-3.5" />
       </Button>
     </div>
   );
