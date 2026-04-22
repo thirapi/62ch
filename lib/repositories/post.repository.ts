@@ -290,6 +290,11 @@ export class PostRepository {
     const CACHE_TTL = 15 * 60 * 1000; // 15 menit
     const globalStats = globalThis as any;
 
+    // Percepat build: Jangan hitung stats jika sedang dalam fase build statis Vercel
+    if (process.env.NEXT_PHASE === 'phase-production-build') {
+      return { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 };
+    }
+
     // Gunakan cache jika masih valid
     if (
       globalStats.__statsCache && 

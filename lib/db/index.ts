@@ -14,9 +14,8 @@ const globalForDb = globalThis as unknown as {
 
 const client = globalForDb.client ?? postgres(connectionString, {
   prepare: false,
-  // Di lingkungan serverless (Vercel), kita kecilkan max connection 
-  // karena setiap instance fungsi akan membuka pool sendiri.
-  max: process.env.NODE_ENV === "production" ? 1 : 10,
+  // Kita gunakan limit 5 agar tidak terjadi deadlock saat parallel rendering di build/production
+  max: 5,
 });
 
 // Selalu simpan di global agar bisa di-reuse saat 'warm start' di serverless/production
