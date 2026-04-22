@@ -60,14 +60,14 @@ export default async function HomePage() {
   const postsLimit = isMobile ? 20 : 25;
   const imagesLimit = isMobile ? 8 : 12;
 
-  const [boards, categories, latestPosts, recentImages, stats] =
+  const [boards, categories, latestPosts, recentImages] =
     await Promise.all([
       getBoardList(),
       getBoardCategories(),
       getLatestPosts(postsLimit),
       getRecentImages(imagesLimit),
-      getSystemStats(),
     ]);
+
 
   const groupedBoards = groupBoards(boards, categories);
   const categoryNames = Array.from(groupedBoards.keys()).filter(
@@ -185,7 +185,7 @@ export default async function HomePage() {
       </main>
 
       <AdBanner />
-      <SiteFooter stats={stats} />
+      <SiteFooter />
     </div>
   );
 }

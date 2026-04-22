@@ -287,6 +287,17 @@ export class PostRepository {
   }
 
   async getSystemStats(): Promise<SystemStatsEntity> {
+    const CACHE_TTL = 15 * 60 * 1000; // 15 menit
+    const globalStats = globalThis as any;
+
+    // Gunakan cache jika masih valid
+    if (
+      globalStats.__statsCache && 
+      Date.now() - globalStats.__statsCacheTimestamp < CACHE_TTL
+    ) {
+      return globalStats.__statsCache;
+    }
+
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
     try {
@@ -304,14 +315,14 @@ export class PostRepository {
           UNION ALL
           SELECT (reltuples::bigint) as count FROM pg_class WHERE relname = 'replies'
         `),
-        // 2. Threads Today
+        // 2. Threads Today (Penyaringan berdasarkan index createdAt - Cepat)
         db.select({ value: count() }).from(threads).where(and(gt(threads.createdAt, twentyFourHoursAgo), eq(threads.isDeleted, false))),
-        // 3. Replies Today
+        // 3. Replies Today (Penyaringan berdasarkan index createdAt - Cepat)
         db.select({ value: count() }).from(replies).where(and(gt(replies.createdAt, twentyFourHoursAgo), eq(replies.isDeleted, false))),
-        // 3. Total Gambar (Hitung postingan yang punya gambar)
+        // 3. Total Gambar (Ini yang berat - dijalankan paralel)
         db.select({ value: count() }).from(threads).where(and(isNotNull(threads.image), eq(threads.isDeleted, false))),
         db.select({ value: count() }).from(replies).where(and(isNotNull(replies.image), eq(replies.isDeleted, false))),
-        // 4. Active Threads (Gabungkan dua query select secara legal di Drizzle)
+        // 4. Active Threads
         db.select({ value: count() }).from(
           db.select({ threadId: threads.id }).from(threads).where(and(gt(threads.createdAt, twentyFourHoursAgo), eq(threads.isDeleted, false)))
           .union(
@@ -333,15 +344,23 @@ export class PostRepository {
       const activeCountRow = activeThreadsRes.status === 'fulfilled' ? (activeThreadsRes.value[0] as any) : null
       const activeCount = Number(activeCountRow?.value || 0)
 
-      return {
+      const stats = {
         totalPosts,
         postsToday,
         totalImages,
         activeThreads24h: activeCount,
       }
+
+      // Simpan ke cache global
+      globalStats.__statsCache = stats;
+      globalStats.__statsCacheTimestamp = Date.now();
+
+      return stats;
     } catch (error) {
       console.error("Error in getSystemStats:", error)
-      return { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 }
+      // Jika gagal dan ada data lama di cache, gunakan data lama
+      return globalStats.__statsCache || { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 };
     }
   }
+
 }

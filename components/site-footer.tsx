@@ -1,8 +1,10 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { footerText } from "@/constants/footer";
+import { getSystemStats } from "@/lib/actions/home.actions";
+
 
 interface SiteStats {
   totalPosts: number;
@@ -11,8 +13,26 @@ interface SiteStats {
   activeThreads24h: number;
 }
 
-export function SiteFooter({ stats }: { stats?: SiteStats }) {
+export function SiteFooter() {
   const [showStats, setShowStats] = useState(false);
+  const [stats, setStats] = useState<SiteStats | null>(null);
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    async function loadStats() {
+      setLoading(true);
+      try {
+        const data = await getSystemStats();
+        setStats(data);
+      } catch (error) {
+        console.error("Failed to fetch statistics:", error);
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    loadStats();
+  }, []);
 
   return (
     <>
@@ -35,20 +55,16 @@ export function SiteFooter({ stats }: { stats?: SiteStats }) {
             >
               donasi
             </Link>
-            {stats && (
-              <>
-                <span className="text-muted-foreground">•</span>
-                <button
-                  onClick={() => setShowStats(!showStats)}
-                  className="text-accent hover:underline focus:outline-none"
-                >
-                statistik situs
-              </button>
-              </>
-            )}
+            <span className="text-muted-foreground">•</span>
+            <button
+              onClick={() => setShowStats(!showStats)}
+              className="text-accent hover:underline focus:outline-none disabled:opacity-50"
+              disabled={loading && !stats}
+            >
+              {loading && !stats ? "memuat statistik..." : "statistik situs"}
+            </button>
           </div>
           <div className="space-y-1">
-            {/* <p className="text-xs text-muted-foreground">{footerText}</p> */}
             <p className="text-[10px] text-muted-foreground/60 max-w-2xl mx-auto leading-relaxed">
               Semua postingan di 62chan adalah tanggung jawab pengunggahnya dan
               bukan tanggung jawab 62chan.
@@ -99,7 +115,6 @@ export function SiteFooter({ stats }: { stats?: SiteStats }) {
                   </span>
                 </span>
               </div>
-              {/* Duplicate for seamless loop */}
               <div
                 className="flex animate-marquee gap-10 items-center text-[10px] font-mono text-muted-foreground/80 pr-10"
                 aria-hidden="true"
@@ -164,4 +179,5 @@ export function SiteFooter({ stats }: { stats?: SiteStats }) {
     </>
   );
 }
+
 

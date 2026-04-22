@@ -13,12 +13,14 @@ const globalForDb = globalThis as unknown as {
 };
 
 const client = globalForDb.client ?? postgres(connectionString, {
-  prepare: false, 
-  max: 10,
+  prepare: false,
+  // Di lingkungan serverless (Vercel), kita kecilkan max connection 
+  // karena setiap instance fungsi akan membuka pool sendiri.
+  max: process.env.NODE_ENV === "production" ? 1 : 10,
 });
 
-if (process.env.NODE_ENV !== "production") {
-  globalForDb.client = client;
-}
+// Selalu simpan di global agar bisa di-reuse saat 'warm start' di serverless/production
+globalForDb.client = client;
 
 export const db = drizzle(client, { schema });
+
