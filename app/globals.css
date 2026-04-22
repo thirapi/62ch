@@ -178,7 +178,7 @@
   }
 
   .ib-post-number {
-    @apply text-accent font-mono text-xs hover:underline cursor-pointer;
+    @apply text-accent font-mono text-xs hover:underline cursor-pointer select-none;
   }
 
   .custom-scrollbar {

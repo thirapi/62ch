@@ -13,7 +13,7 @@ import { getCaptcha } from "@/lib/actions/thread.actions";
 import { ImageUploader } from "./image-uploader";
 import { useEffect } from "react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { ShieldAlert, AlertTriangle } from "lucide-react";
+import { ShieldAlert, AlertTriangle, RefreshCcw } from "lucide-react";
 import { useReply } from "./reply-context";
 import { useThreadWatcher } from "./thread-watcher-provider";
 import posthog from "posthog-js";
@@ -188,12 +188,23 @@ export function ReplyForm({
         </div>
 
         <div className="space-y-1">
-          <Label
-            htmlFor={`${prefix}reply-captcha`}
-            className="text-[10px] font-bold opacity-60"
-          >
-            Verifikasi: {captchaQuestion}
-          </Label>
+          <div className="flex items-center justify-between">
+            <Label
+              htmlFor={`${prefix}reply-captcha`}
+              className="text-[10px] font-bold opacity-60"
+            >
+              Verifikasi: {captchaQuestion || "Memuat..."}
+            </Label>
+            <button
+              type="button"
+              onClick={refreshCaptcha}
+              className="text-[10px] text-accent hover:underline flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity"
+              title="Segarkan CAPTCHA"
+            >
+              <RefreshCcw className="h-2.5 w-2.5" />
+              Ganti
+            </button>
+          </div>
           <Input
             id={`${prefix}reply-captcha`}
             name="captcha"
@@ -289,6 +300,9 @@ export function ReplyForm({
               <p>Tip: Gunakan {`>>NomorPost`} untuk membalas post tertentu.</p>
               <p>
                 Gunakan {`[spoiler]teks[/spoiler]`} untuk menyembunyikan teks.
+              </p>
+              <p>
+                Format: [b]tebal[/b], [i]miring[/i], [u]garis bawah[/u], [s]coret[/s], [code]kode[/code].
               </p>
               <p>
                 Gunakan {`Nama#Sandi`} di kolom Nama untuk membuat Tripcode.

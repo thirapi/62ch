@@ -16,7 +16,7 @@ export class CaptchaService {
         cookieStore.set(this.COOKIE_NAME, answer, {
             httpOnly: true,
             secure: process.env.NODE_ENV === "production",
-            maxAge: 300 // 5 minutes
+            maxAge: 900 // 15 minutes
         })
 
         return { question, id: "math" }

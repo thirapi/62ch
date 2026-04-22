@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { Send, Plus, ChevronUp } from "lucide-react";
+import { Send, Plus, ChevronUp, RefreshCcw } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { createThread, getCaptcha } from "@/lib/actions/thread.actions";
 import { ImageUploader } from "./image-uploader";
@@ -252,10 +252,20 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
                     className="bg-muted/30 focus-visible:ring-accent h-8 text-xs"
                   />
                 </div>
-                <div className="space-y-1.5">
-                  <Label htmlFor="captcha" className="text-xs font-bold opacity-70">
-                    Verifikasi: {captchaQuestion}
-                  </Label>
+                <div className="space-y-1.5 min-w-[120px]">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="captcha" className="text-[10px] font-bold opacity-70">
+                      Verifikasi: {captchaQuestion || "..."}
+                    </Label>
+                    <button
+                      type="button"
+                      onClick={refreshCaptcha}
+                      className="text-[10px] text-accent hover:underline flex items-center gap-0.5 opacity-60"
+                      title="Ganti Pertanyaan"
+                    >
+                      <RefreshCcw className="h-2.5 w-2.5" />
+                    </button>
+                  </div>
                   <Input
                     id="captcha"
                     name="captcha"

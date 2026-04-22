@@ -63,9 +63,37 @@ export function ThreadClient({
     }
   };
 
-  const handleQuote = (postNumber: number) => {
+  const handleQuote = (postNumber: number, e?: React.MouseEvent) => {
+    if (e) {
+      e.preventDefault();
+    }
+    
     setQrOpen(true);
-    const quoteText = `>>${postNumber}\n`;
+    
+    // Selection to Quote feature - capture selection immediately
+    let selectedText = "";
+    if (typeof window !== "undefined") {
+      const selection = window.getSelection();
+      if (selection && selection.toString().trim().length > 0) {
+        selectedText = selection.toString().trim();
+      }
+    }
+
+    let quoteText = `>>${postNumber}\n`;
+    
+    if (selectedText) {
+      // Format as green quote
+      const lines = selectedText.split("\n");
+      const formattedLines = lines
+        .map(line => line.trim())
+        .filter(line => line.length > 0)
+        .map(line => `>${line}`);
+      
+      if (formattedLines.length > 0) {
+        quoteText += formattedLines.join("\n") + "\n\n";
+      }
+    }
+
     setContent((prev: string) => prev + quoteText);
 
     setTimeout(() => {
@@ -207,7 +235,7 @@ export function ThreadClient({
             </Link>
             <span
               className="ib-post-number cursor-pointer"
-              onClick={() => handleQuote(thread.postNumber)}
+              onMouseDown={(e) => handleQuote(thread.postNumber, e)}
               title="Balas postingan ini"
             >
               {thread.postNumber}
@@ -309,7 +337,7 @@ export function ThreadClient({
                     </Link>
                     <span
                       className="ib-post-number cursor-pointer"
-                      onClick={() => handleQuote(reply.postNumber)}
+                      onMouseDown={(e) => handleQuote(reply.postNumber, e)}
                       title="Balas postingan ini"
                     >
                       {reply.postNumber}

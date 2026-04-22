@@ -92,9 +92,9 @@ function TextLine({
   const parts = [];
   let lastIndex = 0;
 
-  // Regex for >>>/board/, >>123, [spoiler]...[/spoiler], and URLs
+  // Regex for >>>/board/, >>123, URLs, and various formatting tags
   const regex =
-    />>>\/([a-zA-Z0-9_-]+)\/?|>>(\d+)|\[spoiler\](.*?)\[\/spoiler\]|(https?:\/\/[^\s]+)|(www\.[^\s]+)/g;
+    />>>\/([a-zA-Z0-9_-]+)\/?|>>(\d+)|\[spoiler\](.*?)\[\/spoiler\]|(https?:\/\/[^\s]+)|(www\.[^\s]+)|\[b\](.*?)\[\/b\]|\[i\](.*?)\[\/i\]|\[u\](.*?)\[\/u\]|\[s\](.*?)\[\/s\]|\[code\](.*?)\[\/code\]/g;
   let match;
 
   while ((match = regex.exec(text)) !== null) {
@@ -195,6 +195,28 @@ function TextLine({
           </a>,
         );
       }
+    } else if (match[6]) {
+      // [b] Bold
+      parts.push(<strong key={match.index}>{match[6]}</strong>);
+    } else if (match[7]) {
+      // [i] Italic
+      parts.push(<em key={match.index}>{match[7]}</em>);
+    } else if (match[8]) {
+      // [u] Underline
+      parts.push(<u key={match.index}>{match[8]}</u>);
+    } else if (match[9]) {
+      // [s] Strikethrough
+      parts.push(<s key={match.index}>{match[9]}</s>);
+    } else if (match[10]) {
+      // [code] Code
+      parts.push(
+        <code 
+          key={match.index} 
+          className="bg-muted px-1.5 py-0.5 rounded text-[0.9em] font-mono border border-muted-foreground/10"
+        >
+          {match[10]}
+        </code>
+      );
     }
 
     lastIndex = regex.lastIndex;
