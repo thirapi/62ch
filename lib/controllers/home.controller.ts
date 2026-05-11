@@ -3,6 +3,7 @@ import type { GetLatestPostsUseCase } from "@/lib/use-cases/get-latest-posts.use
 import type { GetRecentImagesUseCase } from "@/lib/use-cases/get-recent-images.use-case"
 import type { GetPostByNumberUseCase } from "@/lib/use-cases/get-post-by-number.use-case"
 import type { GetSystemStatsUseCase } from "@/lib/use-cases/get-system-stats.use-case"
+import type { GetLatestAnnouncementUseCase } from "@/lib/use-cases/get-latest-announcement.use-case"
 
 export class HomeController {
   constructor(
@@ -11,6 +12,7 @@ export class HomeController {
     private getBoardListUseCase: GetBoardListUseCase,
     private getPostByNumberUseCase: GetPostByNumberUseCase,
     private getSystemStatsUseCase: GetSystemStatsUseCase,
+    private getLatestAnnouncementUseCase: GetLatestAnnouncementUseCase,
   ) { }
 
   async getBoardList() {
@@ -40,5 +42,9 @@ export class HomeController {
 
   async getSystemStats() {
     return await this.getSystemStatsUseCase.execute()
+  }
+
+  async getLatestAnnouncement() {
+    return await this.getLatestAnnouncementUseCase.execute()
   }
 }

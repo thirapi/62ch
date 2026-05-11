@@ -3,7 +3,7 @@
 import { container } from "@/lib/di/container"
 import { revalidatePath } from "next/cache"
 
-const { moderationController, createReportUseCase } = container
+const { moderationController, reportController } = container
 
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
@@ -96,7 +96,7 @@ export async function dismissReport(reportId: number) {
 
 export async function createReport(contentType: "thread" | "reply", contentId: number, reason: string) {
   try {
-    const reportId = await createReportUseCase.execute({
+    const reportId = await reportController.createReport({
       contentType,
       contentId,
       reason,
@@ -165,7 +165,7 @@ export async function handleSpamMacro(reportId: number, contentType: "thread" | 
   return handleModerationAction(async (user) => {
     // 1. Ban User
     await moderationController.banUser(user, ipAddress, "Spam / Iklan", 24)
-    
+
     // 2. Delete Content
     if (contentType === "thread") {
       await moderationController.deleteThread(user, contentId)

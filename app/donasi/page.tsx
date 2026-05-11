@@ -118,6 +118,15 @@ export default async function DonasiPage() {
         </section>
 
         <section className="space-y-4 text-sm text-muted-foreground leading-relaxed">
+          <div className="space-y-1 border-l-2 border-accent/50 bg-accent/5 py-2 px-3 rounded-r-sm">
+            <p className="font-bold text-accent">
+              Update
+            </p>
+            <p>
+              saat ini kita beroperasi menggunakan <strong>service free plan</strong> seutuhnya. donasi yang terkumpul akan disimpan untuk mendanai rencana <i>upgrade</i> kapasitas jika dibutuhkan kedepannya.
+            </p>
+          </div>
+
           <div className="space-y-1">
             <p className="font-bold text-foreground">
               Q: kalau target tidak tercapai gimana?

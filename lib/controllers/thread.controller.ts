@@ -1,6 +1,8 @@
 import type { CreateThreadUseCase } from "@/lib/use-cases/create-thread.use-case"
 import type { GetThreadListUseCase } from "@/lib/use-cases/get-thread-list.use-case"
 import type { GetThreadDetailUseCase } from "@/lib/use-cases/get-thread-detail.use-case"
+import type { DeletePostWithPasswordUseCase } from "@/lib/use-cases/delete-post-with-password.use-case"
+import type { SearchThreadsUseCase } from "@/lib/use-cases/search-threads.use-case"
 
 export interface CreateThreadRequest {
   boardId: number
@@ -20,6 +22,8 @@ export class ThreadController {
     private createThreadUseCase: CreateThreadUseCase,
     private getThreadListUseCase: GetThreadListUseCase,
     private getThreadDetailUseCase: GetThreadDetailUseCase,
+    private deletePostWithPasswordUseCase: DeletePostWithPasswordUseCase,
+    private searchThreadsUseCase: SearchThreadsUseCase,
   ) { }
 
   async createThread(request: CreateThreadRequest) {
@@ -72,5 +76,16 @@ export class ThreadController {
 
     // Call use case
     return await this.getThreadDetailUseCase.execute(threadId)
+  }
+
+  async deletePostWithPassword(postId: number, postType: "thread" | "reply", password?: string) {
+    if (!postId || !postType) throw new Error("Post ID and Post Type is required")
+    return await this.deletePostWithPasswordUseCase.execute(postId, postType, password)
+  }
+
+  async searchThreads(boardId: number, query: string) {
+    if (!boardId) throw new Error("Board ID is required")
+    if (!query) return []
+    return await this.searchThreadsUseCase.execute(boardId, query)
   }
 }

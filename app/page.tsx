@@ -2,11 +2,13 @@ import Link from "next/link";
 import { headers } from "next/headers";
 import {
   getBoardList,
-  getBoardCategories, // NEW
+  getBoardCategories,
   getLatestPosts,
   getRecentImages,
   getSystemStats,
+  getLatestAnnouncement,
 } from "@/lib/actions/home.actions";
+import { HomeAnnouncement } from "@/components/home-announcement";
 import { footerLinks, footerText } from "@/constants/footer";
 import { FormattedText } from "@/components/formatted-text";
 import { getThumbnailUrl } from "@/lib/utils/image";
@@ -58,12 +60,13 @@ export default async function HomePage() {
   const postsLimit = isMobile ? 20 : 25;
   const imagesLimit = isMobile ? 8 : 12;
 
-  const [boards, categories, latestPosts, recentImages] =
+  const [boards, categories, latestPosts, recentImages, announcement] =
     await Promise.all([
       getBoardList(),
       getBoardCategories(),
       getLatestPosts(postsLimit),
       getRecentImages(imagesLimit),
+      getLatestAnnouncement(),
     ]);
 
 
@@ -92,6 +95,7 @@ export default async function HomePage() {
       <AdBanner className="mt-2" />
 
       <main className="container mx-auto px-4 py-8 flex-1 max-w-6xl">
+        <HomeAnnouncement announcement={announcement} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8 md:gap-y-10">
           {categoryNames.map((categoryName) => (
             <section
@@ -145,31 +149,31 @@ export default async function HomePage() {
                   <div className="relative flex-1">
                     <div className="overflow-y-auto max-h-[440px] sm:max-h-[642px] pr-2 custom-scrollbar">
                       <div className="columns-2 sm:columns-3 gap-2">
-                    {recentImages.map((image) => (
-                      <div key={`img-wrap-${image.id}`} className="break-inside-avoid mb-2 w-full">
-                        <ThreadPreview
-                          key={`img-preview-${image.id}`}
-                          subject={image.threadSubject}
-                          excerpt={image.threadExcerpt}
-                          boardCode={image.boardCode}
-                          isNsfw={image.isNsfw}
-                          isSpoiler={image.isSpoiler}
-                        >
-                          <VerifiedLink
-                            key={`${image.id}-${image.imageUrl}`}
-                            href={`/${image.boardCode}/thread/${image.threadId}#p${image.postNumber}`}
-                            className="group block w-full"
-                          >
-                            <RecentImage
-                              imageUrl={image.imageUrl}
+                        {recentImages.map((image) => (
+                          <div key={`img-wrap-${image.id}`} className="break-inside-avoid mb-2 w-full">
+                            <ThreadPreview
+                              key={`img-preview-${image.id}`}
+                              subject={image.threadSubject}
+                              excerpt={image.threadExcerpt}
+                              boardCode={image.boardCode}
                               isNsfw={image.isNsfw}
                               isSpoiler={image.isSpoiler}
-                              boardCode={image.boardCode}
-                            />
-                          </VerifiedLink>
-                        </ThreadPreview>
-                      </div>
-                    ))}
+                            >
+                              <VerifiedLink
+                                key={`${image.id}-${image.imageUrl}`}
+                                href={`/${image.boardCode}/thread/${image.threadId}#p${image.postNumber}`}
+                                className="group block w-full"
+                              >
+                                <RecentImage
+                                  imageUrl={image.imageUrl}
+                                  isNsfw={image.isNsfw}
+                                  isSpoiler={image.isSpoiler}
+                                  boardCode={image.boardCode}
+                                />
+                              </VerifiedLink>
+                            </ThreadPreview>
+                          </div>
+                        ))}
                       </div>
                     </div>
                     {/* Fade gradient hint */}

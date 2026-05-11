@@ -1,8 +1,5 @@
 "use server"
 
-import { BoardRepository } from "@/lib/repositories/board.repository"
-import { BoardCategoryRepository } from "@/lib/repositories/board-category.repository"
-import { PostRepository } from "@/lib/repositories/post.repository"
 import { cacheLife, cacheTag } from "next/cache"
 
 // Kita instansiasi di dalam atau gunakan import murni untuk memastikan serializability
@@ -16,11 +13,10 @@ export async function getBoardList() {
     expire: 3600,
   })
   cacheTag('boards')
-  
-  // Instansiasi repository langsung di sini agar tidak menangkap variabel non-serializable dari luar
-  const boardRepository = new BoardRepository()
+
   try {
-    return await boardRepository.findAll()
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getBoardList()
   } catch (error) {
     console.error("Error fetching board list:", error)
     return []
@@ -35,10 +31,10 @@ export async function getBoardCategories() {
     expire: 7200,
   })
   cacheTag('categories')
-  
-  const categoryRepository = new BoardCategoryRepository()
+
   try {
-    return await categoryRepository.findAll()
+    const { container } = await import("@/lib/di/container")
+    return await container.boardCategoryController.getCategories()
   } catch (error) {
     console.error("Error fetching board categories:", error)
     return []
@@ -46,9 +42,9 @@ export async function getBoardCategories() {
 }
 
 export async function getLatestPosts(limit = 10, beforeDate?: Date) {
-  const postRepository = new PostRepository()
   try {
-    return await postRepository.getLatestPosts(limit, beforeDate)
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getLatestPosts(limit, beforeDate)
   } catch (error) {
     console.error("Error fetching latest posts:", error)
     return []
@@ -56,9 +52,9 @@ export async function getLatestPosts(limit = 10, beforeDate?: Date) {
 }
 
 export async function getRecentImages(limit = 12) {
-  const postRepository = new PostRepository()
   try {
-    return await postRepository.getRecentImages(limit)
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getRecentImages(limit)
   } catch (error) {
     console.error("Error fetching recent images:", error)
     return []
@@ -66,9 +62,9 @@ export async function getRecentImages(limit = 12) {
 }
 
 export async function getPostByNumber(postNumber: number) {
-  const postRepository = new PostRepository()
   try {
-    return await postRepository.findByPostNumber(postNumber)
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getPostByNumber(postNumber)
   } catch (error) {
     console.error(`Error fetching post by number ${postNumber}:`, error)
     return null
@@ -76,9 +72,9 @@ export async function getPostByNumber(postNumber: number) {
 }
 
 export async function getSystemStats() {
-  const postRepository = new PostRepository()
   try {
-    return await postRepository.getSystemStats()
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getSystemStats()
   } catch (error) {
     console.error("Error fetching system stats:", error)
     return {
@@ -87,5 +83,15 @@ export async function getSystemStats() {
       totalImages: 0,
       activeThreads24h: 0
     }
+  }
+}
+
+export async function getLatestAnnouncement() {
+  try {
+    const { container } = await import("@/lib/di/container")
+    return await container.homeController.getLatestAnnouncement()
+  } catch (error) {
+    console.error("Error fetching announcement:", error)
+    return null
   }
 }

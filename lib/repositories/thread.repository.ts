@@ -1,5 +1,5 @@
 import { db } from "@/lib/db"
-import { threads, replies } from "@/lib/db/schema"
+import { threads, replies, boards } from "@/lib/db/schema"
 import { asc, eq, desc, and, sql, inArray } from "drizzle-orm"
 import type { ThreadEntity, CreateThreadInput } from "@/lib/entities/thread.entity"
 
@@ -92,7 +92,7 @@ export class ThreadRepository {
       })
       .from(threads)
       .where(and(
-        eq(threads.boardId, boardId), 
+        eq(threads.boardId, boardId),
         eq(threads.isDeleted, false),
         eq(threads.isArchived, false)
       ))
@@ -165,6 +165,43 @@ export class ThreadRepository {
     })
 
     return row ? this.mapToEntity(row) : null
+  }
+
+  async findLatestAnnouncementByBoardCode(boardCode: string): Promise<ThreadEntity | null> {
+    const rows = await db
+      .select({
+        id: threads.id,
+        boardId: threads.boardId,
+        subject: threads.subject,
+        content: threads.content,
+        author: threads.author,
+        image: threads.image,
+        imageMetadata: threads.imageMetadata,
+        isPinned: threads.isPinned,
+        isLocked: threads.isLocked,
+        isArchived: threads.isArchived,
+        isDeleted: threads.isDeleted,
+        isNsfw: threads.isNsfw,
+        isSpoiler: threads.isSpoiler,
+        createdAt: threads.createdAt,
+        bumpedAt: threads.bumpedAt,
+        postNumber: threads.postNumber,
+        ipAddress: threads.ipAddress,
+        capcode: threads.capcode,
+        deletionPassword: threads.deletionPassword,
+      })
+      .from(threads)
+      .innerJoin(boards, eq(threads.boardId, boards.id))
+      .where(and(
+        eq(boards.code, boardCode),
+        eq(threads.isPinned, true),
+        eq(threads.isDeleted, false)
+      ))
+      .orderBy(desc(threads.createdAt))
+      .limit(1);
+
+    if (rows.length === 0) return null;
+    return this.mapToEntity(rows[0]);
   }
 
   async softDelete(id: number): Promise<void> {
@@ -249,7 +286,7 @@ export class ThreadRepository {
       })
       .from(threads)
       .where(and(
-        eq(threads.boardId, boardId), 
+        eq(threads.boardId, boardId),
         eq(threads.isDeleted, false),
         eq(threads.isArchived, false)
       ))
@@ -324,7 +361,7 @@ export class ThreadRepository {
     return threadsRows.map((row) => {
       const c = countMap.get(row.id)
       const threadReplies = repliesMap.get(row.id) || []
-      
+
       return {
         id: row.id,
         boardId: row.boardId,
