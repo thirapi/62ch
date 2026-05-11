@@ -167,7 +167,7 @@ export class ThreadRepository {
     return row ? this.mapToEntity(row) : null
   }
 
-  async findLatestAnnouncementByBoardCode(boardCode: string): Promise<ThreadEntity | null> {
+  async findAnnouncementsByBoardCode(boardCode: string, limit = 3): Promise<ThreadEntity[]> {
     const rows = await db
       .select({
         id: threads.id,
@@ -198,10 +198,9 @@ export class ThreadRepository {
         eq(threads.isDeleted, false)
       ))
       .orderBy(desc(threads.createdAt))
-      .limit(1);
+      .limit(limit);
 
-    if (rows.length === 0) return null;
-    return this.mapToEntity(rows[0]);
+    return rows.map(row => this.mapToEntity(row));
   }
 
   async softDelete(id: number): Promise<void> {

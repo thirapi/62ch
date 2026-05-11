@@ -65,7 +65,7 @@ export function SiteFooter() {
             </button>
           </div>
           <div className="space-y-1">
-            <p className="text-[10px] text-muted-foreground/60 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-[10px] text-muted-foreground max-w-2xl mx-auto leading-relaxed">
               Semua postingan di 62chan adalah tanggung jawab pengunggahnya dan
               bukan tanggung jawab 62chan.
               <br />

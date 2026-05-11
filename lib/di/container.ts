@@ -39,7 +39,7 @@ import { GetPostByNumberUseCase } from "@/lib/use-cases/get-post-by-number.use-c
 import { GetRecentImagesUseCase } from "@/lib/use-cases/get-recent-images.use-case"
 import { GetSystemStatsUseCase } from "@/lib/use-cases/get-system-stats.use-case"
 import { GetReportsUseCase } from "@/lib/use-cases/get-reports.use-case"
-import { GetLatestAnnouncementUseCase } from "@/lib/use-cases/get-latest-announcement.use-case"
+import { GetAnnouncementsUseCase } from "@/lib/use-cases/get-latest-announcement.use-case"
 import { SearchThreadsUseCase } from "@/lib/use-cases/search-threads.use-case"
 import { GetThreadDetailUseCase } from "@/lib/use-cases/get-thread-detail.use-case"
 import { GetThreadListUseCase } from "@/lib/use-cases/get-thread-list.use-case"
@@ -127,7 +127,7 @@ const getRecentImagesUseCase = new GetRecentImagesUseCase(postRepository)
 const getPostByNumberUseCase = new GetPostByNumberUseCase(postRepository)
 const getSystemStatsUseCase = new GetSystemStatsUseCase(postRepository)
 const getReportsUseCase = new GetReportsUseCase(reportRepository)
-const getLatestAnnouncementUseCase = new GetLatestAnnouncementUseCase(threadRepository)
+const getAnnouncementsUseCase = new GetAnnouncementsUseCase(threadRepository)
 const searchThreadsUseCase = new SearchThreadsUseCase(threadRepository)
 const getThreadDetailUseCase = new GetThreadDetailUseCase(threadRepository, replyRepository)
 const getThreadListUseCase = new GetThreadListUseCase(threadRepository)
@@ -186,7 +186,7 @@ const homeController = new HomeController(
   getBoardListUseCase,
   getPostByNumberUseCase,
   getSystemStatsUseCase,
-  getLatestAnnouncementUseCase
+  getAnnouncementsUseCase
 )
 const moderationController = new ModerationController(
   lockThreadUseCase,

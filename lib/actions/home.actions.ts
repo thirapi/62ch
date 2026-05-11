@@ -86,12 +86,12 @@ export async function getSystemStats() {
   }
 }
 
-export async function getLatestAnnouncement() {
+export async function getAnnouncements(limit = 3) {
   try {
     const { container } = await import("@/lib/di/container")
-    return await container.homeController.getLatestAnnouncement()
+    return await container.homeController.getAnnouncements(limit)
   } catch (error) {
-    console.error("Error fetching announcement:", error)
-    return null
+    console.error("Error fetching announcements:", error)
+    return []
   }
 }

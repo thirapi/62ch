@@ -6,7 +6,7 @@ import {
   getLatestPosts,
   getRecentImages,
   getSystemStats,
-  getLatestAnnouncement,
+  getAnnouncements,
 } from "@/lib/actions/home.actions";
 import { HomeAnnouncement } from "@/components/home-announcement";
 import { footerLinks, footerText } from "@/constants/footer";
@@ -60,13 +60,13 @@ export default async function HomePage() {
   const postsLimit = isMobile ? 20 : 25;
   const imagesLimit = isMobile ? 8 : 12;
 
-  const [boards, categories, latestPosts, recentImages, announcement] =
+  const [boards, categories, latestPosts, recentImages, announcements] =
     await Promise.all([
       getBoardList(),
       getBoardCategories(),
       getLatestPosts(postsLimit),
       getRecentImages(imagesLimit),
-      getLatestAnnouncement(),
+      getAnnouncements(3),
     ]);
 
 
@@ -95,7 +95,7 @@ export default async function HomePage() {
       <AdBanner className="mt-2" />
 
       <main className="container mx-auto px-4 py-8 flex-1 max-w-6xl">
-        <HomeAnnouncement announcement={announcement} />
+        <HomeAnnouncement announcements={announcements} />
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8 md:gap-y-10">
           {categoryNames.map((categoryName) => (
             <section
