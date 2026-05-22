@@ -26,6 +26,8 @@ export interface CreateThreadCommand {
   content: string
   author?: string
   imageFile?: File | null
+  imageUrl?: string
+  imageMetadata?: string
   deletionPassword?: string
   isNsfw?: boolean
   isSpoiler?: boolean

@@ -14,8 +14,13 @@ const globalForDb = globalThis as unknown as {
 
 const client = globalForDb.client ?? postgres(connectionString, {
   prepare: false,
-  // Increase max connections to 10 to handle parallel queries better
-  max: 10,
+  // Tuning for scalability:
+  // - max: limit to prevent exhausting DB connections in serverless/high-concurrency
+  // - idle_timeout: close idle connections to free up resources
+  // - connect_timeout: fail fast if DB is unreachable
+  max: process.env.NODE_ENV === 'production' ? 20 : 10,
+  idle_timeout: 20,
+  connect_timeout: 10,
 });
 
 // Selalu simpan di global agar bisa di-reuse saat 'warm start' di serverless/production

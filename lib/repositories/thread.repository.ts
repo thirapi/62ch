@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { threads, replies, boards } from "@/lib/db/schema"
-import { asc, eq, desc, and, sql, inArray } from "drizzle-orm"
+import { asc, eq, desc, and, sql, inArray, or } from "drizzle-orm"
 import type { ThreadEntity, CreateThreadInput } from "@/lib/entities/thread.entity"
 
 export class ThreadRepository {
@@ -459,6 +459,55 @@ export class ThreadRepository {
       where: inArray(threads.id, ids),
     })
     return rows.map((row) => this.mapToEntity(row))
+  }
+
+  async searchByBoardId(boardId: number, query: string): Promise<ThreadEntity[]> {
+    const q = `%${query.toLowerCase()}%`
+    const rows = await db
+      .select({
+        id: threads.id,
+        boardId: threads.boardId,
+        subject: threads.subject,
+        content: threads.content,
+        author: threads.author,
+        image: threads.image,
+        imageMetadata: threads.imageMetadata,
+        isPinned: threads.isPinned,
+        isLocked: threads.isLocked,
+        isArchived: threads.isArchived,
+        isDeleted: threads.isDeleted,
+        isNsfw: threads.isNsfw,
+        isSpoiler: threads.isSpoiler,
+        createdAt: threads.createdAt,
+        bumpedAt: threads.bumpedAt,
+        postNumber: threads.postNumber,
+        ipAddress: threads.ipAddress,
+        capcode: threads.capcode,
+      })
+      .from(threads)
+      .where(and(
+        eq(threads.boardId, boardId),
+        eq(threads.isDeleted, false),
+        or(
+          sql`LOWER(${threads.subject}) ILIKE ${q}`,
+          sql`LOWER(${threads.content}) ILIKE ${q}`
+        )
+      ))
+      .orderBy(desc(threads.isPinned), desc(threads.bumpedAt))
+
+    return rows.map((row) => ({
+      ...row,
+      author: row.author ?? "Awanama",
+      createdAt: row.createdAt!,
+      bumpedAt: row.bumpedAt!,
+      postNumber: row.postNumber!,
+      isPinned: row.isPinned ?? false,
+      isLocked: row.isLocked ?? false,
+      isArchived: row.isArchived ?? false,
+      isDeleted: row.isDeleted ?? false,
+      isNsfw: row.isNsfw ?? false,
+      isSpoiler: row.isSpoiler ?? false,
+    }))
   }
 
   private mapToEntity(row: typeof threads.$inferSelect): ThreadEntity {

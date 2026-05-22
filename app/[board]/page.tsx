@@ -51,14 +51,15 @@ async function BoardContent({
   const limit = 50;
   const offset = (currentPage - 1) * limit;
 
-  // Memanggil Action, bukan Controller
-  const board = await getBoardByCode(boardCode);
+  // Parallelize board fetch and potential auth check
+  const [board, user] = await Promise.all([
+    getBoardByCode(boardCode),
+    getAuthUser()
+  ]);
 
   if (!board) {
     notFound();
   }
-
-  const user = await getAuthUser();
 
   // Memanggil Action untuk mengambil data thread
   let { threads, totalPages } = await getThreadList(
@@ -175,13 +176,12 @@ export default async function BoardPage({
     sort?: string;
   }>;
 }) {
-  const { board: boardCode } = await params;
-  const {
+  const [{ board: boardCode }, {
     view = "list",
     q: query = "",
     page = "1",
     sort = "bump",
-  } = await searchParams;
+  }] = await Promise.all([params, searchParams]);
 
   const board = await getBoardByCode(boardCode);
 

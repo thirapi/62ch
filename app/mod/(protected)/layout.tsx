@@ -1,5 +1,5 @@
 import { getModeratorAuthorizer } from "@/lib/actions/moderation.actions";
-import { redirect } from "next/navigation";
+import { redirect, forbidden } from "next/navigation";
 import { Suspense } from "react";
 
 async function AuthGuard({ children }: { children: React.ReactNode }) {
@@ -10,7 +10,7 @@ async function AuthGuard({ children }: { children: React.ReactNode }) {
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : "";
     if (errorMessage.includes("insufficient permissions")) {
-      redirect("/");
+      forbidden();
     } else {
       redirect("/mod/login");
     }

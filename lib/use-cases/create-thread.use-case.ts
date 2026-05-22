@@ -41,7 +41,7 @@ export class CreateThreadUseCase {
     }
 
     // Business rule: Thread MUST have an image
-    if (!input.imageFile || input.imageFile.size === 0) {
+    if (!input.imageUrl && (!input.imageFile || input.imageFile.size === 0)) {
       throw new Error("Anda harus mengunggah gambar untuk membuat thread baru.")
     }
 
@@ -71,9 +71,9 @@ export class CreateThreadUseCase {
 
     const postNumber = await this.sequenceService.getNextPostNumber();
 
-    let imageUrl: string | undefined
-    let imageMetadata: string | undefined
-    if (input.imageFile && input.imageFile.size > 0) {
+    let imageUrl: string | undefined = input.imageUrl
+    let imageMetadata: string | undefined = input.imageMetadata
+    if (!imageUrl && input.imageFile && input.imageFile.size > 0) {
       try {
         const uploadResult = await this.cloudinaryService.uploadImage(input.imageFile)
         imageUrl = uploadResult.url

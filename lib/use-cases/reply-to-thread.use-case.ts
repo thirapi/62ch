@@ -69,9 +69,10 @@ export class ReplyToThreadUseCase {
 
     const postNumber = await this.sequenceService.getNextPostNumber();
 
-    let imageUrl: string | undefined
-    let imageMetadata: string | undefined
-    if (input.imageFile && input.imageFile.size > 0) {
+    let imageUrl: string | undefined = input.imageUrl
+    let imageMetadata: string | undefined = input.imageMetadata
+
+    if (!imageUrl && input.imageFile && input.imageFile.size > 0) {
       try {
         const uploadResult = await this.cloudinaryService.uploadImage(input.imageFile)
         imageUrl = uploadResult.url

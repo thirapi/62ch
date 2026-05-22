@@ -39,5 +39,10 @@ export const replies = pgTable(
     threadIdx: index('idx_replies_thread_id').on(t.threadId),
     deletedIdx: index('idx_replies_is_deleted').on(t.isDeleted),
     createdIdx: index('idx_replies_created_at').on(t.createdAt),
+    threadViewIdx: index('idx_replies_thread_view').on(
+      t.threadId,
+      t.isDeleted,
+      t.createdAt
+    ),
   })
 )

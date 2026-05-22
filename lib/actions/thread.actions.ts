@@ -1,7 +1,7 @@
 "use server"
 
 import { container } from "@/lib/di/container"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
 
@@ -31,6 +31,8 @@ export async function createThread(formData: FormData) {
     }
     const author = formData.get("author") as string
     const imageFile = formData.get("image") as File | null
+    const imageUrl = formData.get("imageUrl") as string
+    const imageMetadata = formData.get("imageMetadata") as string
     const deletionPassword = formData.get("deletionPassword") as string
     const isNsfw = formData.get("isNsfw") === "on"
     const isSpoiler = formData.get("isSpoiler") === "on"
@@ -57,6 +59,8 @@ export async function createThread(formData: FormData) {
       content,
       author,
       imageFile,
+      imageUrl,
+      imageMetadata,
       deletionPassword,
       isNsfw,
       isSpoiler,
@@ -66,6 +70,10 @@ export async function createThread(formData: FormData) {
 
     revalidatePath("/")
     revalidatePath(`/${boardCode}`)
+    revalidateTag('system-stats', 'default')
+    revalidateTag('latest-posts', 'default')
+    revalidateTag('recent-images', 'default')
+    revalidateTag('boards', 'default')
     return { success: true, threadId, postNumber }
   } catch (error) {
     return { success: false, error: error instanceof Error ? error.message : "Failed to create thread" }

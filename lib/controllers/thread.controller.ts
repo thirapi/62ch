@@ -10,6 +10,8 @@ export interface CreateThreadRequest {
   content: string
   author?: string
   imageFile?: File | null
+  imageUrl?: string
+  imageMetadata?: string
   deletionPassword?: string
   isNsfw?: boolean
   isSpoiler?: boolean
@@ -43,6 +45,8 @@ export class ThreadController {
       content: request.content,
       author: request.author,
       imageFile: request.imageFile,
+      imageUrl: request.imageUrl,
+      imageMetadata: request.imageMetadata,
       deletionPassword: request.deletionPassword,
       isNsfw: request.isNsfw,
       isSpoiler: request.isSpoiler,

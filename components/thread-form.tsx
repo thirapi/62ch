@@ -13,6 +13,7 @@ import { ImageUploader } from "./image-uploader";
 import { Checkbox } from "@/components/ui/checkbox";
 import posthog from "posthog-js";
 import { useThreadWatcher } from "./thread-watcher-provider";
+import { uploadImageClient } from "@/lib/utils/cloudinary-client";
 
 interface ThreadFormProps {
   boardId: number;
@@ -78,9 +79,19 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
       return;
     }
 
-    formData.set("image", imageFile);
-
     try {
+      // Step 1: Client-side upload to Cloudinary
+      const uploadResult = await uploadImageClient(imageFile);
+      formData.set("imageUrl", uploadResult.url);
+      formData.set("imageMetadata", JSON.stringify({
+        width: uploadResult.width,
+        height: uploadResult.height,
+        format: uploadResult.format,
+        bytes: uploadResult.bytes,
+        originalName: uploadResult.originalName
+      }));
+
+      // Step 2: Call Server Action with image metadata
       const result = await createThread(formData);
 
       if (result.success && result.threadId) {

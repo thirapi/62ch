@@ -17,6 +17,7 @@ import { ShieldAlert, AlertTriangle, RefreshCcw } from "lucide-react";
 import { useReply } from "./reply-context";
 import { useThreadWatcher } from "./thread-watcher-provider";
 import posthog from "posthog-js";
+import { uploadImageClient } from "@/lib/utils/cloudinary-client";
 
 interface ReplyFormProps {
   threadId: number;
@@ -71,11 +72,21 @@ export function ReplyForm({
     formData.append("threadId", threadId.toString());
     formData.append("boardCode", boardCode);
 
-    if (state.imageFile) {
-      formData.append("image", state.imageFile);
-    }
-
     try {
+      // Step 1: Client-side upload if image exists
+      if (state.imageFile) {
+        const uploadResult = await uploadImageClient(state.imageFile);
+        formData.set("imageUrl", uploadResult.url);
+        formData.set("imageMetadata", JSON.stringify({
+          width: uploadResult.width,
+          height: uploadResult.height,
+          format: uploadResult.format,
+          bytes: uploadResult.bytes,
+          originalName: uploadResult.originalName
+        }));
+      }
+
+      // Step 2: Call Server Action
       const result = await createReply(formData);
 
       if (result.success) {

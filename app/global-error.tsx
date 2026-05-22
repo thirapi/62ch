@@ -1,8 +1,8 @@
 "use client";
 
 import * as Sentry from "@sentry/nextjs";
-import NextError from "next/error";
 import { useEffect } from "react";
+import { ErrorDisplay } from "@/components/error-display";
 
 export default function GlobalError({
   error,
@@ -14,13 +14,15 @@ export default function GlobalError({
   }, [error]);
 
   return (
-    <html lang="en">
+    <html lang="id">
       <body>
-        {/* `NextError` is the default Next.js error page component. Its type
-        definition requires a `statusCode` prop. However, since the App Router
-        does not expose status codes for errors, we simply pass 0 to render a
-        generic error message. */}
-        <NextError statusCode={0} />
+        <ErrorDisplay
+          statusCode="500"
+          imageSrc="https://raw.githubusercontent.com/Ender-Wiggin2019/ServiceLogos/main/503ServiceUnavailable.png/ServiceUnavailable.png"
+          title="Terjadi Kesalahan Sistem"
+          imageAlt="System Error Illustration"
+          description="Sistem mengalami gangguan yang tidak terduga. Tim kami telah diberitahu dan akan segera memperbaikinya. Harap coba lagi nanti."
+        />
       </body>
     </html>
   );

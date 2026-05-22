@@ -1,22 +1,13 @@
-import Link from "next/link";
-import { Button } from "@/components/ui/button";
-import { ArrowLeft } from "lucide-react";
+import { ErrorDisplay } from "@/components/error-display";
 
 export default function NotFound() {
   return (
-    <div className="flex flex-col items-center justify-center min-h-[70vh] px-4 text-center">
-      <h1 className="text-6xl font-bold text-accent mb-4">404</h1>
-      <h2 className="text-2xl font-semibold mb-2">Halaman Tidak Ditemukan</h2>
-      <p className="text-muted-foreground max-w-md mb-8">
-        Maaf, halaman atau utas yang Anda cari mungkin telah dihapus,
-        kadaluarsa, atau tidak pernah ada sejak awal.
-      </p>
-      <Button asChild variant="outline" className="gap-2">
-        <Link href="/">
-          <ArrowLeft className="h-4 w-4" />
-          Kembali ke Beranda
-        </Link>
-      </Button>
-    </div>
+    <ErrorDisplay
+      statusCode="404"
+      imageSrc="https://raw.githubusercontent.com/Ender-Wiggin2019/ServiceLogos/main/404Notfound/NotFound.png"
+      title="Halaman Tidak Ditemukan"
+      imageAlt="404 Not Found Illustration"
+      description="Maaf, halaman atau utas yang Anda cari mungkin telah dihapus, kadaluarsa, atau tidak pernah ada sejak awal."
+    />
   );
 }

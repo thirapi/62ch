@@ -42,6 +42,14 @@ export async function getBoardCategories() {
 }
 
 export async function getLatestPosts(limit = 10, beforeDate?: Date) {
+  'use cache'
+  cacheLife({
+    stale: 60,
+    revalidate: 120,
+    expire: 600,
+  })
+  cacheTag('latest-posts')
+
   try {
     const { container } = await import("@/lib/di/container")
     return await container.homeController.getLatestPosts(limit, beforeDate)
@@ -52,6 +60,14 @@ export async function getLatestPosts(limit = 10, beforeDate?: Date) {
 }
 
 export async function getRecentImages(limit = 12) {
+  'use cache'
+  cacheLife({
+    stale: 60,
+    revalidate: 120,
+    expire: 600,
+  })
+  cacheTag('recent-images')
+
   try {
     const { container } = await import("@/lib/di/container")
     return await container.homeController.getRecentImages(limit)
@@ -72,6 +88,14 @@ export async function getPostByNumber(postNumber: number) {
 }
 
 export async function getSystemStats() {
+  'use cache'
+  cacheLife({
+    stale: 900,
+    revalidate: 1800,
+    expire: 3600,
+  })
+  cacheTag('system-stats')
+
   try {
     const { container } = await import("@/lib/di/container")
     return await container.homeController.getSystemStats()

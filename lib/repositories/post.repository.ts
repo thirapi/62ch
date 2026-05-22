@@ -201,39 +201,26 @@ export class PostRepository {
   }
 
   async getSystemStats(): Promise<SystemStatsEntity> {
-    const CACHE_TTL = 15 * 60 * 1000; // 15 menit
-    const globalStats = globalThis as any;
-
     // Percepat build: Jangan hitung stats jika sedang dalam fase build statis Vercel
     if (process.env.NEXT_PHASE === 'phase-production-build') {
       return { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 };
-    }
-
-    // Gunakan cache jika masih valid
-    if (
-      globalStats.__statsCache && 
-      Date.now() - globalStats.__statsCacheTimestamp < CACHE_TTL
-    ) {
-      return globalStats.__statsCache;
     }
 
     const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
 
     try {
       const [
-        totalRes,
+        totalThreadsRes,
+        totalRepliesRes,
         threadsTodayRes,
         repliesTodayRes,
         imagesRes,
         replyImagesRes,
         activeThreadsRes
       ] = await Promise.allSettled([
-        // 1. Total - Pakai estimasi (Instan)
-        db.execute(sql`
-          SELECT (reltuples::bigint) as count FROM pg_class WHERE relname = 'threads'
-          UNION ALL
-          SELECT (reltuples::bigint) as count FROM pg_class WHERE relname = 'replies'
-        `),
+        // 1. Total (Akurat)
+        db.select({ value: count() }).from(threads).where(eq(threads.isDeleted, false)),
+        db.select({ value: count() }).from(replies).where(eq(replies.isDeleted, false)),
         // 2. Threads Today (Penyaringan berdasarkan index createdAt - Cepat)
         db.select({ value: count() }).from(threads).where(and(gt(threads.createdAt, twentyFourHoursAgo), eq(threads.isDeleted, false))),
         // 3. Replies Today (Penyaringan berdasarkan index createdAt - Cepat)
@@ -250,9 +237,8 @@ export class PostRepository {
         )
       ])
 
-      const totalPosts = totalRes.status === 'fulfilled' 
-        ? (totalRes.value as any).reduce((acc: number, row: any) => acc + Number(row.count || 0), 0)
-        : 0
+      const totalPosts = (totalThreadsRes.status === 'fulfilled' ? Number(totalThreadsRes.value[0].value) : 0) + 
+                         (totalRepliesRes.status === 'fulfilled' ? Number(totalRepliesRes.value[0].value) : 0)
 
       const postsToday = (threadsTodayRes.status === 'fulfilled' ? Number(threadsTodayRes.value[0].value) : 0) + 
                          (repliesTodayRes.status === 'fulfilled' ? Number(repliesTodayRes.value[0].value) : 0)
@@ -270,15 +256,10 @@ export class PostRepository {
         activeThreads24h: activeCount,
       }
 
-      // Simpan ke cache global
-      globalStats.__statsCache = stats;
-      globalStats.__statsCacheTimestamp = Date.now();
-
       return stats;
     } catch (error) {
       console.error("Error in getSystemStats:", error)
-      // Jika gagal dan ada data lama di cache, gunakan data lama
-      return globalStats.__statsCache || { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 };
+      return { totalPosts: 0, postsToday: 0, totalImages: 0, activeThreads24h: 0 };
     }
   }
 
