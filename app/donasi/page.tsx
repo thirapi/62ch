@@ -26,6 +26,7 @@ interface DonationStats {
 }
 
 async function getStats(): Promise<DonationStats | null> {
+  return null;
   try {
     const res = await fetch(
       "https://saweria-milestone.vercel.app/api/donations/stats",
@@ -49,7 +50,7 @@ export default async function DonasiPage() {
       <div className="space-y-6">
         {/* Simple Header */}
         <header className="border-b border-border pb-3">
-          <h1 className="text-xl font-bold ib-subject">Donasi</h1>
+          <h1 className="text-xl font-bold ib-subject"><s>Donasi</s> &nbsp; FAQ</h1>
           <p className="text-sm text-muted-foreground mt-1">
             Sharing is caring
           </p>
@@ -106,14 +107,12 @@ export default async function DonasiPage() {
               pembayaran via QRIS, GoPay, OVO, Dana, LinkAja).
             </p>
 
-            <a
-              href="https://saweria.co/support62chan"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="inline-block bg-accent text-accent-foreground px-4 py-1.5 font-bold text-sm border border-accent hover:bg-accent/90 transition-colors"
+            <button
+              disabled
+              className="inline-block bg-accent text-accent-foreground px-4 py-1.5 font-bold text-sm border border-accent transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               Donasi via Saweria
-            </a>
+            </button>
           </div>
         </section>
 

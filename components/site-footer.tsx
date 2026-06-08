@@ -53,7 +53,7 @@ export function SiteFooter() {
               className="text-accent hover:underline"
               title="Dukung operasional server"
             >
-              donasi
+              <s>donasi</s>&nbsp;faq
             </Link>
             <span className="text-muted-foreground">•</span>
             <button
