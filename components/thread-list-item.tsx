@@ -9,6 +9,7 @@ import { TripcodeDisplay } from "@/components/tripcode-display";
 import { useHiding } from "@/hooks/use-hiding";
 import { cn } from "@/lib/utils";
 import { PostActions } from "@/components/post-actions";
+import { CapcodeMarker } from "@/components/capcode-marker";
 
 interface ThreadListItemProps {
   thread: any;
@@ -33,41 +34,6 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
       </div>
     );
   }
-
-  const CapcodeMarker = ({
-    type,
-    className,
-  }: {
-    type: string | null | undefined;
-    className?: string;
-  }) => {
-    if (!type) return null;
-    if (type === "mod" || type === "moderator") {
-      return (
-        <span
-          className={cn(
-            "text-purple-600 dark:text-purple-400 font-bold leading-none",
-            className,
-          )}
-        >
-          ## Mod
-        </span>
-      );
-    }
-    if (type === "admin") {
-      return (
-        <span
-          className={cn(
-            "text-red-600 dark:text-red-400 font-bold leading-none",
-            className,
-          )}
-        >
-          ## Admin
-        </span>
-      );
-    }
-    return null;
-  };
 
   return (
     <div id={`p${thread.postNumber}`} className="ib-post py-1 first:pt-0 scroll-mt-14">

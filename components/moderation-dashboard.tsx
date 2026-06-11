@@ -65,6 +65,7 @@ interface ModerationDashboardProps {
   pendingTotal: number;
   currentPage: number;
   totalPages: number;
+  userRole?: string | null;
 }
 
 export function ModerationDashboard({
@@ -72,6 +73,7 @@ export function ModerationDashboard({
   pendingTotal,
   currentPage,
   totalPages,
+  userRole,
 }: ModerationDashboardProps) {
   const [selectedIds, setSelectedIds] = useState<number[]>([]);
   const [isProcessing, setIsProcessing] = useState(false);
@@ -431,6 +433,7 @@ export function ModerationDashboard({
                         isLocked={activeReport.isLocked}
                         isPinned={activeReport.isPinned}
                         isBanned={activeReport.isBanned}
+                        userRole={userRole}
                         onSuccess={() => {
                           setActiveReportId(null);
                         }}

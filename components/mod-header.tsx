@@ -37,16 +37,21 @@ export function ModHeader({ role }: { role?: string | null }) {
           <nav className="hidden md:flex items-center gap-1">
               <TabLink href="/mod" active={pathname === "/mod"} icon={<ShieldAlert className="h-4 w-4" />}>Laporan</TabLink>
               {role !== "janitor" && (
-                <>
-                  <TabLink href="/mod/boards" active={pathname.startsWith("/mod/boards")} icon={<Settings className="h-4 w-4" />}>Board</TabLink>
-                  <TabLink href="/mod/categories" active={pathname.startsWith("/mod/categories")} icon={<Settings className="h-4 w-4" />}>Kategori</TabLink>
-                </>
+               <>
+                 <TabLink href="/mod/boards" active={pathname.startsWith("/mod/boards")} icon={<Settings className="h-4 w-4" />}>Board</TabLink>
+                 {role === "admin" && (
+                   <TabLink href="/mod/categories" active={pathname.startsWith("/mod/categories")} icon={<Settings className="h-4 w-4" />}>Kategori</TabLink>
+                 )}
+               </>
               )}
               <TabLink href="/mod/history" active={pathname === "/mod/history"} icon={<History className="h-4 w-4" />}>Riwayat</TabLink>
-              <TabLink href="/mod/bans" active={pathname === "/mod/bans"} icon={<ShieldX className="h-4 w-4" />}>Blokir IP</TabLink>
-              {role === "admin" && (
-                <TabLink href="/mod/janitors" active={pathname.startsWith("/mod/janitors")} icon={<UserCog className="h-4 w-4" />}>Janitor</TabLink>
+              {role !== "janitor" && (
+               <TabLink href="/mod/bans" active={pathname === "/mod/bans"} icon={<ShieldX className="h-4 w-4" />}>Blokir IP</TabLink>
               )}
+              {role === "admin" && (
+               <TabLink href="/mod/staff" active={pathname.startsWith("/mod/staff")} icon={<UserCog className="h-4 w-4" />}>Staff</TabLink>
+              )}
+
           </nav>
         </div>
       </div>

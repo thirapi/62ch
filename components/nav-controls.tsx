@@ -42,10 +42,10 @@ interface NavControlsProps {
 
 export function NavControls({ user }: NavControlsProps) {
   const { resolvedTheme, setTheme } = useTheme();
-  const { 
-    position, 
-    togglePosition, 
-    defaultBoardView, 
+  const {
+    position,
+    togglePosition,
+    defaultBoardView,
     toggleDefaultBoardView,
     autoPlayGif,
     toggleAutoPlayGif
@@ -72,7 +72,7 @@ export function NavControls({ user }: NavControlsProps) {
   return (
     <div className="flex items-center gap-1.5 sm:gap-3">
       <span className="text-muted-foreground/50">[</span>
-      
+
       {/* Refresh Button */}
       <Tooltip>
         <TooltipTrigger asChild>
@@ -87,7 +87,7 @@ export function NavControls({ user }: NavControlsProps) {
         <TooltipContent side="bottom">Segarkan halaman</TooltipContent>
       </Tooltip>
       <span className="text-muted-foreground/50">/</span>
-      
+
       {/* Thread Watcher Toggle */}
       <Tooltip>
         <TooltipTrigger asChild>
@@ -152,7 +152,7 @@ export function NavControls({ user }: NavControlsProps) {
             <Settings className="size-3.5" />
             Pengaturan
           </DropdownMenuLabel>
-          
+
           <DropdownMenuItem asChild className="cursor-pointer h-[26px] py-0 sm:hidden focus:text-accent">
             <Link href="/rules" className="flex items-center gap-2 w-full">
               <Gavel className="size-3.5" />
@@ -160,7 +160,7 @@ export function NavControls({ user }: NavControlsProps) {
             </Link>
           </DropdownMenuItem>
           <DropdownMenuSeparator className="sm:hidden" />
-          
+
           <DropdownMenuSeparator />
 
           <DropdownMenuItem
@@ -208,6 +208,15 @@ export function NavControls({ user }: NavControlsProps) {
 
           {user && (
             <>
+              <DropdownMenuSeparator />
+              <DropdownMenuLabel className="flex flex-col gap-0.5 py-1.5">
+                <span className="text-[10px] text-accent">
+                  {user.role}
+                </span>
+                <span className="font-normal opacity-60">
+                  {user.email}
+                </span>
+              </DropdownMenuLabel>
               <DropdownMenuSeparator />
               <form action={logout}>
                 <button type="submit" className="w-full text-left">

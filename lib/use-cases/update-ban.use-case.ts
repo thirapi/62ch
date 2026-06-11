@@ -10,11 +10,10 @@ export class UpdateBanUseCase {
     constructor(private banRepository: BanRepository) { }
 
     async execute(user: any, command: UpdateBanCommand): Promise<void> {
-        // Business rule: Check authorization
-        if (!user || (user.role !== "admin" && user.role !== "moderator" && user.role !== "janitor")) {
-            throw new Error("Unauthorized: Pelaku bukan admin, moderator, atau janitor")
-        }
-
+      // Business rule: Check authorization
+      if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+        throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+      }
         let expiresAt: Date | null | undefined
 
         if (command.durationHours === null) {

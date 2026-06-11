@@ -30,6 +30,7 @@ interface ModActionsProps {
   isLocked?: boolean;
   isPinned?: boolean;
   isBanned?: boolean;
+  userRole?: string | null;
   onSuccess?: () => void;
 }
 
@@ -41,6 +42,7 @@ export function ModActions({
   isLocked,
   isPinned,
   isBanned,
+  userRole,
   onSuccess,
 }: ModActionsProps) {
   const [isProcessing, setIsProcessing] = useState(false);
@@ -49,24 +51,35 @@ export function ModActions({
   const { toast } = useToast();
 
   async function handleAction(action: string) {
-    if (action === "ban") {
-      if (ipAddress) {
-        if (isBanned) {
-          toast({
-            title: "Informasi",
-            description: "IP ini sudah dalam daftar blokir",
-          });
-          return;
-        }
-        setIsBanDialogOpen(true);
-      } else {
+    if (action === "ban" || action === "spamMacro") {
+      if (userRole === "janitor") {
         toast({
-          title: "Kesalahan",
-          description: "IP Address tidak ditemukan",
+          title: "Izin Ditolak",
+          description: "Janitor tidak diizinkan melakukan blokir IP",
           variant: "destructive",
         });
+        return;
       }
-      return;
+
+      if (action === "ban") {
+        if (ipAddress) {
+          if (isBanned) {
+            toast({
+              title: "Informasi",
+              description: "IP ini sudah dalam daftar blokir",
+            });
+            return;
+          }
+          setIsBanDialogOpen(true);
+        } else {
+          toast({
+            title: "Kesalahan",
+            description: "IP Address tidak ditemukan",
+            variant: "destructive",
+          });
+        }
+        return;
+      }
     }
 
     setIsProcessing(true);
@@ -214,7 +227,7 @@ export function ModActions({
         <XCircle className="h-4 w-4 mr-2" />
         Abaikan
       </Button>
-      {ipAddress && (
+      {ipAddress && userRole !== "janitor" && (
         <Button
           variant="secondary"
           size="sm"

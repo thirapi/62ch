@@ -33,7 +33,7 @@ export class BoardJanitorRepository {
   async getJanitorUsers(): Promise<any[]> {
     // This is useful for admin view
     return await db.query.users.findMany({
-      where: (users, { eq }) => eq(users.role, "janitor"),
+      where: (users, { inArray }) => inArray(users.role, ["janitor", "moderator"]),
     })
   }
 

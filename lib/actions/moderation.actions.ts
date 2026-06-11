@@ -42,6 +42,14 @@ export async function getAdminOrModeratorAuthorizer() {
   return user
 }
 
+export async function getAdminAuthorizer() {
+  const user = await getModeratorAuthorizer()
+  if (user.role !== "admin") {
+    throw new Error("Unauthorized: Pelaku harus admin")
+  }
+  return user
+}
+
 async function handleModerationAction(actionCall: (user: any) => Promise<any>, revalidate: string | null = "/mod") {
   try {
     const user = await getModeratorAuthorizer()
@@ -163,6 +171,10 @@ export async function bulkDismissReports(reportIds: number[]) {
 
 export async function handleSpamMacro(reportId: number, contentType: "thread" | "reply", contentId: number, ipAddress: string) {
   return handleModerationAction(async (user) => {
+    if (user.role === "janitor") {
+      throw new Error("Unauthorized: Janitor tidak diizinkan melakukan blokir IP")
+    }
+
     // 1. Ban User
     await moderationController.banUser(user, ipAddress, "Spam / Iklan", 24)
 

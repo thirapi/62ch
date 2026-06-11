@@ -2,7 +2,7 @@
 
 import { container } from "@/lib/di/container"
 import { revalidatePath } from "next/cache"
-import { getAdminOrModeratorAuthorizer } from "./moderation.actions"
+import { getAdminOrModeratorAuthorizer, getAdminAuthorizer } from "./moderation.actions"
 
 const { boardController } = container
 
@@ -48,14 +48,14 @@ export async function getBoardByCode(code: string) {
 
 export async function createBoard(formData: FormData) {
   try {
-    await getAdminOrModeratorAuthorizer()
+    const user = await getAdminAuthorizer()
     const code = formData.get("code") as string
     const name = formData.get("name") as string
     const description = formData.get("description") as string
     const categoryIdStr = formData.get("categoryId") as string
     const categoryId = (categoryIdStr && categoryIdStr !== "none") ? Number.parseInt(categoryIdStr) : null
 
-    await boardController.createBoard({
+    await boardController.createBoard(user, {
       code,
       name,
       description,
@@ -72,7 +72,7 @@ export async function createBoard(formData: FormData) {
 
 export async function updateBoard(formData: FormData) {
   try {
-    await getAdminOrModeratorAuthorizer()
+    const user = await getAdminOrModeratorAuthorizer()
     const id = Number.parseInt(formData.get("id") as string)
     const code = formData.get("code") as string
     const name = formData.get("name") as string
@@ -80,7 +80,7 @@ export async function updateBoard(formData: FormData) {
     const categoryIdStr = formData.get("categoryId") as string
     const categoryId = (categoryIdStr && categoryIdStr !== "none") ? Number.parseInt(categoryIdStr) : null
 
-    await boardController.updateBoard({
+    await boardController.updateBoard(user, {
       id,
       code,
       name,
@@ -99,8 +99,8 @@ export async function updateBoard(formData: FormData) {
 
 export async function deleteBoard(id: number) {
   try {
-    await getAdminOrModeratorAuthorizer()
-    await boardController.deleteBoard(id)
+    const user = await getAdminAuthorizer()
+    await boardController.deleteBoard(user, id)
     revalidatePath("/")
     revalidatePath("/mod/boards")
     return { success: true }

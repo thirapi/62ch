@@ -3,7 +3,12 @@ import type { BoardRepository } from "@/lib/repositories/board.repository"
 export class DeleteBoardUseCase {
   constructor(private boardRepository: BoardRepository) { }
 
-  async execute(id: number): Promise<void> {
+  async execute(user: any, id: number): Promise<void> {
+    // Business Rule: Check authorization
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized: Hanya admin yang dapat menghapus board")
+    }
+
     const board = await this.boardRepository.findById(id)
     if (!board) {
       throw new Error("Board not found")

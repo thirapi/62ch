@@ -4,10 +4,25 @@ import type { UpdateBoardCommand, BoardEntity } from "@/lib/entities/board.entit
 export class UpdateBoardUseCase {
   constructor(private boardRepository: BoardRepository) { }
 
-  async execute(input: UpdateBoardCommand): Promise<BoardEntity> {
+  async execute(user: any, input: UpdateBoardCommand): Promise<BoardEntity> {
+    // Business Rule: Check authorization
+    if (!user || (user.role !== "admin" && user.role !== "moderator")) {
+      throw new Error("Unauthorized: Pelaku bukan admin atau moderator")
+    }
+
     const board = await this.boardRepository.findById(input.id)
     if (!board) {
       throw new Error("Board not found")
+    }
+
+    // Business Rule: Moderator restrictions
+    if (user.role === "moderator") {
+      if (input.code && input.code !== board.code) {
+        throw new Error("Unauthorized: Moderator tidak diizinkan mengubah slug/kode board")
+      }
+      if (input.categoryId !== undefined && input.categoryId !== board.categoryId) {
+        throw new Error("Unauthorized: Moderator tidak diizinkan mengubah kategori board")
+      }
     }
 
     // Business Rule: Validate new code uniqueness if changed

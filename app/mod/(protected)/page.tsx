@@ -4,6 +4,7 @@ import { ModerationDashboard } from "@/components/moderation-dashboard";
 import { ModerationBoardFilter } from "@/components/moderation-board-filter";
 import {
   getPendingReports,
+  getModeratorAuthorizer,
 } from "@/lib/actions/moderation.actions";
 import {
   getBoardList,
@@ -21,9 +22,15 @@ async function ModDashboardWrapper({
   const limit = 20;
   const offset = (currentPage - 1) * limit;
 
+  // Auth & Permissions
+  const user = await getModeratorAuthorizer();
+
   // Fetch all boards for filtering
-  const boards = await getBoardList();
-  const selectedBoard = (boards as any[]).find(b => b.code === boardCode);
+  let boards = await getBoardList() as any[];
+  if (user.role === "janitor" && user.janitorBoards) {
+    boards = boards.filter(b => user.janitorBoards.includes(b.id));
+  }
+  const selectedBoard = boards.find(b => b.code === boardCode);
 
   const { reports: pendingReports, total: pendingTotal } = await getPendingReports(limit, offset, selectedBoard?.id);
   const totalPages = Math.ceil(pendingTotal / limit);
@@ -45,6 +52,7 @@ async function ModDashboardWrapper({
           pendingTotal={pendingTotal}
           currentPage={currentPage}
           totalPages={totalPages}
+          userRole={user.role}
         />
       </div>
     </>

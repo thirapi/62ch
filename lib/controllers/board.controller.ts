@@ -53,11 +53,11 @@ export class BoardController {
     return board
   }
 
-  async createBoard(request: CreateBoardRequest) {
+  async createBoard(user: any, request: CreateBoardRequest) {
     if (!request.code) throw new Error("Code is required")
     if (!request.name) throw new Error("Name is required")
 
-    return await this.createBoardUseCase.execute({
+    return await this.createBoardUseCase.execute(user, {
       code: request.code,
       name: request.name,
       description: request.description ?? null,
@@ -65,10 +65,10 @@ export class BoardController {
     })
   }
 
-  async updateBoard(request: UpdateBoardRequest) {
+  async updateBoard(user: any, request: UpdateBoardRequest) {
     if (!request.id) throw new Error("Board ID is required")
 
-    return await this.updateBoardUseCase.execute({
+    return await this.updateBoardUseCase.execute(user, {
       id: request.id,
       code: request.code,
       name: request.name,
@@ -77,9 +77,9 @@ export class BoardController {
     })
   }
 
-  async deleteBoard(id: number) {
+  async deleteBoard(user: any, id: number) {
     if (!id) throw new Error("Board ID is required")
-    await this.deleteBoardUseCase.execute(id)
+    await this.deleteBoardUseCase.execute(user, id)
     return { success: true }
   }
 }

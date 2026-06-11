@@ -17,7 +17,7 @@ export class JanitorController {
     return await this.getJanitorsUseCase.execute(user)
   }
 
-  async createJanitor(user: any, data: { email: string; password?: string }) {
+  async createJanitor(user: any, data: { email: string; password?: string; role?: "admin" | "moderator" | "janitor" }) {
     if (!data.email) throw new Error("Email is required")
     return await this.createJanitorUseCase.execute(user, data)
   }

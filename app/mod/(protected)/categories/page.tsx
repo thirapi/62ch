@@ -27,11 +27,13 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { deleteCategory, getAllCategories } from "@/lib/actions/category.actions";
+import { getAdminAuthorizer } from "@/lib/actions/moderation.actions";
 import { CategoryFormDialog } from "@/components/mod/category-form-dialog";
 import { CategoryDeleteButton } from "@/components/mod/category-delete-button";
 import { CategoryReorderButtons } from "@/components/mod/category-reorder-buttons";
 
 export default async function CategoriesPage() {
+  await getAdminAuthorizer();
   const categories = await getAllCategories();
 
   return (

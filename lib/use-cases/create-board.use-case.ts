@@ -4,7 +4,12 @@ import type { CreateBoardCommand, BoardEntity } from "@/lib/entities/board.entit
 export class CreateBoardUseCase {
   constructor(private boardRepository: BoardRepository) { }
 
-  async execute(input: CreateBoardCommand): Promise<BoardEntity> {
+  async execute(user: any, input: CreateBoardCommand): Promise<BoardEntity> {
+    // Business Rule: Check authorization
+    if (!user || user.role !== "admin") {
+      throw new Error("Unauthorized: Hanya admin yang dapat membuat board baru")
+    }
+
     // Business Rule: Code MUST be provided and valid (slug-like)
     if (!input.code || input.code.trim().length === 0) {
       throw new Error("Board code is required")

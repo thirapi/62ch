@@ -1,4 +1,4 @@
-import { getBans } from "@/lib/actions/moderation.actions";
+import { getBans, getAdminOrModeratorAuthorizer } from "@/lib/actions/moderation.actions";
 import { BanList } from "@/components/ban-list";
 import { Suspense } from "react";
 
@@ -8,6 +8,7 @@ async function BansListWrapper() {
 }
 
 export default async function BansManagementPage() {
+  await getAdminOrModeratorAuthorizer();
   return (
     <div className="space-y-10">
       <header className="mb-0">

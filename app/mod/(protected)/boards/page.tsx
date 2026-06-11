@@ -17,8 +17,10 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { getAllBoards, deleteBoard } from "@/lib/actions/board.actions";
+import { getAdminOrModeratorAuthorizer } from "@/lib/actions/moderation.actions";
 
 export default async function BoardsPage() {
+  await getAdminOrModeratorAuthorizer();
   const boards = await getAllBoards();
 
   return (

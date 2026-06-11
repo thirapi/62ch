@@ -23,6 +23,7 @@ import { useEffect } from "react";
 import { useHiding } from "@/hooks/use-hiding";
 import { X, Plus, MoreHorizontal } from "lucide-react";
 import { PostActions } from "@/components/post-actions";
+import { CapcodeMarker } from "@/components/capcode-marker";
 
 interface ThreadClientProps {
   thread: ThreadUI;
@@ -130,41 +131,6 @@ export function ThreadClient({
       }
       return false;
     });
-  };
-
-  const CapcodeMarker = ({
-    type,
-    className,
-  }: {
-    type: string | null | undefined;
-    className?: string;
-  }) => {
-    if (!type) return null;
-    if (type === "mod" || type === "moderator") {
-      return (
-        <span
-          className={cn(
-            "text-purple-600 dark:text-purple-400 font-bold leading-none",
-            className,
-          )}
-        >
-          ## Mod
-        </span>
-      );
-    }
-    if (type === "admin") {
-      return (
-        <span
-          className={cn(
-            "text-red-600 dark:text-red-400 font-bold leading-none",
-            className,
-          )}
-        >
-          ## Admin
-        </span>
-      );
-    }
-    return null;
   };
 
   return (
