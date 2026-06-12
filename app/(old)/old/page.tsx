@@ -60,7 +60,7 @@ export default async function OldHomePage() {
             <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "9pt" }}>
               {groupedBoards.get(categoryName)!.map((board) => (
                 <li key={board.id}>
-                  <a href={`/old/${board.code}`}><b>/{board.code}/</b> - {board.name}</a>
+                  <a href={`/${board.code}`}><b>/{board.code}/</b> - {board.name}</a>
                 </li>
               ))}
             </ul>
@@ -78,7 +78,7 @@ export default async function OldHomePage() {
               {latestPosts.map((post) => (
                 <tr key={post.id} style={{ verticalAlign: "top" }}>
                   <td style={{ whiteSpace: "nowrap", paddingRight: "10px" }}>
-                    <a href={`/old/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}>
+                    <a href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}>
                       /{post.boardCode}/{post.postNumber}
                     </a>
                   </td>
@@ -98,7 +98,7 @@ export default async function OldHomePage() {
           <h2 style={{ fontSize: "12pt", color: "#800000" }}>Gambar Terbaru</h2>
           <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "5px" }}>
             {recentImages.map((img) => (
-              <a key={img.id} href={`/old/${img.boardCode}/thread/${img.threadId}#p${img.postNumber}`} style={{ position: "relative", display: "block", overflow: "hidden" }}>
+              <a key={img.id} href={`/${img.boardCode}/thread/${img.threadId}#p${img.postNumber}`} style={{ position: "relative", display: "block", overflow: "hidden" }}>
                 <img 
                   src={img.imageUrl} 
                   alt="" 

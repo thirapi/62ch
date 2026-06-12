@@ -34,7 +34,7 @@ export default async function OldThreadPage({
       </header>
 
       <hr />
-      [<a href={`/old/${boardCode}`}>Kembali ke Board</a>]
+      [<a href={`/${boardCode}`}>Kembali ke Board</a>]
       <hr />
 
       {error && (
@@ -62,8 +62,8 @@ export default async function OldThreadPage({
             <span className="post-name">Awanama</span>{" "}
             {format(new Date(thread.createdAt), "dd/MM/yy(EEE)HH:mm:ss", { locale: id })}{" "}
             <span className="post-id">No.{thread.postNumber}</span>{" "}
-            [<a href={`/old/action/report?type=thread&id=${thread.id}`}>Lapor</a>]{" "}
-            [<a href={`/old/action/delete?type=thread&id=${thread.id}`}>Hapus</a>]
+            [<a href={`/action/report?type=thread&id=${thread.id}`}>Lapor</a>]{" "}
+            [<a href={`/action/delete?type=thread&id=${thread.id}`}>Hapus</a>]
           </div>
           <div className="post-content">
             {thread.content.split("\n").map((line: string, i: number) => (
@@ -79,8 +79,8 @@ export default async function OldThreadPage({
                 <span className="post-name">Awanama</span>{" "}
                 {format(new Date(reply.createdAt), "dd/MM/yy(EEE)HH:mm:ss", { locale: id })}{" "}
                 <span className="post-id">No.{reply.postNumber}</span>{" "}
-                [<a href={`/old/action/report?type=reply&id=${reply.id}`}>Lapor</a>]{" "}
-                [<a href={`/old/action/delete?type=reply&id=${reply.id}`}>Hapus</a>]
+                [<a href={`/action/report?type=reply&id=${reply.id}`}>Lapor</a>]{" "}
+                [<a href={`/action/delete?type=reply&id=${reply.id}`}>Hapus</a>]
               </div>
               {reply.image && (
                 <div className="post-image-thumb" style={{ float: "none", margin: "5px 0" }}>
@@ -146,7 +146,7 @@ export default async function OldThreadPage({
         </form>
       </div>
       <hr />
-      [<a href={`/old/${boardCode}`}>Kembali ke Board</a>]
+      [<a href={`/${boardCode}`}>Kembali ke Board</a>]
     </main>
   );
 }

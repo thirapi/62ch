@@ -8,9 +8,9 @@ export async function oldCreateThread(formData: FormData) {
   const result = await baseCreateThread(formData);
   const boardCode = formData.get("boardCode") as string;
   if (result.success) {
-    redirect(`/old/${boardCode}`);
+    redirect(`/${boardCode}`);
   } else {
-    redirect(`/old/${boardCode}?error=${encodeURIComponent(result.error || "Unknown error")}`);
+    redirect(`/${boardCode}?error=${encodeURIComponent(result.error || "Unknown error")}`);
   }
 }
 
@@ -19,8 +19,8 @@ export async function oldCreateReply(formData: FormData) {
   const boardCode = formData.get("boardCode") as string;
   const threadId = formData.get("threadId") as string;
   if (result.success) {
-    redirect(`/old/${boardCode}/thread/${threadId}`);
+    redirect(`/${boardCode}/thread/${threadId}`);
   } else {
-    redirect(`/old/${boardCode}/thread/${threadId}?error=${encodeURIComponent(result.error || "Unknown error")}`);
+    redirect(`/${boardCode}/thread/${threadId}?error=${encodeURIComponent(result.error || "Unknown error")}`);
   }
 }

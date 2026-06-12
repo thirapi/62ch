@@ -1,13 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import { createReport } from "@/lib/actions/moderation.actions";
+import { Suspense } from "react";
 
-export default async function OldReportPage({
-  searchParams,
+async function ReportContent({
+  type,
+  contentId,
+  error,
 }: {
-  searchParams: Promise<{ type: string; id: string; error?: string }>;
+  type: string;
+  contentId: string;
+  error?: string;
 }) {
-  const { type, id: contentId, error } = await searchParams;
-
   if (!type || !contentId) notFound();
 
   async function handleReport(formData: FormData) {
@@ -19,11 +22,9 @@ export default async function OldReportPage({
     const result = await createReport(contentType, id, reason);
 
     if (result.success) {
-      // Redirect back to some sensible page, maybe a success page or just back
-      // For now, let's just go back to home or a generic success message
-      redirect("/old?message=Laporan berhasil dikirim");
+      redirect("/?message=Laporan berhasil dikirim");
     } else {
-      redirect(`/old/action/report?type=${contentType}&id=${id}&error=${encodeURIComponent(result.error || "Gagal mengirim laporan")}`);
+      redirect(`/action/report?type=${contentType}&id=${id}&error=${encodeURIComponent(result.error || "Gagal mengirim laporan")}`);
     }
   }
 
@@ -60,5 +61,19 @@ export default async function OldReportPage({
         </table>
       </form>
     </main>
+  );
+}
+
+export default async function OldReportPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type: string; id: string; error?: string }>;
+}) {
+  const { type, id: contentId, error } = await searchParams;
+
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "40px" }}>Memuat...</div>}>
+      <ReportContent type={type} contentId={contentId} error={error} />
+    </Suspense>
   );
 }

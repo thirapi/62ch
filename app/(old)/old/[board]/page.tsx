@@ -113,9 +113,9 @@ export default async function OldBoardPage({
                 <span className="post-name">Awanama</span>{" "}
                 {format(new Date(thread.createdAt), "dd/MM/yy(EEE)HH:mm:ss", { locale: id })}{" "}
                 <span className="post-id">No.{thread.postNumber}</span>{" "}
-                [<a href={`/old/${boardCode}/thread/${thread.id}`}>Balas</a>]{" "}
-                [<a href={`/old/action/report?type=thread&id=${thread.id}`}>Lapor</a>]{" "}
-                [<a href={`/old/action/delete?type=thread&id=${thread.id}`}>Hapus</a>]
+                [<a href={`/${boardCode}/thread/${thread.id}`}>Balas</a>]{" "}
+                [<a href={`/action/report?type=thread&id=${thread.id}`}>Lapor</a>]{" "}
+                [<a href={`/action/delete?type=thread&id=${thread.id}`}>Hapus</a>]
               </div>
               <div className="post-content">
                 {thread.content.split("\n").map((line, i) => (
@@ -127,7 +127,7 @@ export default async function OldBoardPage({
               <div className="replies" style={{ marginLeft: "40px" }}>
                 {thread.replyCount > thread.replies.length && (
                   <div style={{ fontSize: "9pt", margin: "10px 0" }}>
-                    {thread.replyCount - thread.replies.length} balasan disembunyikan. [<a href={`/old/${boardCode}/thread/${thread.id}`}>Lihat Thread</a>]
+                    {thread.replyCount - thread.replies.length} balasan disembunyikan. [<a href={`/${boardCode}/thread/${thread.id}`}>Lihat Thread</a>]
                   </div>
                 )}
                 {thread.replies.map((reply) => (
@@ -136,8 +136,8 @@ export default async function OldBoardPage({
                       <span className="post-name">Awanama</span>{" "}
                       {format(new Date(reply.createdAt), "dd/MM/yy(EEE)HH:mm:ss", { locale: id })}{" "}
                       <span className="post-id">No.{reply.postNumber}</span>{" "}
-                      [<a href={`/old/action/report?type=reply&id=${reply.id}`}>Lapor</a>]{" "}
-                      [<a href={`/old/action/delete?type=reply&id=${reply.id}`}>Hapus</a>]
+                      [<a href={`/action/report?type=reply&id=${reply.id}`}>Lapor</a>]{" "}
+                      [<a href={`/action/delete?type=reply&id=${reply.id}`}>Hapus</a>]
                     </div>
                     {reply.image && (
                       <div className="post-image-thumb" style={{ float: "none", margin: "5px 0" }}>
@@ -165,9 +165,9 @@ export default async function OldBoardPage({
       </div>
 
       <div style={{ textAlign: "center", marginBottom: "20px" }}>
-        {currentPage > 1 && <a href={`/old/${boardCode}?page=${currentPage - 1}`}>[Sebelumnya]</a>}{" "}
+        {currentPage > 1 && <a href={`/${boardCode}?page=${currentPage - 1}`}>[Sebelumnya]</a>}{" "}
         Halaman {currentPage} / {totalPages}{" "}
-        {currentPage < totalPages && <a href={`/old/${boardCode}?page=${currentPage + 1}`}>[Selanjutnya]</a>}
+        {currentPage < totalPages && <a href={`/${boardCode}?page=${currentPage + 1}`}>[Selanjutnya]</a>}
       </div>
     </main>
   );

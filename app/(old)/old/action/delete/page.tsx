@@ -1,13 +1,16 @@
 import { notFound, redirect } from "next/navigation";
 import { deletePost } from "@/lib/actions/post.actions";
+import { Suspense } from "react";
 
-export default async function OldDeletePage({
-  searchParams,
+async function DeleteContent({
+  type,
+  contentId,
+  error,
 }: {
-  searchParams: Promise<{ type: string; id: string; error?: string }>;
+  type: string;
+  contentId: string;
+  error?: string;
 }) {
-  const { type, id: contentId, error } = await searchParams;
-
   if (!type || !contentId) notFound();
 
   async function handleDelete(formData: FormData) {
@@ -19,9 +22,9 @@ export default async function OldDeletePage({
     const result = await deletePost(id, postType, password);
 
     if (result.success) {
-      redirect("/old?message=Postingan berhasil dihapus");
+      redirect("/?message=Postingan berhasil dihapus");
     } else {
-      redirect(`/old/action/delete?type=${postType}&id=${id}&error=${encodeURIComponent(result.error || "Gagal menghapus postingan")}`);
+      redirect(`/action/delete?type=${postType}&id=${id}&error=${encodeURIComponent(result.error || "Gagal menghapus postingan")}`);
     }
   }
 
@@ -58,5 +61,19 @@ export default async function OldDeletePage({
         </table>
       </form>
     </main>
+  );
+}
+
+export default async function OldDeletePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ type: string; id: string; error?: string }>;
+}) {
+  const { type, id: contentId, error } = await searchParams;
+
+  return (
+    <Suspense fallback={<div style={{ textAlign: "center", padding: "40px" }}>Memuat...</div>}>
+      <DeleteContent type={type} contentId={contentId} error={error} />
+    </Suspense>
   );
 }
