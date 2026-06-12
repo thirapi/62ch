@@ -18,13 +18,22 @@ export default async function OldLayout({
   return (
     <html lang="id">
       <body>
-        <nav style={{ fontSize: "8pt", textAlign: "center", borderBottom: "1px solid #ccc", padding: "4px" }}>
-          [ <a href="/">home</a> ]
-          {boards.map((board) => (
-            <span key={board.id}> / <a href={`/${board.code}`} title={board.name}>{board.code}</a></span>
-          ))}
-          [ <a href="/rules">rules</a> ] [ <a href="/donasi">donasi</a> ]
-        </nav>
+      <nav style={{ 
+        position: "sticky",
+        top: 0,
+        backgroundColor: "#fff",
+        zIndex: 1000,
+        fontSize: "8pt", 
+        textAlign: "left", 
+        borderBottom: "1px solid #ccc", 
+        padding: "4px" 
+      }}>
+        [ <a href="/">home</a> ] [
+        {boards.map((board) => (
+          <span key={board.id}> / <a href={`/${board.code}`} title={board.name}>{board.code}</a></span>
+        ))}
+        ] [ <a href="/rules">rules</a> ]
+      </nav>
         <Suspense fallback={<div style={{ textAlign: "center", padding: "40px" }}>Memuat...</div>}>
           {children}
         </Suspense>

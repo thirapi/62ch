@@ -25,7 +25,7 @@ export default async function OldHomePage() {
     await Promise.all([
       getBoardList(),
       getBoardCategories(),
-      getLatestPosts(25),
+      getLatestPosts(8),
       getRecentImages(12),
       getAnnouncements(3),
     ]);
@@ -39,98 +39,123 @@ export default async function OldHomePage() {
     <main>
       <header>
         <h1 className="board-title">62chan</h1>
-        <div className="board-subtitle">Papan Gambar Anonim Indonesia</div>
       </header>
 
-      {announcements.length > 0 && (
-        <section style={{ margin: "20px auto", maxWidth: "800px", border: "1px dashed red", padding: "10px" }}>
-          <b style={{ color: "red" }}>Pengumuman:</b>
-          <ul style={{ margin: "5px 0", paddingLeft: "20px" }}>
-            {announcements.map((ann) => (
-              <li key={ann.id}>{ann.content}</li>
-            ))}
-          </ul>
-        </section>
-      )}
-
-      <div style={{ display: "flex", flexWrap: "wrap", justifyContent: "center", gap: "20px", marginBottom: "40px" }}>
-        {categoryNames.map((categoryName) => (
-          <div key={categoryName} style={{ minWidth: "200px" }}>
-            <h2 style={{ fontSize: "11pt", borderBottom: "1px solid #ccc", color: "#800000" }}>{categoryName}</h2>
-            <ul style={{ listStyle: "none", padding: 0, margin: 0, fontSize: "9pt" }}>
-              {groupedBoards.get(categoryName)!.map((board) => (
-                <li key={board.id}>
-                  <a href={`/${board.code}`}><b>/{board.code}/</b> - {board.name}</a>
-                </li>
-              ))}
-            </ul>
+      <div className="old-page-container">
+        {announcements.length > 0 && (
+          <div className="old-box">
+            <div className="old-box-header">
+              News
+            </div>
+            <div className="old-box-content">
+              <ul style={{ margin: 0, paddingLeft: "20px", lineHeight: "1.6" }}>
+                {announcements.map((ann) => (
+                  <li key={ann.id} style={{ marginBottom: "6px" }}>
+                    {ann.content}
+                  </li>
+                ))}
+              </ul>
+            </div>
           </div>
-        ))}
-      </div>
+        )}
 
-      <hr />
+        <div className="old-box">
+          <div className="old-box-header">
+            Boards
+          </div>
 
-      <div style={{ display: "flex", flexWrap: "wrap", gap: "40px" }}>
-        <section style={{ flex: "2" }}>
-          <h2 style={{ fontSize: "12pt", color: "#800000" }}>Postingan Terbaru</h2>
-          <table width="100%" cellPadding="2" cellSpacing="0" style={{ fontSize: "9pt" }}>
-            <tbody>
-              {latestPosts.map((post) => (
-                <tr key={post.id} style={{ verticalAlign: "top" }}>
-                  <td style={{ whiteSpace: "nowrap", paddingRight: "10px" }}>
-                    <a href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}>
-                      /{post.boardCode}/{post.postNumber}
-                    </a>
-                  </td>
-                  <td>
-                    <span style={{ color: "#789922", fontWeight: "bold" }}>{post.boardCode}</span>: {post.excerpt}
-                  </td>
-                  <td style={{ textAlign: "right", color: "#666", fontSize: "8pt" }}>
-                    {formatDistanceToNow(new Date(post.createdAt), { addSuffix: true, locale: id })}
-                  </td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
-        </section>
+          <div className="old-boards-grid">
+            {categoryNames.map((categoryName) => (
+              <div
+                key={categoryName}
+                className="old-board-category"
+              >
+                <h2 className="old-board-category-title">
+                  {categoryName}
+                </h2>
+                <ul className="old-board-list">
+                  {groupedBoards.get(categoryName)!.map((board) => (
+                    <li key={board.id}>
+                      <a
+                        href={`/${board.code}`}
+                        className="old-board-link"
+                      >
+                        <b style={{ color: "#ff0000" }}>/{board.code}/</b> -{" "}
+                        {board.name}
+                      </a>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </div>
+        </div>
 
-        <section style={{ flex: "1" }}>
-          <h2 style={{ fontSize: "12pt", color: "#800000" }}>Gambar Terbaru</h2>
-          <div style={{ display: "grid", gridTemplateColumns: "repeat(3, 1fr)", gap: "5px" }}>
-            {recentImages.map((img) => (
-              <a key={img.id} href={`/${img.boardCode}/thread/${img.threadId}#p${img.postNumber}`} style={{ position: "relative", display: "block", overflow: "hidden" }}>
-                <img 
-                  src={img.imageUrl} 
-                  alt="" 
-                  style={{ 
-                    width: "100%", 
-                    height: "80px", 
-                    objectFit: "cover", 
-                    border: "1px solid #ccc",
-                    filter: (img.isNsfw || img.isSpoiler) ? "blur(10px)" : "none"
-                  }} 
-                />
-                {(img.isNsfw || img.isSpoiler) && (
-                  <div
-                    style={{
-                      position: "absolute",
-                      top: "50%",
-                      left: "50%",
-                      transform: "translate(-50%, -50%)",
-                      color: "white",
-                      textShadow: "0 0 4px black",
-                      pointerEvents: "none",
-                      fontWeight: "bold",
-                      fontSize: "8pt"
-                    }}
+        <hr />
+
+        <div className="old-recent-container">
+          <section className="old-recent-section old-box">
+            <div className="old-box-header">Postingan Terbaru</div>
+            <div className="old-box-content">
+              <table className="old-posts-table">
+                <tbody>
+                  {latestPosts.map((post) => (
+                    <tr key={post.id}>
+                      <td style={{ whiteSpace: "nowrap", paddingRight: "10px" }}>
+                        <a
+                          href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
+                        >
+                          /{post.boardCode}/{post.postNumber}
+                        </a>
+                      </td>
+                      <td>
+                        <span style={{ color: "#789922", fontWeight: "bold" }}>
+                          {post.boardCode}
+                        </span>
+                        : {post.excerpt}
+                      </td>
+                      <td className="old-posts-table-date">
+                        {formatDistanceToNow(new Date(post.createdAt), {
+                          addSuffix: true,
+                          locale: id,
+                        })}
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          </section>
+
+          <section className="old-recent-section old-box">
+            <div className="old-box-header">Gambar Terbaru</div>
+            <div className="old-box-content">
+              <div className="old-images-grid">
+                {recentImages.map((img) => (
+                  <a
+                    key={img.id}
+                    href={`/${img.boardCode}/thread/${img.threadId}#p${img.postNumber}`}
+                    className="old-image-item"
                   >
-                    {img.isNsfw ? "NSFW" : "SPOILER"}
-                  </div>
-                )}
-              </a>
-            ))}
-          </div>
-        </section>
+                    <img
+                      src={img.imageUrl}
+                      alt=""
+                      className="old-image-img"
+                      style={{
+                        filter: img.isNsfw || img.isSpoiler ? "blur(10px)" : "none",
+                      }}
+                    />
+                    {(img.isNsfw || img.isSpoiler) && (
+                      <div className="old-image-overlay">
+                        {img.isNsfw ? "NSFW" : "SPOILER"}
+                      </div>
+                    )}
+                  </a>
+                ))}
+              </div>
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

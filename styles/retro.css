@@ -124,8 +124,140 @@ form table {
   padding: 0 4px;
 }
 
-input[type="text"], input[type="password"], textarea {
-  border: 1px solid #a9a9a9;
-  font-family: inherit;
+
+/* Old Home Page Styles */
+.old-page-container {
+  max-width: 850px;
+  margin: 20px auto;
+  padding: 0 15px;
+  font-family: Tahoma, Geneva, sans-serif;
   font-size: 10pt;
+  color: #000000;
 }
+
+.old-box {
+  border: 1px solid #d9bfb7;
+  background-color: #ffffee;
+  box-shadow: 1px 1px 2px rgba(0,0,0,0.05);
+  margin-bottom: 25px;
+}
+
+.old-box-header {
+  background-color: #f0e4d4;
+  color: #800000;
+  padding: 6px 12px;
+  font-weight: bold;
+  font-size: 11pt;
+  border-bottom: 1px solid #d9bfb7;
+}
+
+.old-box-content {
+  padding: 12px;
+}
+
+.old-boards-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 25px;
+  padding: 20px;
+  justify-content: flex-start;
+}
+
+.old-board-category {
+  flex: 1 1 200px;
+  min-width: 180px;
+}
+
+.old-board-category-title {
+  font-size: 10pt;
+  color: #b00000;
+  margin: 0 0 8px 0;
+  padding-bottom: 3px;
+  border-bottom: 1px dashed #d9bfb7;
+  font-weight: bold;
+}
+
+.old-board-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-size: 9.5pt;
+  line-height: 1.7;
+}
+
+.old-board-link {
+  color: #34345c;
+  text-decoration: none;
+}
+
+.old-board-link:hover {
+  text-decoration: underline;
+  color: #ff0000;
+}
+
+.old-recent-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 40px;
+  align-items: stretch;
+}
+
+.old-recent-section {
+  flex: 1;
+}
+
+.old-recent-title {
+  font-size: 12pt;
+  color: #800000;
+  margin-bottom: 10px;
+}
+
+.old-posts-table {
+  width: 100%;
+  font-size: 9pt;
+  border-collapse: collapse;
+}
+
+.old-posts-table td {
+  padding: 2px;
+  vertical-align: top;
+}
+
+.old-posts-table-date {
+  text-align: right;
+  color: #666;
+  font-size: 8pt;
+  white-space: nowrap;
+}
+
+.old-images-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 5px;
+}
+
+.old-image-item {
+  position: relative;
+  display: block;
+  overflow: hidden;
+}
+
+.old-image-img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  border: 1px solid #ccc;
+}
+
+.old-image-overlay {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: white;
+  text-shadow: 0 0 4px black;
+  pointer-events: none;
+  font-weight: bold;
+  font-size: 8pt;
+}
+
