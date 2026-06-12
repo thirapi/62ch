@@ -1,36 +1,41 @@
-import { cookies } from "next/headers"
+import { createHmac } from "crypto"
 
 export class CaptchaService {
-    private static COOKIE_NAME = "captcha_answer"
+    private static SECRET = process.env.CAPTCHA_SECRET || "62chan_secret_default_change_this"
 
-    static async generate(): Promise<{ question: string; id: string }> {
+    static async generate(): Promise<{ question: string; token: string }> {
         const a = Math.floor(Math.random() * 10) + 1
         const b = Math.floor(Math.random() * 10) + 1
         const answer = (a + b).toString()
         const question = `Berapa ${a} + ${b}?`
+        const expiresAt = Date.now() + 1000 * 60 * 15 // 15 minutes
 
-        // In a real app, we'd encrypt this or use a more secure token
-        // For now, let's just store it in a cookie (not secure for real prod, but fine for demo)
-        // To make it slightly better, let's hash it or just keep it as is for this case.
-        const cookieStore = await cookies()
-        cookieStore.set(this.COOKIE_NAME, answer, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 900 // 15 minutes
-        })
+        const payload = `${answer}:${expiresAt}`
+        const signature = createHmac("sha256", this.SECRET).update(payload).digest("hex")
+        const token = Buffer.from(`${payload}:${signature}`).toString("base64")
 
-        return { question, id: "math" }
+        return { question, token }
     }
 
-    static async verify(userAnswer: string): Promise<boolean> {
-        const cookieStore = await cookies()
-        const correctAnswer = cookieStore.get(this.COOKIE_NAME)?.value
+    static async verify(userAnswer: string, token: string): Promise<boolean> {
+        if (!token) return false
 
-        if (!correctAnswer) return false
+        try {
+            const decoded = Buffer.from(token, "base64").toString("utf-8")
+            const [answer, expiresAt, signature] = decoded.split(":")
 
-        // Clear cookie after verification
-        cookieStore.delete(this.COOKIE_NAME)
+            if (!answer || !expiresAt || !signature) return false
 
-        return userAnswer === correctAnswer
+            // Check expiry
+            if (Date.now() > Number.parseInt(expiresAt)) return false
+
+            // Verify signature
+            const payload = `${answer}:${expiresAt}`
+            const expectedSignature = createHmac("sha256", this.SECRET).update(payload).digest("hex")
+
+            return userAnswer === answer && signature === expectedSignature
+        } catch (e) {
+            return false
+        }
     }
 }

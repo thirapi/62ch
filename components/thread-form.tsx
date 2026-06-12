@@ -29,6 +29,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaToken, setCaptchaToken] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const { addMyPost } = useThreadWatcher();
@@ -54,6 +55,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
     try {
       const data = await getCaptcha();
       setCaptchaQuestion(data.question);
+      setCaptchaToken(data.token);
     } catch (err) {
       console.error("Failed to load captcha", err);
     }
@@ -231,7 +233,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
                 />
               </div>
 
-              <div className="flex flex-wrap gap-x-4 gap-y-2">
+              <div className="flex flex-wrap gap-x-4 gap-y-2 mt-2">
                 <div className="flex items-center space-x-2.5">
                   <Checkbox id="isNsfw" name="isNsfw" />
                   <Label htmlFor="isNsfw" className="text-xs text-destructive flex items-center gap-1 cursor-pointer font-medium">NSFW</Label>
@@ -284,6 +286,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
                     required
                     className="bg-muted/30 focus-visible:ring-accent h-8 text-xs font-mono"
                   />
+                  <input type="hidden" name="captchaToken" value={captchaToken} />
                 </div>
               </div>
 
