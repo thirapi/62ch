@@ -1,0 +1,131 @@
+/* Classic Imageboard Aesthetics */
+:root {
+  --bg-color: #ffffee;
+  --text-color: #800000;
+  --link-color: #0000ee;
+  --header-bg: #98e8d2;
+  --post-bg: #f0e0d6;
+  --post-border: #d9bfb7;
+  --subject-color: #0f0c5d;
+  --name-color: #117743;
+  --quote-color: #789922;
+}
+
+body {
+  background-color: var(--bg-color);
+  color: #333;
+  font-family: arial, helvetica, sans-serif;
+  font-size: 10pt;
+  margin: 0;
+  padding: 0 8px;
+}
+
+a {
+  color: var(--link-color);
+  text-decoration: none;
+}
+
+a:hover {
+  color: #ff0000;
+}
+
+header {
+  text-align: center;
+  margin-top: 20px;
+  margin-bottom: 20px;
+}
+
+.board-title {
+  color: var(--text-color);
+  font-family: Tahoma, sans-serif;
+  font-size: 28pt;
+  font-weight: bold;
+  letter-spacing: -2pt;
+  margin: 0;
+}
+
+.board-subtitle {
+  font-size: 10pt;
+}
+
+nav {
+  font-size: 9pt;
+  border-bottom: 1px solid #ccc;
+  padding: 2px 0;
+  margin-bottom: 10px;
+}
+
+.post {
+  display: block;
+  margin: 4px 0;
+}
+
+.post.reply {
+  background-color: var(--post-bg);
+  border: 1px solid var(--post-border);
+  border-left: none;
+  border-top: none;
+  display: table;
+  padding: 2px;
+}
+
+.post-header {
+  font-size: 9pt;
+  margin-bottom: 4px;
+}
+
+.post-subject {
+  color: var(--subject-color);
+  font-weight: bold;
+}
+
+.post-name {
+  color: var(--name-color);
+  font-weight: bold;
+}
+
+.post-id {
+  color: #000;
+}
+
+.post-content {
+  margin: 10px 40px;
+  line-height: 1.2;
+}
+
+.greentext {
+  color: var(--quote-color);
+}
+
+.post-image-thumb {
+  float: left;
+  margin: 2px 20px;
+}
+
+.post-footer {
+  clear: both;
+}
+
+hr {
+  border: 0;
+  border-top: 1px solid #b7c5d9;
+  height: 0;
+  width: 100%;
+  margin: 10px 0;
+}
+
+form table {
+  margin: auto;
+}
+
+.form-label {
+  background-color: #eeaa88;
+  font-weight: bold;
+  padding: 0 4px;
+}
+
+input[type="text"], input[type="password"], textarea {
+  border: 1px solid #a9a9a9;
+  font-family: inherit;
+  font-size: 10pt;
+}
