@@ -14,9 +14,8 @@ export async function createReply(formData: FormData) {
   try {
     const ipAddress = await getClientIp()
     const captchaAnswer = formData.get("captcha") as string
-    const captchaToken = formData.get("captchaToken") as string
 
-    const isValidCaptcha = await CaptchaService.verify(captchaAnswer, captchaToken)
+    const isValidCaptcha = await CaptchaService.verify(captchaAnswer)
     if (!isValidCaptcha) {
       throw new Error("Jawaban CAPTCHA salah atau sudah kadaluarsa.")
     }

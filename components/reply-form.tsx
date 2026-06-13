@@ -37,7 +37,6 @@ export function ReplyForm({
   const [error, setError] = useState<string | null>(null);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [captchaQuestion, setCaptchaQuestion] = useState("");
-  const [captchaToken, setCaptchaToken] = useState("");
   const [captcha, setLocalCaptcha] = useState("");
   const [showTips, setShowTips] = useState(false);
   const formRef = useRef<HTMLFormElement>(null);
@@ -58,7 +57,6 @@ export function ReplyForm({
   const refreshCaptcha = async () => {
     const data = await getCaptcha();
     setCaptchaQuestion(data.question);
-    setCaptchaToken(data.token);
   };
 
   useEffect(() => {
@@ -73,7 +71,6 @@ export function ReplyForm({
     const formData = new FormData(e.currentTarget);
     formData.append("threadId", threadId.toString());
     formData.append("boardCode", boardCode);
-    formData.set("captchaToken", captchaToken);
 
     try {
       // Step 1: Client-side upload if image exists
@@ -228,7 +225,6 @@ export function ReplyForm({
             value={captcha}
             onChange={(e) => setLocalCaptcha(e.target.value)}
           />
-          <input type="hidden" name="captchaToken" value={captchaToken} />
         </div>
 
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pt-2">
