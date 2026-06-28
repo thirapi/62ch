@@ -58,7 +58,7 @@
     "cmdk": "1.0.4",
     "date-fns": "4.1.0",
     "dotenv": "^17.2.3",
-    "drizzle-orm": "^0.45.1",
+    "drizzle-orm": "^0.45.2",
     "embla-carousel-react": "8.5.1",
     "input-otp": "1.4.1",
     "lucia": "^3.2.2",
