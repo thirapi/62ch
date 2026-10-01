@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { headers } from "next/headers";
 import {
   getBoardList,
@@ -83,11 +84,17 @@ export default async function HomePage() {
              dark:from-accent/5 dark:to-transparent"
       >
         <div className="container mx-auto px-4 relative">
-          <h1 className="text-3xl sm:text-4xl font-bold tracking-tight">
-            62
-            <span className="text-accent underline decoration-4 decoration-accent/10 underline-offset-4">
-              chan
-            </span>
+          <h1 className="flex justify-center">
+            <Image
+              src="/logo-62chan.png"
+              alt="62chan"
+              width={1741}
+              height={1349}
+              priority
+              sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, 320px"
+              className="w-56 sm:w-72 md:w-80 h-auto max-w-[80vw] object-contain"
+            />
+            <span className="sr-only">62chan</span>
           </h1>
         </div>
       </header>
