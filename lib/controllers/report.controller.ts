@@ -1,17 +1,25 @@
 import type { GetReportsUseCase } from "@/lib/use-cases/get-reports.use-case"
 import type { CreateReportUseCase } from "@/lib/use-cases/create-report.use-case"
 import type { ReportRepository } from "@/lib/repositories/report.repository"
+import type { SubmitUserReportUseCase } from "@/lib/use-cases/submit-user-report.use-case"
 
 export class ReportController {
   constructor(
     private reportRepository: ReportRepository,
     private getReportsUseCase: GetReportsUseCase,
     private createReportUseCase: CreateReportUseCase,
+    private submitUserReportUseCase: SubmitUserReportUseCase,
   ) { }
 
   async createReport(request: { contentType: "thread" | "reply"; contentId: number; reason: string }) {
     if (!request.reason || request.reason.trim() === "") throw new Error("Alasan laporan harus diisi");
     return await this.createReportUseCase.execute(request);
+  }
+
+  /** Public, rate-limited report submission from anonymous users. */
+  async submitUserReport(request: { contentType: "thread" | "reply"; contentId: number; reason: string; reporterIp: string }) {
+    if (typeof request.reason !== "string" || request.reason.trim() === "") throw new Error("Alasan laporan harus diisi");
+    return await this.submitUserReportUseCase.execute(request);
   }
 
   async getReports() {

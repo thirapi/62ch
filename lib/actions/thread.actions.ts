@@ -13,9 +13,10 @@ const { threadController } = container
 export async function createThread(formData: FormData) {
   try {
     const ipAddress = await getClientIp()
-    const captchaAnswer = formData.get("captcha") as string
-
-    const isValidCaptcha = await CaptchaService.verify(captchaAnswer)
+    const isValidCaptcha = await CaptchaService.verify(
+      formData.get("captchaId"),
+      formData.get("captcha"),
+    )
     if (!isValidCaptcha) {
       throw new Error("Jawaban CAPTCHA salah atau sudah kadaluarsa.")
     }
@@ -24,11 +25,8 @@ export async function createThread(formData: FormData) {
     const boardId = Number.parseInt(formData.get("boardId") as string)
     const boardCode = formData.get("boardCode") as string
     const subject = formData.get("subject") as string
-    const rawContent = formData.get("content") as string
-    const content = rawContent.replace(/\r\n/g, "\n")
-    if (content.length > 2000) {
-      throw new Error("Pesan terlalu panjang (maksimum 2000 karakter).")
-    }
+    const rawContent = formData.get("content")
+    const content = typeof rawContent === "string" ? rawContent.replace(/\r\n/g, "\n") : ""
     const author = formData.get("author") as string
     const imageFile = formData.get("image") as File | null
     const imageUrl = formData.get("imageUrl") as string

@@ -7,6 +7,7 @@ const { moderationController, reportController } = container
 
 import { lucia } from "@/lib/auth"
 import { cookies } from "next/headers"
+import { getClientIp } from "@/lib/utils/get-ip"
 
 export async function getModeratorAuthorizer() {
   const cookieStore = await cookies()
@@ -104,10 +105,11 @@ export async function dismissReport(reportId: number) {
 
 export async function createReport(contentType: "thread" | "reply", contentId: number, reason: string) {
   try {
-    const reportId = await reportController.createReport({
+    const reportId = await reportController.submitUserReport({
       contentType,
-      contentId,
+      contentId: Number(contentId),
       reason,
+      reporterIp: await getClientIp(),
     })
     return { success: true, reportId }
   } catch (error) {

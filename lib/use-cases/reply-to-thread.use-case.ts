@@ -7,6 +7,8 @@ import type { BanRepository } from "@/lib/repositories/ban.repository"
 import type { SequenceService } from "../services/sequence.service"
 import { generateTripcode } from "../utils/tripcode"
 import type { PasswordService } from "../services/password.service"
+import { MAX_POST_LENGTH, POST_COOLDOWN_MS } from "../config/posting"
+import { extractCloudinaryPublicId, isTrustedImageUrl, sanitizeImageMetadata } from "../utils/image-validation"
 import type { AIModerationService } from "../services/ai-moderation.service"
 import type { CreateReportUseCase } from "./create-report.use-case"
 
@@ -35,8 +37,8 @@ export class ReplyToThreadUseCase {
 
       // Business rule: Rate Limit (10 seconds)
       const lastReply = await this.replyRepository.findLatestByIp(input.ipAddress)
-      if (lastReply && new Date().getTime() - lastReply.createdAt.getTime() < 10000) {
-        throw new Error("Anda memposting terlalu cepat. Harap tunggu 10 detik.")
+      if (lastReply && new Date().getTime() - lastReply.createdAt.getTime() < POST_COOLDOWN_MS) {
+        throw new Error(`Anda memposting terlalu cepat. Harap tunggu ${POST_COOLDOWN_MS / 1000} detik.`)
       }
     }
 
@@ -45,8 +47,14 @@ export class ReplyToThreadUseCase {
       throw new Error("Reply content cannot be empty")
     }
 
-    if (input.content.length > 10000) {
-      throw new Error("Reply content is too long (max 10000 characters)")
+    if (input.content.length > MAX_POST_LENGTH) {
+      throw new Error(`Pesan terlalu panjang (maksimum ${MAX_POST_LENGTH} karakter).`)
+    }
+
+    // Business rule: Only accept images hosted on our own Cloudinary account.
+    // The URL comes from the client (direct upload), so it must be verified.
+    if (input.imageUrl && !isTrustedImageUrl(input.imageUrl)) {
+      throw new Error("URL gambar tidak valid.")
     }
 
     // Business rule: Validate thread exists and is not locked
@@ -63,6 +71,10 @@ export class ReplyToThreadUseCase {
       throw new Error("Cannot reply to deleted thread")
     }
 
+    if (thread.isArchived) {
+      throw new Error("Thread ini sudah diarsipkan dan tidak bisa dibalas.")
+    }
+
     // Business rule: Clean author name and generate tripcode
     const rawAuthor = input.author?.trim() || "Awanama"
     const cleanedAuthor = generateTripcode(rawAuthor)
@@ -70,7 +82,7 @@ export class ReplyToThreadUseCase {
     const postNumber = await this.sequenceService.getNextPostNumber();
 
     let imageUrl: string | undefined = input.imageUrl
-    let imageMetadata: string | undefined = input.imageMetadata
+    let imageMetadata: string | undefined = input.imageUrl ? sanitizeImageMetadata(input.imageMetadata) : undefined
 
     if (!imageUrl && input.imageFile && input.imageFile.size > 0) {
       try {
@@ -113,11 +125,11 @@ export class ReplyToThreadUseCase {
       capcode: input.capcode
     })
 
-    if (imageUrl && input.imageFile) {
+    if (imageUrl) {
       try {
         await this.imageRepository.create({
           url: imageUrl,
-          publicId: imageUrl.split("/").pop()?.split(".")[0] || "",
+          publicId: extractCloudinaryPublicId(imageUrl),
           replyId: reply.id,
         })
       } catch (error) {

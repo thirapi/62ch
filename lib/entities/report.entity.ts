@@ -13,4 +13,5 @@ export interface CreateReportInput {
   contentType: "thread" | "reply"
   contentId: number
   reason: string
+  reporterIp?: string
 }

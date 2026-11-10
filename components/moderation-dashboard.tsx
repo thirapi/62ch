@@ -1,5 +1,6 @@
 "use client";
 
+import { safeHttpUrl } from "@/lib/utils/image-validation"
 import { useState, useMemo } from "react";
 import Link from "next/link";
 import { 
@@ -370,12 +371,13 @@ export function ModerationDashboard({
                         <MessageSquare className="h-3.5 w-3.5" /> Konten yang dilaporkan
                       </h4>
                       <div className="rounded-lg border bg-muted/20 p-4 space-y-4">
-                         {activeReport.image && (
+                         {safeHttpUrl(activeReport.image) && (
                            <div className="relative aspect-video w-full rounded-md overflow-hidden border shadow-sm group">
-                              <Image src={activeReport.image} alt="Report context" fill className="object-contain bg-black/5" unoptimized />
+                              <Image src={safeHttpUrl(activeReport.image)!} alt="Report context" fill className="object-contain bg-black/5" unoptimized />
                               <Link 
-                                href={activeReport.image} 
+                                href={safeHttpUrl(activeReport.image)!} 
                                 target="_blank"
+                                rel="noopener noreferrer"
                                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center text-white text-xs font-bold"
                               >
                                 Buka Gambar Penuh

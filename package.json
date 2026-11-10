@@ -14,7 +14,8 @@
     "dev:setup": "npm run db:reset && npm run db:migrate",
     "dev:fresh": "npm run dev:setup && npm run dev",
     "generate-user-seed": "tsx scripts/generate-user-seed.ts",
-    "seed:load-test": "tsx --env-file=.env scripts/seed-load-test.ts 1 5000 100 6"
+    "seed:load-test": "tsx --env-file=.env scripts/seed-load-test.ts 1 5000 100 6",
+    "test": "tsx --test 'lib/**/__tests__/*.test.ts'"
   },
   "dependencies": {
     "@hookform/resolvers": "^3.10.0",

@@ -22,6 +22,7 @@ import { AIModerationService } from "@/lib/services/ai-moderation.service"
 // Use Cases
 import { FlagPostUseCase } from "@/lib/use-cases/flag-post.use-case"
 import { CreateReportUseCase } from "@/lib/use-cases/create-report.use-case"
+import { SubmitUserReportUseCase } from "@/lib/use-cases/submit-user-report.use-case"
 import { CreateThreadUseCase } from "@/lib/use-cases/create-thread.use-case"
 import { BanUserUseCase } from "@/lib/use-cases/ban-user.use-case"
 import { UnbanUserUseCase } from "@/lib/use-cases/unban-user.use-case"
@@ -103,6 +104,13 @@ const aiModerationService = new AIModerationService()
 
 // Instantiate Use Cases
 const createReportUseCase = new CreateReportUseCase(reportRepository)
+const submitUserReportUseCase = new SubmitUserReportUseCase(
+  reportRepository,
+  banRepository,
+  threadRepository,
+  replyRepository,
+  createReportUseCase,
+)
 const flagPostUseCase = new FlagPostUseCase(reportRepository)
 const createThreadUseCase = new CreateThreadUseCase(
   threadRepository,
@@ -208,7 +216,7 @@ const moderationController = new ModerationController(
   bulkDismissReportsUseCase,
 )
 const replyController = new ReplyController(replyToThreadUseCase)
-const reportController = new ReportController(reportRepository, getReportsUseCase, createReportUseCase)
+const reportController = new ReportController(reportRepository, getReportsUseCase, createReportUseCase, submitUserReportUseCase)
 const threadController = new ThreadController(
   createThreadUseCase,
   getThreadListUseCase,
