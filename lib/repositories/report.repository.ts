@@ -1,6 +1,6 @@
 import { db } from "@/lib/db"
 import { reports } from "@/lib/db/schema"
-import { desc, eq, or, sql, inArray } from "drizzle-orm"
+import { and, desc, eq, gte, or, sql, inArray } from "drizzle-orm"
 import type { ReportEntity, CreateReportInput } from "@/lib/entities/report.entity"
 
 export class ReportRepository {
@@ -11,6 +11,7 @@ export class ReportRepository {
         contentType: input.contentType,
         contentId: input.contentId,
         reason: input.reason,
+        reporterIp: input.reporterIp ?? null,
       })
       .returning()
 
@@ -19,6 +20,31 @@ export class ReportRepository {
     }
 
     return this.mapToEntity(rows[0])
+  }
+
+  async countByReporterIpSince(reporterIp: string, since: Date): Promise<number> {
+    const [row] = await db
+      .select({ count: sql<number>`cast(count(*) as int)` })
+      .from(reports)
+      .where(and(eq(reports.reporterIp, reporterIp), gte(reports.reportedAt, since)))
+    return Number(row?.count ?? 0)
+  }
+
+  async hasPendingFromReporter(
+    reporterIp: string,
+    contentType: "thread" | "reply",
+    contentId: number,
+  ): Promise<boolean> {
+    const row = await db.query.reports.findFirst({
+      columns: { id: true },
+      where: and(
+        eq(reports.reporterIp, reporterIp),
+        eq(reports.contentType, contentType),
+        eq(reports.contentId, contentId),
+        eq(reports.status, "pending"),
+      ),
+    })
+    return !!row
   }
 
   async findAll(): Promise<ReportEntity[]> {

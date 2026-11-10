@@ -7,6 +7,8 @@ import { CreateThreadCommand } from "@/lib/entities/thread.entity"
 import { SequenceService } from "../services/sequence.service"
 import { generateTripcode } from "../utils/tripcode"
 import { PasswordService } from "../services/password.service"
+import { MAX_POST_LENGTH, MAX_SUBJECT_LENGTH, POST_COOLDOWN_MS } from "../config/posting"
+import { extractCloudinaryPublicId, isTrustedImageUrl, sanitizeImageMetadata } from "../utils/image-validation"
 import type { AIModerationService } from "../services/ai-moderation.service"
 import type { CreateReportUseCase } from "./create-report.use-case"
 
@@ -35,8 +37,8 @@ export class CreateThreadUseCase {
 
       // Business rule: Rate Limit (10 seconds)
       const lastThread = await this.threadRepository.findLatestByIp(input.ipAddress)
-      if (lastThread && new Date().getTime() - lastThread.createdAt.getTime() < 10000) {
-        throw new Error("Anda memposting terlalu cepat. Harap tunggu 10 detik.")
+      if (lastThread && new Date().getTime() - lastThread.createdAt.getTime() < POST_COOLDOWN_MS) {
+        throw new Error(`Anda memposting terlalu cepat. Harap tunggu ${POST_COOLDOWN_MS / 1000} detik.`)
       }
     }
 
@@ -50,8 +52,14 @@ export class CreateThreadUseCase {
       throw new Error("Thread content cannot be empty")
     }
 
-    if (input.content.length > 10000) {
-      throw new Error("Thread content is too long (max 10000 characters)")
+    if (input.content.length > MAX_POST_LENGTH) {
+      throw new Error(`Pesan terlalu panjang (maksimum ${MAX_POST_LENGTH} karakter).`)
+    }
+
+    // Business rule: Only accept images hosted on our own Cloudinary account.
+    // The URL comes from the client (direct upload), so it must be verified.
+    if (input.imageUrl && !isTrustedImageUrl(input.imageUrl)) {
+      throw new Error("URL gambar tidak valid.")
     }
 
     // Business rule: Validate board exists
@@ -61,8 +69,8 @@ export class CreateThreadUseCase {
     }
 
     // Business rule: Validate subject length if provided
-    if (input.subject && input.subject.length > 200) {
-      throw new Error("Subject is too long (max 200 characters)")
+    if (input.subject && input.subject.length > MAX_SUBJECT_LENGTH) {
+      throw new Error(`Subjek terlalu panjang (maksimum ${MAX_SUBJECT_LENGTH} karakter).`)
     }
 
     // Business rule: Clean author name and generate tripcode
@@ -72,7 +80,7 @@ export class CreateThreadUseCase {
     const postNumber = await this.sequenceService.getNextPostNumber();
 
     let imageUrl: string | undefined = input.imageUrl
-    let imageMetadata: string | undefined = input.imageMetadata
+    let imageMetadata: string | undefined = input.imageUrl ? sanitizeImageMetadata(input.imageMetadata) : undefined
     if (!imageUrl && input.imageFile && input.imageFile.size > 0) {
       try {
         const uploadResult = await this.cloudinaryService.uploadImage(input.imageFile)
@@ -126,11 +134,11 @@ export class CreateThreadUseCase {
       }
     }
 
-    if (imageUrl && input.imageFile) {
+    if (imageUrl) {
       try {
         await this.imageRepository.create({
           url: imageUrl,
-          publicId: imageUrl.split("/").pop()?.split(".")[0] || "",
+          publicId: extractCloudinaryPublicId(imageUrl),
           threadId: thread.id,
         })
       } catch (error) {

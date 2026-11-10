@@ -1,36 +1,57 @@
-import { cookies } from "next/headers"
+import { randomBytes, randomInt } from "node:crypto"
+import { eq, lt } from "drizzle-orm"
+import { db } from "@/lib/db"
+import { captchaChallenges } from "@/lib/db/schema"
 
+const TTL_MS = 15 * 60 * 1000
+const CLEANUP_PROBABILITY = 0.05
+const ID_PATTERN = /^[a-f0-9]{32}$/
+
+/**
+ * Math captcha with server-side state.
+ *
+ * - The answer is stored only in the database; the client receives an opaque
+ *   random id, so it cannot forge a "solved" challenge.
+ * - Each challenge is deleted atomically on its first verification attempt
+ *   (right or wrong), so it cannot be replayed or brute-forced.
+ * - Every form gets its own id, so several forms on one page (reply form +
+ *   quick reply) no longer invalidate each other.
+ */
 export class CaptchaService {
-    private static COOKIE_NAME = "captcha_answer"
+  static async generate(): Promise<{ question: string; id: string }> {
+    const a = randomInt(1, 11)
+    const b = randomInt(1, 11)
+    const id = randomBytes(16).toString("hex")
 
-    static async generate(): Promise<{ question: string; id: string }> {
-        const a = Math.floor(Math.random() * 10) + 1
-        const b = Math.floor(Math.random() * 10) + 1
-        const answer = (a + b).toString()
-        const question = `Berapa ${a} + ${b}?`
+    await db.insert(captchaChallenges).values({
+      id,
+      answer: String(a + b),
+      expiresAt: new Date(Date.now() + TTL_MS),
+    })
 
-        // In a real app, we'd encrypt this or use a more secure token
-        // For now, let's just store it in a cookie (not secure for real prod, but fine for demo)
-        // To make it slightly better, let's hash it or just keep it as is for this case.
-        const cookieStore = await cookies()
-        cookieStore.set(this.COOKIE_NAME, answer, {
-            httpOnly: true,
-            secure: process.env.NODE_ENV === "production",
-            maxAge: 900 // 15 minutes
-        })
-
-        return { question, id: "math" }
+    if (Math.random() < CLEANUP_PROBABILITY) {
+      // Best effort: purge expired challenges so the table stays small.
+      db.delete(captchaChallenges)
+        .where(lt(captchaChallenges.expiresAt, new Date()))
+        .catch((err) => console.error("[Captcha] cleanup failed:", err))
     }
 
-    static async verify(userAnswer: string): Promise<boolean> {
-        const cookieStore = await cookies()
-        const correctAnswer = cookieStore.get(this.COOKIE_NAME)?.value
+    return { question: `Berapa ${a} + ${b}?`, id }
+  }
 
-        if (!correctAnswer) return false
+  static async verify(id: unknown, userAnswer: unknown): Promise<boolean> {
+    if (typeof id !== "string" || !ID_PATTERN.test(id)) return false
+    if (typeof userAnswer !== "string") return false
 
-        // Clear cookie after verification
-        cookieStore.delete(this.COOKIE_NAME)
+    // Consume the challenge regardless of whether the answer is correct.
+    const [row] = await db
+      .delete(captchaChallenges)
+      .where(eq(captchaChallenges.id, id))
+      .returning()
 
-        return userAnswer === correctAnswer
-    }
+    if (!row) return false
+    if (row.expiresAt.getTime() < Date.now()) return false
+
+    return userAnswer.trim() === row.answer
+  }
 }

@@ -33,6 +33,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const [imageFile, setImageFile] = useState<File | null>(null);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaId, setCaptchaId] = useState("");
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const { addMyPost } = useThreadWatcher();
@@ -64,6 +65,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
     try {
       const data = await getCaptcha();
       setCaptchaQuestion(data.question);
+      setCaptchaId(data.id);
     } catch (err) {
       console.error("Failed to load captcha", err);
     }
@@ -138,6 +140,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
       setError(
         `Terjadi kesalahan tak terduga: ${err instanceof Error ? err.message : "Internal Error"}`,
       );
+      refreshCaptcha();
     } finally {
       setIsSubmitting(false);
     }
@@ -324,6 +327,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
                   <RefreshCcw className="h-2.5 w-2.5" />
                 </button>
               </div>
+              <input type="hidden" name="captchaId" value={captchaId} />
               <Input
                 id="captcha"
                 name="captcha"

@@ -1,6 +1,13 @@
 import { db } from "@/lib/db"
 import { bans } from "@/lib/db/schema"
 import { eq, and, gt, or, isNull, inArray } from "drizzle-orm"
+import { normalizeIp } from "@/lib/utils/ip"
+
+/** Canonical form plus the raw value, so legacy rows stored un-normalised still match. */
+function ipVariants(ip: string): string[] {
+    const normalized = normalizeIp(ip)
+    return normalized && normalized !== ip ? [normalized, ip] : [ip]
+}
 
 export interface BanEntity {
     id: number
@@ -18,7 +25,7 @@ export class BanRepository {
         // Active means either expiresAt is null (permanent) or expiresAt > now
         const row = await db.query.bans.findFirst({
             where: and(
-                eq(bans.ipAddress, ip),
+                inArray(bans.ipAddress, ipVariants(ip)),
                 or(
                     isNull(bans.expiresAt),
                     gt(bans.expiresAt, now)
@@ -39,6 +46,7 @@ export class BanRepository {
 
     async findActiveByIps(ips: string[]): Promise<BanEntity[]> {
         if (ips.length === 0) return []
+        ips = [...new Set(ips.flatMap(ipVariants))]
         const now = new Date()
         const rows = await db.query.bans.findMany({
             where: and(
@@ -61,14 +69,14 @@ export class BanRepository {
 
     async create(input: { ipAddress: string; reason?: string; expiresAt?: Date }): Promise<void> {
         await db.insert(bans).values({
-            ipAddress: input.ipAddress,
+            ipAddress: normalizeIp(input.ipAddress) ?? input.ipAddress,
             reason: input.reason ?? null,
             expiresAt: input.expiresAt ?? null
         })
     }
 
     async deleteByIp(ip: string): Promise<void> {
-        await db.delete(bans).where(eq(bans.ipAddress, ip))
+        await db.delete(bans).where(inArray(bans.ipAddress, ipVariants(ip)))
     }
 
     async findAll(): Promise<BanEntity[]> {

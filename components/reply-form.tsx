@@ -39,6 +39,7 @@ export function ReplyForm({
   const [error, setError] = useState<string | null>(null);
   const [resetTrigger, setResetTrigger] = useState(0);
   const [captchaQuestion, setCaptchaQuestion] = useState("");
+  const [captchaId, setCaptchaId] = useState("");
   const [captcha, setLocalCaptcha] = useState("");
   const [showTips, setShowTips] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -64,8 +65,14 @@ export function ReplyForm({
   const { watchThread, addMyPost } = useThreadWatcher();
 
   const refreshCaptcha = async () => {
-    const data = await getCaptcha();
-    setCaptchaQuestion(data.question);
+    try {
+      const data = await getCaptcha();
+      setCaptchaQuestion(data.question);
+      setCaptchaId(data.id);
+      setLocalCaptcha("");
+    } catch (err) {
+      console.error("Failed to load captcha", err);
+    }
   };
 
   useEffect(() => {
@@ -130,6 +137,7 @@ export function ReplyForm({
       setError(
         `Terjadi kesalahan tak terduga: ${err instanceof Error ? err.message : "Internal Error"}`,
       );
+      refreshCaptcha();
     } finally {
       setIsSubmitting(false);
     }
@@ -227,6 +235,7 @@ export function ReplyForm({
                 Ganti
               </button>
             </div>
+            <input type="hidden" name="captchaId" value={captchaId} />
             <Input
               id={`${prefix}reply-captcha`}
               name="captcha"
