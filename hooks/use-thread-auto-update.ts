@@ -35,32 +35,48 @@ export function useThreadAutoUpdate({
 }: Options) {
   const router = useRouter();
   const [isRefreshing, startTransition] = useTransition();
-  const [secondsLeft, setSecondsLeft] = useState(BASE_INTERVAL_S);
+  // Epoch ms of the next scheduled check. Only changes once per cycle, so the
+  // page doesn't re-render every second — <AutoUpdateCountdown> ticks on its own.
+  const [nextCheckAt, setNextCheckAt] = useState<number | null>(null);
   const [state, setState] = useState<AutoUpdateState>("idle");
 
   const intervalRef = useRef(BASE_INTERVAL_S);
   const knownRef = useRef({ count: knownReplyCount, isLocked, isArchived });
   const checkingRef = useRef(false);
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
+  const enabledRef = useRef(enabled);
+  enabledRef.current = enabled;
 
   // Props are the source of truth after every refresh
   useEffect(() => {
     knownRef.current = { count: knownReplyCount, isLocked, isArchived };
   }, [knownReplyCount, isLocked, isArchived]);
 
-  const scheduleNext = useCallback((seconds: number) => {
+  const checkRef = useRef<(manual?: boolean) => Promise<void>>(async () => {});
+
+  const schedule = useCallback((seconds: number) => {
+    clearTimeout(timerRef.current);
+    if (!enabledRef.current) {
+      setNextCheckAt(null);
+      return;
+    }
     const hidden = typeof document !== "undefined" && document.hidden;
-    setSecondsLeft(hidden ? Math.max(seconds, HIDDEN_MIN_INTERVAL_S) : seconds);
+    const delay = (hidden ? Math.max(seconds, HIDDEN_MIN_INTERVAL_S) : seconds) * 1000;
+    setNextCheckAt(Date.now() + delay);
+    timerRef.current = setTimeout(() => void checkRef.current(), delay);
   }, []);
 
   const check = useCallback(
     async (manual = false) => {
       if (checkingRef.current) return;
       checkingRef.current = true;
+      clearTimeout(timerRef.current);
       setState("checking");
       try {
         const status = await getThreadStatus(threadId);
         if (!status) {
           setState("gone");
+          setNextCheckAt(null);
           return;
         }
         const known = knownRef.current;
@@ -83,52 +99,42 @@ export function useThreadAutoUpdate({
           ? BASE_INTERVAL_S
           : Math.min(intervalRef.current * 2, MAX_INTERVAL_S);
         setState("idle");
-        scheduleNext(intervalRef.current);
+        schedule(intervalRef.current);
       } catch {
         setState("idle");
-        scheduleNext(MAX_INTERVAL_S);
+        schedule(MAX_INTERVAL_S);
       } finally {
         checkingRef.current = false;
       }
     },
-    [threadId, router, scheduleNext],
+    [threadId, router, schedule],
   );
+  checkRef.current = check;
 
-  // One-second ticker drives both the countdown label and the actual poll
+  // Start / stop the cycle
   useEffect(() => {
-    if (!enabled || state === "gone") return;
-    const timer = setInterval(() => {
-      setSecondsLeft((s) => (s > 0 ? s - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [enabled, state]);
-
-  useEffect(() => {
-    if (enabled && state === "idle" && secondsLeft === 0) {
-      void check();
+    if (enabled) {
+      intervalRef.current = BASE_INTERVAL_S;
+      schedule(BASE_INTERVAL_S);
+    } else {
+      clearTimeout(timerRef.current);
+      setNextCheckAt(null);
     }
-  }, [enabled, state, secondsLeft, check]);
+    return () => clearTimeout(timerRef.current);
+  }, [enabled, schedule]);
 
   // Coming back to the tab: check soon instead of waiting out a long backoff
   useEffect(() => {
     if (!enabled) return;
     const onVisible = () => {
-      if (!document.hidden) {
+      if (!document.hidden && !checkingRef.current) {
         intervalRef.current = BASE_INTERVAL_S;
-        setSecondsLeft((s) => Math.min(s, 2));
+        schedule(2);
       }
     };
     document.addEventListener("visibilitychange", onVisible);
     return () => document.removeEventListener("visibilitychange", onVisible);
-  }, [enabled]);
-
-  // Re-enabling restarts the cycle
-  useEffect(() => {
-    if (enabled) {
-      intervalRef.current = BASE_INTERVAL_S;
-      setSecondsLeft(BASE_INTERVAL_S);
-    }
-  }, [enabled]);
+  }, [enabled, schedule]);
 
   const updateNow = useCallback(() => {
     intervalRef.current = BASE_INTERVAL_S;
@@ -136,9 +142,21 @@ export function useThreadAutoUpdate({
   }, [check]);
 
   return {
-    secondsLeft,
+    nextCheckAt: state === "gone" ? null : nextCheckAt,
     isChecking: state === "checking" || isRefreshing,
     isGone: state === "gone",
     updateNow,
   };
+}
+
+/** Self-contained 1s ticker so only this <span> re-renders, not the whole thread. */
+export function useSecondsUntil(target: number | null) {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    if (target === null) return;
+    setNow(Date.now());
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, [target]);
+  return target === null ? null : Math.max(0, Math.ceil((target - now) / 1000));
 }

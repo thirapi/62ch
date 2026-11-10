@@ -21,7 +21,7 @@ import { cn } from "@/lib/utils";
 import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
 import { toast } from "sonner";
 import { useNav } from "@/components/nav-provider";
-import { useThreadAutoUpdate } from "@/hooks/use-thread-auto-update";
+import { useThreadAutoUpdate, useSecondsUntil } from "@/hooks/use-thread-auto-update";
 import { useDocumentTitleCount } from "@/hooks/use-document-title-prefix";
 import { getLastSeenPost, setLastSeenPost } from "@/lib/utils/last-seen";
 import { useHiding } from "@/hooks/use-hiding";
@@ -89,7 +89,7 @@ export function ThreadClient({
   // --- Auto-update -------------------------------------------------------
   const visibleReplyCount = replies.filter((r) => !r.isDeleted).length;
   const imageCount = replies.filter((r) => !!r.image).length + (thread.image ? 1 : 0);
-  const { secondsLeft, isChecking, isGone, updateNow } = useThreadAutoUpdate({
+  const { nextCheckAt, isChecking, isGone, updateNow } = useThreadAutoUpdate({
     threadId: thread.id,
     knownReplyCount: visibleReplyCount,
     isLocked: !!thread.isLocked,
@@ -678,7 +678,7 @@ export function ThreadClient({
           autoUpdateThread &&
           !thread.isArchived && (
             <span className="opacity-70" aria-live="polite">
-              {isChecking ? "memeriksa…" : `cek lagi ${secondsLeft} dtk`}
+              {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
             </span>
           )
         )}
@@ -861,6 +861,11 @@ export function ThreadClient({
   );
 }
 
+
+function AutoUpdateCountdown({ target }: { target: number | null }) {
+  const seconds = useSecondsUntil(target);
+  return <>{seconds === null ? "" : `cek lagi ${seconds} dtk`}</>;
+}
 
 function YouMarker() {
   return (
