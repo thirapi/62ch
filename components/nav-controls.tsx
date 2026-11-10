@@ -48,7 +48,11 @@ export function NavControls({ user }: NavControlsProps) {
     defaultBoardView,
     toggleDefaultBoardView,
     autoPlayGif,
-    toggleAutoPlayGif
+    toggleAutoPlayGif,
+    autoUpdateThread,
+    toggleAutoUpdateThread,
+    hoverPreview,
+    toggleHoverPreview,
   } = useNav();
   const { toggleWatcher, watchedThreads } = useThreadWatcher();
   const router = useRouter();
@@ -184,6 +188,28 @@ export function NavControls({ user }: NavControlsProps) {
             <span>Putar GIF Otomatis</span>
             <span className="ml-auto opacity-50 font-bold">
               {autoPlayGif ? "✔" : "✘"}
+            </span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={toggleAutoUpdateThread}
+            onSelect={(e) => e.preventDefault()}
+            className="cursor-pointer h-[26px] py-0"
+          >
+            <span>Perbarui Thread Otomatis</span>
+            <span className="ml-auto opacity-50 font-bold">
+              {autoUpdateThread ? "✔" : "✘"}
+            </span>
+          </DropdownMenuItem>
+
+          <DropdownMenuItem
+            onClick={toggleHoverPreview}
+            onSelect={(e) => e.preventDefault()}
+            className="cursor-pointer h-[26px] py-0 hidden sm:flex"
+          >
+            <span>Pratinjau Gambar saat Hover</span>
+            <span className="ml-auto opacity-50 font-bold">
+              {hoverPreview ? "✔" : "✘"}
             </span>
           </DropdownMenuItem>
 

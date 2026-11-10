@@ -1,6 +1,6 @@
 "use client";
 
-import React, { createContext, useContext, useState, useEffect } from "react";
+import React, { createContext, useContext, useState, useEffect, useRef } from "react";
 import { useDefaultPassword } from "@/hooks/use-default-password";
 
 interface ReplyState {
@@ -27,7 +27,16 @@ interface ReplyContextType {
 
 const ReplyContext = createContext<ReplyContextType | undefined>(undefined);
 
-export function ReplyProvider({ children }: { children: React.ReactNode }) {
+const DRAFT_SAVE_DELAY_MS = 400;
+
+export function ReplyProvider({
+  children,
+  draftKey,
+}: {
+  children: React.ReactNode;
+  /** When set, the reply text is saved to localStorage under this key and restored on reload. */
+  draftKey?: string;
+}) {
   const [author, setAuthorState] = useState("");
   const [deletionPassword, setDeletionPasswordState] = useState("");
   const [content, setContent] = useState("");
@@ -36,12 +45,39 @@ export function ReplyProvider({ children }: { children: React.ReactNode }) {
   const [isSpoiler, setIsSpoiler] = useState(false);
   const [isSage, setIsSage] = useState(false);
   const [savedPassword, setSavedPassword] = useDefaultPassword();
+  const draftLoadedRef = useRef(false);
 
   // Load persistent fields from localStorage
   useEffect(() => {
     const savedAuthor = localStorage.getItem("ib-author");
     if (savedAuthor) setAuthorState(savedAuthor);
   }, []);
+
+  // Restore an unsent draft for this thread
+  useEffect(() => {
+    if (!draftKey) return;
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) setContent((prev) => prev || saved);
+    } catch {
+      // storage unavailable — drafts are best-effort
+    }
+    draftLoadedRef.current = true;
+  }, [draftKey]);
+
+  // Persist the draft (debounced) while the user types
+  useEffect(() => {
+    if (!draftKey || !draftLoadedRef.current) return;
+    const timer = setTimeout(() => {
+      try {
+        if (content.trim()) localStorage.setItem(draftKey, content);
+        else localStorage.removeItem(draftKey);
+      } catch {
+        // ignore quota / privacy-mode errors
+      }
+    }, DRAFT_SAVE_DELAY_MS);
+    return () => clearTimeout(timer);
+  }, [content, draftKey]);
 
   // Sync auto-generated default password into form state
   useEffect(() => {
@@ -69,6 +105,13 @@ export function ReplyProvider({ children }: { children: React.ReactNode }) {
   };
 
   const resetForm = () => {
+    if (draftKey) {
+      try {
+        localStorage.removeItem(draftKey);
+      } catch {
+        // ignore
+      }
+    }
     setContent("");
     setImageFile(null);
     setIsNsfw(false);

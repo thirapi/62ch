@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/pagination";
 import type { Metadata } from "next";
@@ -13,6 +14,7 @@ import { BoardSort } from "@/components/board-sort";
 import { BoardViewToggle } from "@/components/board-view-toggle";
 import { CatalogView } from "@/components/catalog-view";
 import { Suspense } from "react";
+import { ThreadListSkeleton } from "@/components/page-skeletons";
 
 // Menggunakan Action layer sesuai Clean Architecture
 import { getBoardByCode } from "@/lib/actions/board.actions";
@@ -105,6 +107,13 @@ async function BoardContent({
             <BoardSearch />
           </div>
           <div className="flex items-center justify-between gap-2 shrink-0 sm:justify-end">
+            <Link
+              href={`/${boardCode}/archive`}
+              className="text-muted-foreground hover:text-accent hover:underline whitespace-nowrap"
+              title="Thread yang sudah diarsipkan"
+            >
+              [Arsip]
+            </Link>
             <BoardSort />
             <BoardViewToggle />
           </div>
@@ -205,7 +214,7 @@ export default async function BoardPage({
 
       <AdBanner />
 
-      <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent" /></div>}>
+      <Suspense fallback={<div className="px-3 sm:px-4 md:px-8 w-full"><ThreadListSkeleton /></div>}>
         <BoardContent 
           boardCode={boardCode}
           view={view}

@@ -8,7 +8,7 @@ import { cookies } from "next/headers"
 import { getClientIp } from "@/lib/utils/get-ip"
 import { CaptchaService } from "@/lib/services/captcha.service"
 
-const { threadController } = container
+const { threadController, threadRepository, replyRepository, getArchivedThreadsUseCase } = container
 
 export async function createThread(formData: FormData) {
   try {
@@ -98,6 +98,36 @@ export async function getThreadDetail(threadId: number) {
   } catch (error) {
     console.error(`Error fetching thread detail for thread ${threadId}:`, error)
     return null
+  }
+}
+
+/**
+ * Lightweight status check used by the thread auto-updater: one row lookup
+ * plus a COUNT, instead of fetching the whole thread with all replies.
+ */
+export async function getThreadStatus(threadId: number) {
+  try {
+    if (!Number.isInteger(threadId) || threadId <= 0) return null
+    const thread = await threadRepository.findById(threadId)
+    if (!thread || thread.isDeleted) return null
+    const replyCount = await replyRepository.countByThreadId(threadId)
+    return {
+      replyCount,
+      isLocked: !!thread.isLocked,
+      isArchived: !!thread.isArchived,
+    }
+  } catch (error) {
+    console.error(`Error fetching thread status for thread ${threadId}:`, error)
+    return null
+  }
+}
+
+export async function getArchivedThreads(boardId: number) {
+  try {
+    return await getArchivedThreadsUseCase.execute(boardId)
+  } catch (error) {
+    console.error(`Error fetching archived threads for board ${boardId}:`, error)
+    return []
   }
 }
 

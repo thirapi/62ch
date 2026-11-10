@@ -206,6 +206,12 @@ export default async function ThreadPage({
           >
             [ Katalog ]
           </Link>
+          <Link
+            href={`/${boardCode}/archive`}
+            className="text-accent hover:underline font-bold whitespace-nowrap hidden sm:inline"
+          >
+            [ Arsip ]
+          </Link>
         </div>
         <div className="font-bold text-accent truncate max-w-[50%] sm:max-w-none text-right">
           <span className="hidden sm:inline">/{board.code}/ - {board.name}</span>

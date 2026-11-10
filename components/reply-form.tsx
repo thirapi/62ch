@@ -255,6 +255,7 @@ export function ReplyForm({
             maxSizeMB={10}
             resetTrigger={resetTrigger}
             hideLabel={true}
+            pasteTargetRef={formRef}
           />
           <div className="flex flex-wrap gap-x-3 gap-y-1.5 mt-2 text-xs">
             <div className="flex items-center space-x-2">

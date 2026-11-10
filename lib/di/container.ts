@@ -7,6 +7,7 @@ import { PostRepository } from "@/lib/repositories/post.repository"
 import { ReplyRepository } from "@/lib/repositories/reply.repository"
 import { ReportRepository } from "@/lib/repositories/report.repository"
 import { ThreadRepository } from "@/lib/repositories/thread.repository"
+import { GetArchivedThreadsUseCase } from "@/lib/use-cases/get-archived-threads.use-case"
 import { BanRepository } from "@/lib/repositories/ban.repository"
 import { BoardCategoryRepository } from "@/lib/repositories/board-category.repository"
 import { BoardJanitorRepository } from "@/lib/repositories/board-janitor.repository"
@@ -103,6 +104,7 @@ const aiModerationService = new AIModerationService()
 
 
 // Instantiate Use Cases
+const getArchivedThreadsUseCase = new GetArchivedThreadsUseCase(threadRepository)
 const createReportUseCase = new CreateReportUseCase(reportRepository)
 const submitUserReportUseCase = new SubmitUserReportUseCase(
   reportRepository,
@@ -264,6 +266,9 @@ export const container = {
   deletePostWithPasswordUseCase,
   searchThreadsUseCase,
   boardRepository, // Export repository for actions
+  threadRepository,
+  replyRepository,
+  getArchivedThreadsUseCase,
   categoryRepository,
   boardJanitorRepository,
   janitorController,

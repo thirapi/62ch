@@ -15,6 +15,8 @@ interface ImageUploaderProps {
   maxSizeMB?: number;
   resetTrigger?: number; 
   hideLabel?: boolean;
+  /** Element (usually the whole form) that accepts Ctrl+V / Cmd+V image pastes. */
+  pasteTargetRef?: React.RefObject<HTMLElement | null>;
 }
 
 export function ImageUploader({
@@ -23,6 +25,7 @@ export function ImageUploader({
   maxSizeMB = 10,
   resetTrigger,
   hideLabel = false,
+  pasteTargetRef,
 }: ImageUploaderProps) {
   const [preview, setPreview] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
@@ -82,6 +85,29 @@ export function ImageUploader({
 
     onImageSelect(file);
   };
+
+  // Paste-to-attach: pick the first image on the clipboard; text pastes are untouched
+  const validateRef = useRef(validateAndProcessFile);
+  validateRef.current = validateAndProcessFile;
+  useEffect(() => {
+    const target = pasteTargetRef?.current;
+    if (!target) return;
+    const onPaste = (e: ClipboardEvent) => {
+      const items = Array.from(e.clipboardData?.items ?? []);
+      const imageItem = items.find((item) => item.kind === "file" && item.type.startsWith("image/"));
+      const file = imageItem?.getAsFile();
+      if (!file) return;
+      e.preventDefault();
+      const ext = file.type.split("/")[1] || "png";
+      const named =
+        file.name && file.name !== "image.png"
+          ? file
+          : new File([file], `tempel-${Date.now()}.${ext}`, { type: file.type });
+      validateRef.current(named);
+    };
+    target.addEventListener("paste", onPaste);
+    return () => target.removeEventListener("paste", onPaste);
+  }, [pasteTargetRef]);
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -155,10 +181,13 @@ export function ImageUploader({
               <Upload className={cn("h-8 w-8", isDragging && "text-accent animate-bounce")} />
               <div className="text-sm text-center">
                 <span className={cn("font-medium", isDragging && "text-accent")}>
-                  {isDragging ? "Lepaskan untuk mengunggah" : "Klik atau seret gambar ke sini"}
+                  {isDragging ? "Lepaskan untuk mengunggah" : "Klik, seret, atau tempel gambar"}
                 </span>
                 <p className="text-[10px] mt-1 opacity-70">
                   PNG, JPG, GIF, WebP hingga {maxSizeMB}MB
+                  {pasteTargetRef && (
+                    <span className="hidden sm:inline"> · Ctrl+V untuk menempel</span>
+                  )}
                 </p>
               </div>
             </button>
