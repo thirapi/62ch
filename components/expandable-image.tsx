@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import { HoverImagePreview } from "./hover-image-preview";
 import { Maximize2, Minimize2, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getThumbnailUrl } from "@/lib/utils/image";
@@ -31,7 +32,17 @@ export function ExpandableImage({
   const [isExpanded, setIsExpanded] = useState(false);
   const [showNsfw, setShowNsfw] = useState(!isNsfw);
   const [showSpoiler, setShowSpoiler] = useState(!isSpoiler);
-  const { autoPlayGif } = useNav();
+  const { autoPlayGif, hoverPreview } = useNav();
+  const [hoverPos, setHoverPos] = useState<{ x: number; y: number } | null>(null);
+  const [canHover, setCanHover] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia("(hover: hover) and (pointer: fine) and (min-width: 768px)");
+    const update = () => setCanHover(mq.matches);
+    update();
+    mq.addEventListener("change", update);
+    return () => mq.removeEventListener("change", update);
+  }, []);
 
   const isHidden = !showNsfw || !showSpoiler;
   const isGif = src.toLowerCase().endsWith(".gif");
@@ -43,6 +54,7 @@ export function ExpandableImage({
     size: "",
     dim: "",
   };
+  let naturalSize: { width: number; height: number } | undefined;
 
   if (metadata) {
     try {
@@ -54,6 +66,7 @@ export function ExpandableImage({
       }
       if (parsed.width && parsed.height) {
         fileInfo.dim = `${parsed.width}x${parsed.height}`;
+        naturalSize = { width: parsed.width, height: parsed.height };
       }
     } catch (e) {
       // Fallback for non-JSON metadata
@@ -61,8 +74,20 @@ export function ExpandableImage({
     }
   }
 
+  const showHoverPreview = hoverPreview && canHover && !isExpanded && !isHidden;
+
   return (
     <>
+      {showHoverPreview && hoverPos && (
+        <HoverImagePreview
+          src={src}
+          x={hoverPos.x}
+          y={hoverPos.y}
+          width={naturalSize?.width}
+          height={naturalSize?.height}
+        />
+      )}
+
       {/* Metadata & Actions */}
       <div className={cn("flex flex-wrap items-center gap-x-1.5 gap-y-0 text-[10px] text-muted-foreground leading-tight mb-1", className)}>
         <span className="font-mono opacity-80">File:</span>
@@ -128,7 +153,14 @@ export function ExpandableImage({
                   : "max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px]",
               ),
         )}
-        onClick={() => setIsExpanded(!isExpanded)}
+        onClick={() => {
+          setIsExpanded(!isExpanded);
+          setHoverPos(null);
+        }}
+        onMouseMove={(e) => {
+          if (showHoverPreview) setHoverPos({ x: e.clientX, y: e.clientY });
+        }}
+        onMouseLeave={() => setHoverPos(null)}
       >
         <img
           src={

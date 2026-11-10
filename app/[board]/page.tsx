@@ -1,9 +1,8 @@
 import { notFound } from "next/navigation";
+import Link from "next/link";
 import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/pagination";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { lucia } from "@/lib/auth";
 import { SiteFooter } from "@/components/site-footer";
 import { ThreadListItem } from "@/components/thread-list-item";
 import { AdBanner } from "@/components/ad-banner";
@@ -13,23 +12,11 @@ import { BoardSort } from "@/components/board-sort";
 import { BoardViewToggle } from "@/components/board-view-toggle";
 import { CatalogView } from "@/components/catalog-view";
 import { Suspense } from "react";
+import { ThreadListSkeleton } from "@/components/page-skeletons";
 
 // Menggunakan Action layer sesuai Clean Architecture
-import { getBoardByCode } from "@/lib/actions/board.actions";
+import { getAuthUserCached, getBoardByCodeCached } from "@/lib/data/request-cache";
 import { getThreadList } from "@/lib/actions/thread.actions";
-
-async function getAuthUser() {
-  try {
-    const cookieStore = await cookies();
-    const sessionId = cookieStore.get(lucia.sessionCookieName)?.value || null;
-    if (!sessionId) return null;
-    const { session, user } = await lucia.validateSession(sessionId);
-    if (!session) return null;
-    return user;
-  } catch (e) {
-    return null;
-  }
-}
 
 async function BoardContent({
   boardCode,
@@ -53,8 +40,8 @@ async function BoardContent({
 
   // Parallelize board fetch and potential auth check
   const [board, user] = await Promise.all([
-    getBoardByCode(boardCode),
-    getAuthUser()
+    getBoardByCodeCached(boardCode),
+    getAuthUserCached()
   ]);
 
   if (!board) {
@@ -62,21 +49,14 @@ async function BoardContent({
   }
 
   // Memanggil Action untuk mengambil data thread
-  let { threads, totalPages } = await getThreadList(
+  // Search runs in the database across the whole board, not just this page
+  const { threads, totalPages } = await getThreadList(
     board.id,
     limit,
     offset,
     sortBy,
+    query || undefined,
   );
-
-  if (query) {
-    const q = query.toLowerCase();
-    threads = threads.filter(
-      (t) =>
-        t.subject?.toLowerCase().includes(q) ||
-        t.content.toLowerCase().includes(q),
-    );
-  }
 
   const isCatalog = view === "catalog";
 
@@ -105,6 +85,13 @@ async function BoardContent({
             <BoardSearch />
           </div>
           <div className="flex items-center justify-between gap-2 shrink-0 sm:justify-end">
+            <Link
+              href={`/${boardCode}/archive`}
+              className="text-muted-foreground hover:text-accent hover:underline whitespace-nowrap"
+              title="Thread yang sudah diarsipkan"
+            >
+              [Arsip]
+            </Link>
             <BoardSort />
             <BoardViewToggle />
           </div>
@@ -132,15 +119,13 @@ async function BoardContent({
           </div>
         )}
 
-        {!query && (
-          <div className="mt-8">
-            <Pagination
-              totalPages={totalPages}
-              currentPage={currentPage}
-              baseUrl={`/${boardCode}`}
-            />
-          </div>
-        )}
+        <div className="mt-8">
+          <Pagination
+            totalPages={totalPages}
+            currentPage={currentPage}
+            baseUrl={`/${boardCode}`}
+          />
+        </div>
       </div>
     </main>
   );
@@ -152,7 +137,7 @@ export async function generateMetadata({
   params: Promise<{ board: string }>;
 }): Promise<Metadata> {
   const { board: boardCode } = await params;
-  const board = await getBoardByCode(boardCode);
+  const board = await getBoardByCodeCached(boardCode);
 
   if (!board) {
     return { title: "Board Not Found" };
@@ -183,7 +168,7 @@ export default async function BoardPage({
     sort = "bump",
   }] = await Promise.all([params, searchParams]);
 
-  const board = await getBoardByCode(boardCode);
+  const board = await getBoardByCodeCached(boardCode);
 
   if (!board) {
     notFound();
@@ -205,7 +190,7 @@ export default async function BoardPage({
 
       <AdBanner />
 
-      <Suspense fallback={<div className="flex items-center justify-center min-h-[50vh]"><div className="animate-spin rounded-full h-8 w-8 border-t-2 border-accent" /></div>}>
+      <Suspense fallback={<div className="px-3 sm:px-4 md:px-8 w-full"><ThreadListSkeleton /></div>}>
         <BoardContent 
           boardCode={boardCode}
           view={view}

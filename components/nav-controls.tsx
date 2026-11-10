@@ -33,7 +33,7 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import { useTransition } from "react";
+import { useEffect, useState, useTransition } from "react";
 import { logout } from "@/lib/actions/auth.actions";
 
 interface NavControlsProps {
@@ -48,9 +48,17 @@ export function NavControls({ user }: NavControlsProps) {
     defaultBoardView,
     toggleDefaultBoardView,
     autoPlayGif,
-    toggleAutoPlayGif
+    toggleAutoPlayGif,
+    autoUpdateThread,
+    toggleAutoUpdateThread,
+    hoverPreview,
+    toggleHoverPreview,
   } = useNav();
   const { toggleWatcher, watchedThreads } = useThreadWatcher();
+  // The watcher list comes from localStorage; only show the badge after hydration
+  // so server HTML and the first client render always match.
+  const [hydrated, setHydrated] = useState(false);
+  useEffect(() => setHydrated(true), []);
   const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
@@ -87,7 +95,7 @@ export function NavControls({ user }: NavControlsProps) {
             className="relative opacity-80 hover:opacity-100 transition-opacity cursor-pointer p-0.5"
           >
             <Eye className="size-3.5" />
-            {watchedThreads.some(t => t.currentReplyCount > t.lastReadReplyCount) && (
+            {hydrated && watchedThreads.some(t => t.currentReplyCount > t.lastReadReplyCount) && (
               <span className={cn(
                 "absolute -top-1 -right-1 size-2 rounded-full border border-background",
                 watchedThreads.some(t => t.hasNewReplyToMe) ? "bg-red-500" : "bg-primary"
@@ -138,7 +146,7 @@ export function NavControls({ user }: NavControlsProps) {
             <Settings className="size-3.5" />
           </button>
         </DropdownMenuTrigger>
-        <DropdownMenuContent align="end" className="w-64 text-[11px] font-mono">
+        <DropdownMenuContent align="end" className="w-56 text-[11px] font-mono">
           <DropdownMenuLabel className="flex items-center gap-2 h-[26px] py-0 opacity-80">
             <Settings className="size-3.5" />
             Pengaturan
@@ -154,48 +162,47 @@ export function NavControls({ user }: NavControlsProps) {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem
-            onClick={togglePosition}
-            onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer h-[26px] py-0"
-          >
-            <span>Navigasi Melayang</span>
-            <span className="ml-auto opacity-50 font-bold">
-              {position === "sticky" ? "✔" : "✘"}
-            </span>
-          </DropdownMenuItem>
+          <SettingsGroupLabel>Tampilan</SettingsGroupLabel>
+          <SettingToggle
+            label="Mode Gelap"
+            hint="Ganti tema terang/gelap"
+            checked={resolvedTheme === "dark"}
+            onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+          />
+          <SettingToggle
+            label="Nav Tetap"
+            hint="Bar navigasi tetap terlihat saat menggulir"
+            checked={position === "sticky"}
+            onToggle={togglePosition}
+          />
+          <SettingToggle
+            label="Autoplay GIF"
+            hint="Putar GIF otomatis di thumbnail"
+            checked={autoPlayGif}
+            onToggle={toggleAutoPlayGif}
+          />
+          <SettingToggle
+            label="Pratinjau Hover"
+            hint="Tampilkan gambar penuh saat kursor di atas thumbnail"
+            checked={hoverPreview}
+            onToggle={toggleHoverPreview}
+            className="hidden sm:flex"
+          />
 
-          <DropdownMenuItem
-            onClick={toggleDefaultBoardView}
-            onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer h-[26px] py-0"
-          >
-            <span>Katalog sebagai Default</span>
-            <span className="ml-auto opacity-50 font-bold">
-              {defaultBoardView === "catalog" ? "✔" : "✘"}
-            </span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={toggleAutoPlayGif}
-            onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer h-[26px] py-0"
-          >
-            <span>Putar GIF Otomatis</span>
-            <span className="ml-auto opacity-50 font-bold">
-              {autoPlayGif ? "✔" : "✘"}
-            </span>
-          </DropdownMenuItem>
-
-          <DropdownMenuItem
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
-            onSelect={(e) => e.preventDefault()}
-            className="cursor-pointer h-[26px] py-0"
-          >
-            <span>Mode {resolvedTheme === "dark" ? "Terang" : "Gelap"}</span>
-          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <SettingsGroupLabel>Board &amp; Thread</SettingsGroupLabel>
+          <SettingToggle
+            label="Buka Katalog"
+            hint="Board dibuka dalam tampilan katalog"
+            checked={defaultBoardView === "catalog"}
+            onToggle={toggleDefaultBoardView}
+          />
+          <SettingToggle
+            label="Auto-update"
+            hint="Muat balasan baru di thread secara otomatis"
+            checked={autoUpdateThread}
+            onToggle={toggleAutoUpdateThread}
+          />
 
           {user && (
             <>
@@ -222,5 +229,43 @@ export function NavControls({ user }: NavControlsProps) {
       </DropdownMenu>
       <span className="text-muted-foreground/50">]</span>
     </div>
+  );
+}
+
+function SettingsGroupLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <DropdownMenuLabel className="px-2 pt-1.5 pb-0.5 text-[9px] font-semibold uppercase tracking-wider text-muted-foreground/70">
+      {children}
+    </DropdownMenuLabel>
+  );
+}
+
+function SettingToggle({
+  label,
+  hint,
+  checked,
+  onToggle,
+  className,
+}: {
+  label: string;
+  hint: string;
+  checked: boolean;
+  onToggle: () => void;
+  className?: string;
+}) {
+  return (
+    <DropdownMenuItem
+      onClick={onToggle}
+      onSelect={(e) => e.preventDefault()}
+      className={cn("cursor-pointer h-[26px] py-0", className)}
+      title={hint}
+      role="menuitemcheckbox"
+      aria-checked={checked}
+    >
+      <span>{label}</span>
+      <span className={cn("ml-auto font-bold", checked ? "text-accent" : "opacity-40")}>
+        {checked ? "✔" : "✘"}
+      </span>
+    </DropdownMenuItem>
   );
 }

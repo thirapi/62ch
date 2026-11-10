@@ -12,6 +12,10 @@ interface NavContextType {
   toggleDefaultBoardView: () => void;
   autoPlayGif: boolean;
   toggleAutoPlayGif: () => void;
+  autoUpdateThread: boolean;
+  toggleAutoUpdateThread: () => void;
+  hoverPreview: boolean;
+  toggleHoverPreview: () => void;
 }
 
 const NavContext = createContext<NavContextType | undefined>(undefined);
@@ -20,6 +24,8 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
   const [position, setPosition] = useState<NavPosition>("static");
   const [defaultBoardView, setDefaultBoardView] = useState<BoardView>("list");
   const [autoPlayGif, setAutoPlayGif] = useState<boolean>(true);
+  const [autoUpdateThread, setAutoUpdateThread] = useState<boolean>(true);
+  const [hoverPreview, setHoverPreview] = useState<boolean>(true);
 
   useEffect(() => {
     const savedPos = localStorage.getItem("ib-nav-position") as NavPosition;
@@ -35,6 +41,14 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
     const savedAutoPlay = localStorage.getItem("ib-autoplay-gif");
     if (savedAutoPlay === "false") {
       setAutoPlayGif(false);
+    }
+
+    if (localStorage.getItem("ib-auto-update-thread") === "false") {
+      setAutoUpdateThread(false);
+    }
+
+    if (localStorage.getItem("ib-hover-preview") === "false") {
+      setHoverPreview(false);
     }
   }, []);
 
@@ -56,6 +70,18 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem("ib-autoplay-gif", String(newVal));
   };
 
+  const toggleAutoUpdateThread = () => {
+    const newVal = !autoUpdateThread;
+    setAutoUpdateThread(newVal);
+    localStorage.setItem("ib-auto-update-thread", String(newVal));
+  };
+
+  const toggleHoverPreview = () => {
+    const newVal = !hoverPreview;
+    setHoverPreview(newVal);
+    localStorage.setItem("ib-hover-preview", String(newVal));
+  };
+
   return (
     <NavContext.Provider 
       value={{ 
@@ -64,7 +90,11 @@ export function NavProvider({ children }: { children: React.ReactNode }) {
         defaultBoardView, 
         toggleDefaultBoardView,
         autoPlayGif,
-        toggleAutoPlayGif
+        toggleAutoPlayGif,
+        autoUpdateThread,
+        toggleAutoUpdateThread,
+        hoverPreview,
+        toggleHoverPreview,
       }}
     >
       {children}

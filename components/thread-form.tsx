@@ -40,6 +40,9 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const isMobile = useIsMobile();
 
   const [content, setContent] = useState("");
+  const [subject, setSubject] = useState("");
+  const draftKey = `ib-draft-thread-${boardCode}`;
+  const draftLoadedRef = useRef(false);
   const [password, setPassword] = useDefaultPassword();
   const [showPassword, setShowPassword] = useState(false);
 
@@ -54,6 +57,46 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
       setIsExpanded(!isMobile);
     }
   }, [boardCode, isMobile]);
+
+  // Restore an unsent thread draft for this board
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(draftKey);
+      if (saved) {
+        const parsed = JSON.parse(saved) as { subject?: string; content?: string };
+        if (parsed.subject) setSubject((prev) => prev || parsed.subject!);
+        if (parsed.content) setContent((prev) => prev || parsed.content!);
+      }
+    } catch {
+      // drafts are best-effort
+    }
+    draftLoadedRef.current = true;
+  }, [draftKey]);
+
+  // Persist the draft (debounced) while typing
+  useEffect(() => {
+    if (!draftLoadedRef.current) return;
+    const timer = setTimeout(() => {
+      try {
+        if (subject.trim() || content.trim()) {
+          localStorage.setItem(draftKey, JSON.stringify({ subject, content }));
+        } else {
+          localStorage.removeItem(draftKey);
+        }
+      } catch {
+        // ignore quota / privacy-mode errors
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [subject, content, draftKey]);
+
+  const clearDraft = () => {
+    try {
+      localStorage.removeItem(draftKey);
+    } catch {
+      // ignore
+    }
+  };
 
   const toggleExpand = () => {
     const newState = !isExpanded;
@@ -73,6 +116,8 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
 
   const handleClear = () => {
     setContent("");
+    setSubject("");
+    clearDraft();
     setImageFile(null);
     formRef.current?.reset();
     setResetTrigger((prev) => prev + 1);
@@ -117,6 +162,8 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
         formRef.current?.reset();
         setImageFile(null);
         setContent("");
+        setSubject("");
+        clearDraft();
         setResetTrigger((prev) => prev + 1);
 
         if (result.postNumber) {
@@ -232,6 +279,8 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
               placeholder="(Opsional)"
               maxLength={200}
               className="bg-muted/30 focus-visible:ring-accent h-8 text-sm"
+              value={subject}
+              onChange={(e) => setSubject(e.target.value)}
             />
           </PostFormRow>
 
@@ -267,6 +316,8 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
             <div className="space-y-2">
               <ImageUploader
                 onImageSelect={setImageFile}
+                selectedFile={imageFile}
+                pasteTargetRef={formRef}
                 maxSizeMB={10}
                 resetTrigger={resetTrigger}
                 hideLabel={true}

@@ -8,7 +8,7 @@ import { cookies } from "next/headers"
 import { getClientIp } from "@/lib/utils/get-ip"
 import { CaptchaService } from "@/lib/services/captcha.service"
 
-const { threadController } = container
+const { threadController, threadRepository, replyRepository, getArchivedThreadsUseCase } = container
 
 export async function createThread(formData: FormData) {
   try {
@@ -82,10 +82,11 @@ export async function getThreadList(
   boardId: number,
   limit?: number,
   offset?: number,
-  sortBy?: "bump" | "new" | "replies" | "images"
+  sortBy?: "bump" | "new" | "replies" | "images",
+  search?: string,
 ) {
   try {
-    return await threadController.getThreadList(boardId, limit, offset, sortBy)
+    return await threadController.getThreadList(boardId, limit, offset, sortBy, search)
   } catch (error) {
     console.error(`Error fetching thread list for board ${boardId}:`, error)
     return { threads: [], totalPages: 0 }
@@ -98,6 +99,50 @@ export async function getThreadDetail(threadId: number) {
   } catch (error) {
     console.error(`Error fetching thread detail for thread ${threadId}:`, error)
     return null
+  }
+}
+
+/**
+ * Lightweight status check used by the thread auto-updater: one row lookup
+ * plus a COUNT, instead of fetching the whole thread with all replies.
+ */
+export async function getThreadStatus(threadId: number) {
+  try {
+    if (!Number.isInteger(threadId) || threadId <= 0) return null
+    const thread = await threadRepository.findById(threadId)
+    if (!thread || thread.isDeleted) return null
+    const replyCount = await replyRepository.countByThreadId(threadId)
+    return {
+      replyCount,
+      isLocked: !!thread.isLocked,
+      isArchived: !!thread.isArchived,
+    }
+  } catch (error) {
+    console.error(`Error fetching thread status for thread ${threadId}:`, error)
+    return null
+  }
+}
+
+/** Batched, lightweight status for the thread watcher. Missing ids mean the thread is gone. */
+export async function getWatchedThreadStatuses(threadIds: number[]) {
+  try {
+    const ids = Array.from(new Set(threadIds))
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, 100)
+    const rows = await threadRepository.getWatchStatuses(ids)
+    return rows.map((r) => ({ ...r, lastActivityAt: r.lastActivityAt.getTime() }))
+  } catch (error) {
+    console.error("Error fetching watched thread statuses:", error)
+    return null
+  }
+}
+
+export async function getArchivedThreads(boardId: number) {
+  try {
+    return await getArchivedThreadsUseCase.execute(boardId)
+  } catch (error) {
+    console.error(`Error fetching archived threads for board ${boardId}:`, error)
+    return []
   }
 }
 

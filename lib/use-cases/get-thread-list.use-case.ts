@@ -18,11 +18,14 @@ export class GetThreadListUseCase {
     boardId: number,
     limit: number = 50,
     offset: number = 0,
-    sortBy: "bump" | "new" | "replies" | "images" = "bump"
+    sortBy: "bump" | "new" | "replies" | "images" = "bump",
+    search?: string,
   ): Promise<{ threads: ThreadWithReplyCount[]; totalPages: number }> {
+    // Business rule: search terms are capped to keep the ILIKE scan reasonable
+    const q = search?.trim().slice(0, 100) || undefined
     const [threads, totalCount] = await Promise.all([
-      this.threadRepository.getThreadsWithPreviews(boardId, limit, offset, sortBy),
-      this.threadRepository.countByBoardId(boardId),
+      this.threadRepository.getThreadsWithPreviews(boardId, limit, offset, sortBy, q),
+      this.threadRepository.countByBoardId(boardId, q),
     ])
 
     const threadsUI: ThreadWithReplyCount[] = threads.map(t => ({

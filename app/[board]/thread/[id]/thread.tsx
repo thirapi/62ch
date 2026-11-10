@@ -10,7 +10,6 @@ import { FormattedText } from "@/components/formatted-text";
 import { Backlinks } from "@/components/backlinks";
 import { ThreadUI } from "@/lib/entities/thread.entity";
 import { ReplyUI } from "@/lib/entities/reply.entity";
-import { useRouter } from "next/navigation";
 import { FormattedDate } from "@/components/formatted-date";
 import { QuickReply } from "@/components/quick-reply";
 import { ExpandableImage } from "@/components/expandable-image";
@@ -19,13 +18,20 @@ import { ReplyProvider, useReply } from "@/components/reply-context";
 import { useThreadWatcher } from "@/components/thread-watcher-provider";
 import { Eye, EyeOff } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { useEffect, useTransition } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useRef } from "react";
+import { toast } from "sonner";
+import { useNav } from "@/components/nav-provider";
+import { useThreadAutoUpdate, useSecondsUntil } from "@/hooks/use-thread-auto-update";
+import { useDocumentTitleCount } from "@/hooks/use-document-title-prefix";
+import { getLastSeenPost, setLastSeenPost } from "@/lib/utils/last-seen";
 import { useHiding } from "@/hooks/use-hiding";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { ChevronLeft, RefreshCw, MessageSquare, ArrowUp, ArrowDown } from "lucide-react";
+import { ChevronLeft, RefreshCw, MessageSquare, ArrowUp, ArrowDown, Archive, ChevronDown } from "lucide-react";
 import { PostActions } from "@/components/post-actions";
 import { CapcodeMarker } from "@/components/capcode-marker";
 import { SelectionQuotePopover } from "@/components/selection-quote-popover";
+import { InPagePostsProvider } from "@/components/in-page-posts";
+import type { PostInfoEntity } from "@/lib/entities/post.entity";
 
 interface ThreadClientProps {
   thread: ThreadUI;
@@ -63,12 +69,154 @@ export function ThreadClient({
   const [lightboxOpen, setLightboxOpen] = useState(false);
   const [selectedImage, setSelectedImage] = useState("");
   const [qrOpen, setQrOpen] = useState(false);
-  const router = useRouter();
   const { setContent } = useReply();
-  const { watchedThreads, watchThread, unwatchThread, markAsRead } = useThreadWatcher();
+  const { watchedThreads, watchThread, unwatchThread, markAsRead, myPosts } = useThreadWatcher();
   const { isReplyHidden, hideThread, hideReply, unhideReply, isLoaded } = useHiding();
-  const [isPending, startTransition] = useTransition();
+  const { autoUpdateThread, toggleAutoUpdateThread } = useNav();
   const isMobile = useIsMobile();
+
+  const isReadOnly = !!thread.isLocked || !!thread.isArchived;
+  const myPostSet = useMemo(() => new Set(myPosts), [myPosts]);
+  const myPostSetRef = useRef(myPostSet);
+  myPostSetRef.current = myPostSet;
+
+  // Quote previews for posts in this thread are served from memory, not the server
+  const inPagePosts = useMemo(() => {
+    const map = new Map<number, PostInfoEntity>();
+    const base = { threadId: thread.id, boardCode };
+    map.set(thread.postNumber, {
+      ...base,
+      id: thread.id,
+      postNumber: thread.postNumber,
+      type: "thread",
+      content: thread.content,
+      author: thread.author || "Awanama",
+      createdAt: thread.createdAt,
+      image: thread.image,
+      isNsfw: thread.isNsfw,
+      isSpoiler: thread.isSpoiler,
+      capcode: thread.capcode,
+    });
+    for (const r of replies) {
+      if (r.isDeleted) continue;
+      map.set(r.postNumber, {
+        ...base,
+        id: r.id,
+        postNumber: r.postNumber,
+        type: "reply",
+        content: r.content,
+        author: r.author || "Awanama",
+        createdAt: r.createdAt,
+        image: r.image,
+        isNsfw: r.isNsfw,
+        isSpoiler: r.isSpoiler,
+        capcode: r.capcode,
+      });
+    }
+    return map;
+  }, [thread, replies, boardCode]);
+
+  const quotesMe = (content: string) => {
+    if (myPostSet.size === 0) return false;
+    for (const m of content.matchAll(/>>(\d+)/g)) {
+      if (myPostSet.has(Number(m[1]))) return true;
+    }
+    return false;
+  };
+
+  // --- Auto-update -------------------------------------------------------
+  const visibleReplyCount = replies.filter((r) => !r.isDeleted).length;
+  const imageCount = replies.filter((r) => !!r.image).length + (thread.image ? 1 : 0);
+  const { nextCheckAt, isChecking, isGone, updateNow } = useThreadAutoUpdate({
+    threadId: thread.id,
+    knownReplyCount: visibleReplyCount,
+    isLocked: !!thread.isLocked,
+    isArchived: !!thread.isArchived,
+    enabled: autoUpdateThread && !thread.isArchived,
+  });
+
+  // --- New-reply tracking (divider, floating pill, tab title) ------------
+  const [dividerPost, setDividerPost] = useState<number | null>(null);
+  const [pendingNew, setPendingNew] = useState<{ first: number; count: number } | null>(null);
+  const [unseenCount, setUnseenCount] = useState(0);
+  const prevReplyIdsRef = useRef<Set<number> | null>(null);
+  const latestPostNumber = replies.length
+    ? Math.max(thread.postNumber, ...replies.map((r) => r.postNumber))
+    : thread.postNumber;
+
+  useEffect(() => {
+    const prev = prevReplyIdsRef.current;
+    if (prev === null) {
+      // First render: compare against what the user saw on their last visit
+      const lastSeen = getLastSeenPost(thread.id);
+      if (lastSeen !== null) {
+        const firstUnread = replies.find(
+          (r) => r.postNumber > lastSeen && !myPostSetRef.current.has(r.postNumber),
+        );
+        if (firstUnread) setDividerPost(firstUnread.postNumber);
+      }
+    } else {
+      const added = replies.filter(
+        (r) => !prev.has(r.id) && !myPostSetRef.current.has(r.postNumber),
+      );
+      if (added.length > 0) {
+        if (document.hidden) {
+          setUnseenCount((c) => c + added.length);
+          setDividerPost((d) => d ?? added[0].postNumber);
+        }
+        setPendingNew((p) =>
+          p ? { first: p.first, count: p.count + added.length } : { first: added[0].postNumber, count: added.length },
+        );
+      }
+    }
+    prevReplyIdsRef.current = new Set(replies.map((r) => r.id));
+    if (!document.hidden) setLastSeenPost(thread.id, latestPostNumber);
+  }, [thread.id, replies, latestPostNumber]);
+
+  useEffect(() => {
+    const onVisible = () => {
+      if (document.hidden) return;
+      setUnseenCount(0);
+      setLastSeenPost(thread.id, latestPostNumber);
+    };
+    document.addEventListener("visibilitychange", onVisible);
+    return () => document.removeEventListener("visibilitychange", onVisible);
+  }, [thread.id, latestPostNumber]);
+
+  useDocumentTitleCount(unseenCount);
+
+  // Hide the "new replies" pill once the first new post scrolls into view
+  useEffect(() => {
+    if (!pendingNew) return;
+    const el = document.getElementById(`p${pendingNew.first}`);
+    if (!el) return;
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((e) => e.isIntersecting)) setPendingNew(null);
+      },
+      { threshold: 0.2 },
+    );
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [pendingNew]);
+
+  const scrollToPost = useCallback((postNumber: number) => {
+    const el = document.getElementById(`p${postNumber}`);
+    if (!el) return false;
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+    el.classList.add("ring-2", "ring-accent");
+    setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2000);
+    return true;
+  }, []);
+
+  const jumpToNew = useCallback(() => {
+    const target = pendingNew?.first ?? dividerPost;
+    if (target && scrollToPost(target)) {
+      setPendingNew(null);
+      return;
+    }
+    toast("Tidak ada balasan baru", { duration: 1500 });
+  }, [pendingNew, dividerPost, scrollToPost]);
 
   const [fabCanScroll, setFabCanScroll] = useState(false);
   const [fabAtTop, setFabAtTop] = useState(true);
@@ -110,7 +258,8 @@ export function ThreadClient({
 
   useEffect(() => {
     markAsRead(thread.id, replies.length);
-  }, [thread.id, replies.length, markAsRead]);
+    // isWatched: re-run once the watcher list has loaded from localStorage
+  }, [thread.id, replies.length, markAsRead, isWatched]);
 
   // Hide global scroll-to-top/bottom buttons while the mobile reply drawer is open
   useEffect(() => {
@@ -138,7 +287,8 @@ export function ThreadClient({
     if (e) {
       e.preventDefault();
     }
-    
+    if (isReadOnly) return;
+
     setQrOpen(true);
     
     // Selection to Quote feature - capture selection immediately
@@ -166,7 +316,10 @@ export function ThreadClient({
     }
 
     setContent((prev: string) => prev + quoteText);
+    focusReplyBox();
+  };
 
+  const focusReplyBox = () => {
     setTimeout(() => {
       const textarea =
         document.getElementById("qr-reply-content") ||
@@ -174,6 +327,59 @@ export function ThreadClient({
       if (textarea) (textarea as HTMLTextAreaElement).focus();
     }, 50);
   };
+
+  const showShortcutHelp = useCallback(() => {
+    toast("Pintasan keyboard", {
+      description: "R — balas · U — perbarui · N — ke balasan baru · Esc — tutup balasan cepat",
+      duration: 5000,
+    });
+  }, []);
+
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.ctrlKey || e.metaKey || e.altKey || e.defaultPrevented) return;
+      if (lightboxOpen) return;
+
+      if (e.key === "Escape") {
+        // Let open popovers (emoji picker, menus) close first
+        if (qrOpen && !document.querySelector("[data-radix-popper-content-wrapper]")) {
+          setQrOpen(false);
+        }
+        return;
+      }
+
+      const t = e.target as HTMLElement | null;
+      const isTyping =
+        !!t && (t.isContentEditable || ["INPUT", "TEXTAREA", "SELECT"].includes(t.tagName));
+      if (isTyping) return;
+
+      switch (e.key) {
+        case "r":
+        case "R":
+          if (isReadOnly) return;
+          e.preventDefault();
+          setQrOpen(true);
+          focusReplyBox();
+          break;
+        case "u":
+        case "U":
+          e.preventDefault();
+          updateNow();
+          break;
+        case "n":
+        case "N":
+          e.preventDefault();
+          jumpToNew();
+          break;
+        case "?":
+          e.preventDefault();
+          showShortcutHelp();
+          break;
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [lightboxOpen, qrOpen, isReadOnly, updateNow, jumpToNew, showShortcutHelp]);
 
   const allPosts = [
     {
@@ -204,7 +410,17 @@ export function ThreadClient({
   };
 
   return (
-    <>
+    <InPagePostsProvider value={inPagePosts}>
+      {thread.isArchived && (
+        <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-muted/40 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
+          <Archive className="h-3.5 w-3.5 shrink-0" />
+          <span>Thread ini sudah diarsipkan dan tidak bisa dibalas lagi.</span>
+          <Link href={`/${boardCode}/archive`} className="text-accent hover:underline font-semibold">
+            Lihat arsip /{boardCode}/
+          </Link>
+        </div>
+      )}
+
       {/* OP Post */}
       <div
         id={`p${thread.postNumber}`}
@@ -259,6 +475,7 @@ export function ThreadClient({
               hideTrip={!!thread.capcode}
             />
             <CapcodeMarker type={thread.capcode} className="text-base" />
+            {myPostSet.has(thread.postNumber) && <YouMarker />}
           </div>
           {thread.posterId && (
             <span
@@ -351,7 +568,18 @@ export function ThreadClient({
           }
 
           return (
-            <div key={reply.id} className="flex items-start gap-1">
+            <Fragment key={reply.id}>
+            {dividerPost !== null && dividerPost === reply.postNumber && (
+              <div
+                id="new-replies"
+                className="flex items-center gap-2 py-1 text-[10px] font-bold uppercase tracking-wider text-accent select-none"
+              >
+                <span className="h-px flex-1 bg-accent/40" />
+                Balasan baru
+                <span className="h-px flex-1 bg-accent/40" />
+              </div>
+            )}
+            <div className="flex items-start gap-1">
               <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
                 &gt;&gt;
               </span>
@@ -361,6 +589,7 @@ export function ThreadClient({
                 className={cn(
                   "ib-reply border border-muted/20 shadow-sm relative group sm:table block w-fit max-w-full scroll-mt-14",
                   reply.isDeleted && "opacity-70 grayscale-[50%]",
+                  quotesMe(reply.content) && "border-l-2 border-l-accent",
                   highlightedId && reply.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015] rounded-sm"
                 )}
               >
@@ -377,6 +606,7 @@ export function ThreadClient({
                       hideTrip={!!reply.capcode}
                     />
                     <CapcodeMarker type={reply.capcode} />
+                    {myPostSet.has(reply.postNumber) && <YouMarker />}
                   </div>
                   {reply.posterId && (
                     <span
@@ -443,6 +673,7 @@ export function ThreadClient({
                 </div>
               </div>
             </div>
+            </Fragment>
           );
         })}
 
@@ -458,6 +689,64 @@ export function ThreadClient({
         )}
       </div>
 
+      {/* Update bar */}
+      <div className="-mt-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
+        <button
+          type="button"
+          onClick={updateNow}
+          disabled={isChecking}
+          className="hover:text-accent hover:underline disabled:opacity-60 cursor-pointer"
+          title="Periksa balasan baru (U)"
+        >
+          [{isChecking ? "Memeriksa…" : "Perbarui"}]
+        </button>
+        {!thread.isArchived && (
+          <button
+            type="button"
+            onClick={toggleAutoUpdateThread}
+            className="hover:text-accent hover:underline cursor-pointer"
+            title="Periksa balasan baru secara otomatis"
+          >
+            [{autoUpdateThread ? "✔" : "✘"} Auto]
+          </button>
+        )}
+        {isGone ? (
+          <span className="text-destructive">Thread ini sudah dihapus.</span>
+        ) : (
+          autoUpdateThread &&
+          !thread.isArchived && (
+            <span className="opacity-70 tabular-nums" aria-live="polite">
+              {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
+            </span>
+          )
+        )}
+        <span className="opacity-70 ml-auto sm:ml-0 tabular-nums">
+          {visibleReplyCount} balasan · {imageCount} gambar
+        </span>
+        <button
+          type="button"
+          onClick={showShortcutHelp}
+          className="hidden sm:inline hover:text-accent hover:underline cursor-pointer"
+        >
+          [? Pintasan]
+        </button>
+      </div>
+
+      {/* Floating "new replies" pill */}
+      {pendingNew && (
+        <button
+          type="button"
+          onClick={jumpToNew}
+          className={cn(
+            "fixed left-1/2 -translate-x-1/2 z-40 flex items-center gap-1.5 rounded-full bg-accent text-accent-foreground px-3.5 py-1.5 text-xs font-bold shadow-lg cursor-pointer animate-in fade-in slide-in-from-bottom-2",
+            isMobile ? "bottom-20" : "bottom-6",
+          )}
+        >
+          <ChevronDown className="h-3.5 w-3.5" />
+          {pendingNew.count} balasan baru
+        </button>
+      )}
+
       {/* Reply Form Section */}
       <div className="mt-12 border-t border-muted/20 pt-8">
         <div className="w-full max-w-2xl mx-auto bg-muted/10 border border-muted/30 rounded-md p-4 sm:p-5">
@@ -470,7 +759,7 @@ export function ThreadClient({
             )}
           </h3>
 
-          {!thread.isLocked ? (
+          {!isReadOnly ? (
             <ReplyForm 
               threadId={thread.id} 
               boardCode={boardCode} 
@@ -478,9 +767,15 @@ export function ThreadClient({
             />
           ) : (
             <div className="py-6 text-center bg-muted/20 rounded">
-              <Lock className="h-7 w-7 mx-auto mb-2 text-muted-foreground opacity-50" />
+              {thread.isArchived ? (
+                <Archive className="h-7 w-7 mx-auto mb-2 text-muted-foreground opacity-50" />
+              ) : (
+                <Lock className="h-7 w-7 mx-auto mb-2 text-muted-foreground opacity-50" />
+              )}
               <p className="text-muted-foreground text-sm">
-                Thread ini terkunci. Anda tidak bisa mengirim balasan baru.
+                {thread.isArchived
+                  ? "Thread ini sudah diarsipkan. Anda tidak bisa mengirim balasan baru."
+                  : "Thread ini terkunci. Anda tidak bisa mengirim balasan baru."}
               </p>
             </div>
           )}
@@ -521,15 +816,11 @@ export function ThreadClient({
           <div className="w-[1px] h-4 bg-border shrink-0" />
 
           <button
-            onClick={() => {
-              startTransition(() => {
-                router.refresh();
-              });
-            }}
+            onClick={updateNow}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors shrink-0 cursor-pointer"
-            title="Segarkan Halaman"
+            title="Perbarui Thread"
           >
-            <RefreshCw className={cn("h-4 w-4", isPending && "animate-spin")} />
+            <RefreshCw className={cn("h-4 w-4", isChecking && "animate-spin")} />
           </button>
 
           <button
@@ -555,7 +846,7 @@ export function ThreadClient({
             {isWatched ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
           </button>
 
-          {!thread.isLocked && (
+          {!isReadOnly && (
             <>
               <div className="w-[1px] h-4 bg-border shrink-0" />
               <Button
@@ -604,14 +895,36 @@ export function ThreadClient({
       )}
 
       <div id="bottom" />
-    </>
+    </InPagePostsProvider>
   );
 }
 
 
+function AutoUpdateCountdown({ target }: { target: number | null }) {
+  const seconds = useSecondsUntil(target);
+  if (seconds === null) return null;
+  return (
+    <>
+      <span className="hidden sm:inline">cek lagi </span>
+      {seconds} dtk
+    </>
+  );
+}
+
+function YouMarker() {
+  return (
+    <span
+      className="text-[10px] font-semibold text-accent/80 ml-0.5 self-center"
+      title="Postingan Anda"
+    >
+      (Anda)
+    </span>
+  );
+}
+
 export default function ThreadPageWrapper(props: ThreadClientProps) {
   return (
-    <ReplyProvider>
+    <ReplyProvider draftKey={`ib-draft-reply-${props.thread.id}`}>
       <ThreadClient {...props} />
     </ReplyProvider>
   );

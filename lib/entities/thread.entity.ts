@@ -72,3 +72,13 @@ export interface ThreadUI {
   posterId?: string
   capcode?: string | null
 }
+export interface ArchivedThreadSummary {
+  id: number
+  postNumber: number
+  subject: string | null
+  excerpt: string
+  hasImage: boolean
+  replyCount: number
+  createdAt: Date
+  bumpedAt: Date
+}

@@ -19,6 +19,8 @@ export function BoardSearch() {
 
     if (debouncedValue === queryInUrl) return;
 
+    // A new search always starts from the first page of results
+    params.delete("page");
     if (debouncedValue) {
       params.set("q", debouncedValue);
     } else {

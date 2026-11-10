@@ -154,7 +154,7 @@ export default async function HomePage() {
                     <div className="overflow-y-auto max-h-[440px] sm:max-h-[642px] pr-2 custom-scrollbar">
                       <div className="columns-2 sm:columns-3 gap-2">
                         {recentImages.map((image) => (
-                          <div key={`img-wrap-${image.id}`} className="break-inside-avoid mb-2 w-full">
+                          <div key={`img-wrap-${image.postNumber}-${image.id}`} className="break-inside-avoid mb-2 w-full">
                             <ThreadPreview
                               key={`img-preview-${image.id}`}
                               subject={image.threadSubject}
