@@ -8,7 +8,8 @@ Berikut ini adalah daftar fitur yang sudah aktif dan bisa langsung digunakan:
 - **Thread dan Balasan**: Sistem diskusi standar dengan nomor post unik untuk setiap kiriman.
 - **Bumping**: Thread yang ada balasan baru otomatis naik ke urutan paling atas.
 - **Katalog**: Tampilan grid untuk melihat semua thread dalam satu board sekaligus.
-- **Pencarian**: Fitur untuk mencari thread berdasarkan judul atau isi di dalam board tertentu.
+- **Pencarian**: Mencari thread berdasarkan judul atau isi di seluruh board (bukan hanya halaman yang terbuka), lengkap dengan halaman hasil.
+- **Urutan**: Thread bisa diurutkan berdasarkan bump, terbaru, jumlah balasan, atau jumlah gambar.
 - **Arsip**: Thread yang tergeser dari board bisa dibaca di `/[board]/archive` (hanya baca).
 
 ## 2. Media dan Interaksi

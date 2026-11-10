@@ -30,6 +30,8 @@ import { ChevronLeft, RefreshCw, MessageSquare, ArrowUp, ArrowDown, Archive, Che
 import { PostActions } from "@/components/post-actions";
 import { CapcodeMarker } from "@/components/capcode-marker";
 import { SelectionQuotePopover } from "@/components/selection-quote-popover";
+import { InPagePostsProvider } from "@/components/in-page-posts";
+import type { PostInfoEntity } from "@/lib/entities/post.entity";
 
 interface ThreadClientProps {
   thread: ThreadUI;
@@ -77,6 +79,42 @@ export function ThreadClient({
   const myPostSet = useMemo(() => new Set(myPosts), [myPosts]);
   const myPostSetRef = useRef(myPostSet);
   myPostSetRef.current = myPostSet;
+
+  // Quote previews for posts in this thread are served from memory, not the server
+  const inPagePosts = useMemo(() => {
+    const map = new Map<number, PostInfoEntity>();
+    const base = { threadId: thread.id, boardCode };
+    map.set(thread.postNumber, {
+      ...base,
+      id: thread.id,
+      postNumber: thread.postNumber,
+      type: "thread",
+      content: thread.content,
+      author: thread.author || "Awanama",
+      createdAt: thread.createdAt,
+      image: thread.image,
+      isNsfw: thread.isNsfw,
+      isSpoiler: thread.isSpoiler,
+      capcode: thread.capcode,
+    });
+    for (const r of replies) {
+      if (r.isDeleted) continue;
+      map.set(r.postNumber, {
+        ...base,
+        id: r.id,
+        postNumber: r.postNumber,
+        type: "reply",
+        content: r.content,
+        author: r.author || "Awanama",
+        createdAt: r.createdAt,
+        image: r.image,
+        isNsfw: r.isNsfw,
+        isSpoiler: r.isSpoiler,
+        capcode: r.capcode,
+      });
+    }
+    return map;
+  }, [thread, replies, boardCode]);
 
   const quotesMe = (content: string) => {
     if (myPostSet.size === 0) return false;
@@ -372,7 +410,7 @@ export function ThreadClient({
   };
 
   return (
-    <>
+    <InPagePostsProvider value={inPagePosts}>
       {thread.isArchived && (
         <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-muted/40 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
           <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -652,7 +690,7 @@ export function ThreadClient({
       </div>
 
       {/* Update bar */}
-      <div className="-mt-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono">
+      <div className="-mt-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
         <button
           type="button"
           onClick={updateNow}
@@ -669,7 +707,7 @@ export function ThreadClient({
             className="hover:text-accent hover:underline cursor-pointer"
             title="Periksa balasan baru secara otomatis"
           >
-            [{autoUpdateThread ? "✔" : "✘"} Otomatis]
+            [{autoUpdateThread ? "✔" : "✘"} Auto]
           </button>
         )}
         {isGone ? (
@@ -677,12 +715,12 @@ export function ThreadClient({
         ) : (
           autoUpdateThread &&
           !thread.isArchived && (
-            <span className="opacity-70" aria-live="polite">
+            <span className="opacity-70 tabular-nums" aria-live="polite">
               {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
             </span>
           )
         )}
-        <span className="opacity-70">
+        <span className="opacity-70 ml-auto sm:ml-0 tabular-nums">
           {visibleReplyCount} balasan · {imageCount} gambar
         </span>
         <button
@@ -857,14 +895,20 @@ export function ThreadClient({
       )}
 
       <div id="bottom" />
-    </>
+    </InPagePostsProvider>
   );
 }
 
 
 function AutoUpdateCountdown({ target }: { target: number | null }) {
   const seconds = useSecondsUntil(target);
-  return <>{seconds === null ? "" : `cek lagi ${seconds} dtk`}</>;
+  if (seconds === null) return null;
+  return (
+    <>
+      <span className="hidden sm:inline">cek lagi </span>
+      {seconds} dtk
+    </>
+  );
 }
 
 function YouMarker() {

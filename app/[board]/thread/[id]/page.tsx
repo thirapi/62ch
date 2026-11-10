@@ -1,23 +1,13 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { BoardRepository } from "@/lib/repositories/board.repository";
-import { ThreadRepository } from "@/lib/repositories/thread.repository";
-import { ReplyRepository } from "@/lib/repositories/reply.repository";
-import { GetThreadDetailUseCase } from "@/lib/use-cases/get-thread-detail.use-case";
+import {
+  getAuthUserCached,
+  getBoardByIdCached,
+  getThreadDetailCached,
+} from "@/lib/data/request-cache";
 import ThreadPageWrapper from "./thread";
 import type { Metadata } from "next";
-import { cookies } from "next/headers";
-import { lucia } from "@/lib/auth";
 import { SiteFooter } from "@/components/site-footer";
-
-async function getAuthUser() {
-  const cookieStore = await cookies();
-  const sessionId = cookieStore.get(lucia.sessionCookieName)?.value || null;
-  if (!sessionId) return null;
-  const { session, user } = await lucia.validateSession(sessionId);
-  if (!session) return null;
-  return user;
-}
 
 export async function generateMetadata({
   params,
@@ -33,13 +23,8 @@ export async function generateMetadata({
     };
   }
 
-  const threadRepository = new ThreadRepository();
-  const getThreadDetailUseCase = new GetThreadDetailUseCase(
-    threadRepository,
-    new ReplyRepository(),
-  );
-
-  const result = await getThreadDetailUseCase.execute(threadId);
+  const user = await getAuthUserCached();
+  const result = await getThreadDetailCached(threadId, user?.role ?? null);
 
   if (!result) {
     return {
@@ -91,15 +76,8 @@ export default async function ThreadPage({
     notFound();
   }
 
-  const threadRepository = new ThreadRepository();
-  const replyRepository = new ReplyRepository();
-  const getThreadDetailUseCase = new GetThreadDetailUseCase(
-    threadRepository,
-    replyRepository,
-  );
-
-  const user = await getAuthUser();
-  const result = await getThreadDetailUseCase.execute(threadId, user);
+  const user = await getAuthUserCached();
+  const result = await getThreadDetailCached(threadId, user?.role ?? null);
 
   if (!result) {
     notFound();
@@ -107,8 +85,7 @@ export default async function ThreadPage({
 
   const { thread, replies } = result;
 
-  const boardRepository = new BoardRepository();
-  const board = await boardRepository.findById(thread.boardId);
+  const board = await getBoardByIdCached(thread.boardId);
 
   if (!board || board.code !== boardCode) {
     notFound();

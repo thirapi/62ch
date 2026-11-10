@@ -4,7 +4,7 @@ import type { Metadata } from "next";
 import { Archive, ImageIcon } from "lucide-react";
 import { SiteFooter } from "@/components/site-footer";
 import { FormattedDate } from "@/components/formatted-date";
-import { getBoardByCode } from "@/lib/actions/board.actions";
+import { getBoardByCodeCached } from "@/lib/data/request-cache";
 import { getArchivedThreads } from "@/lib/actions/thread.actions";
 
 export async function generateMetadata({
@@ -13,7 +13,7 @@ export async function generateMetadata({
   params: Promise<{ board: string }>;
 }): Promise<Metadata> {
   const { board: boardCode } = await params;
-  const board = await getBoardByCode(boardCode);
+  const board = await getBoardByCodeCached(boardCode);
   if (!board) return { title: "Board Not Found" };
 
   return {
@@ -35,7 +35,7 @@ export default async function ArchivePage({
   params: Promise<{ board: string }>;
 }) {
   const { board: boardCode } = await params;
-  const board = await getBoardByCode(boardCode);
+  const board = await getBoardByCodeCached(boardCode);
   if (!board) notFound();
 
   const threads = await getArchivedThreads(board.id);

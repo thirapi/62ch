@@ -14,6 +14,7 @@ import { YouTubeEmbed } from "@/components/youtube-embed";
 import { getThumbnailUrl } from "@/lib/utils/image";
 import { EMOJI_MAP } from "@/constants/custom-emojis";
 import { useThreadWatcher } from "@/components/thread-watcher-provider";
+import { useInPagePost } from "@/components/in-page-posts";
 
 interface FormattedTextProps {
   content: string;
@@ -265,12 +266,15 @@ function PostQuote({
   noLink?: boolean;
   className?: string;
 }) {
-  const [post, setPost] = useState<PostInfoEntity | null>(null);
+  const [fetchedPost, setPost] = useState<PostInfoEntity | null>(null);
+  const localPost = useInPagePost(postNumber);
+  const post = localPost ?? fetchedPost;
   const [isLoading, setIsLoading] = useState(false);
   const [hasError, setHasError] = useState(false);
 
   const handleOpenChange = (open: boolean) => {
     if (open && !post && !isLoading && !hasError) {
+      // Not on this page — look it up on the server
       setIsLoading(true);
       getPostByNumber(postNumber)
         .then((data) => {

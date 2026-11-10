@@ -1,7 +1,23 @@
 import { db } from "@/lib/db"
 import { threads, replies, boards } from "@/lib/db/schema"
-import { asc, eq, desc, and, sql, inArray, or } from "drizzle-orm"
+import { asc, eq, desc, and, sql, inArray, or, ilike, type SQL } from "drizzle-orm"
 import type { ThreadEntity, CreateThreadInput, ArchivedThreadSummary } from "@/lib/entities/thread.entity"
+
+/** Escape LIKE wildcards so user input is matched literally. */
+function likePattern(query: string) {
+  return `%${query.replace(/[\\%_]/g, "\\$&")}%`
+}
+
+/** Shared filter for the live (non-archived) thread list, optionally narrowed by a search query. */
+function activeBoardThreadsWhere(boardId: number, search?: string): SQL | undefined {
+  const q = search?.trim()
+  return and(
+    eq(threads.boardId, boardId),
+    eq(threads.isDeleted, false),
+    eq(threads.isArchived, false),
+    q ? or(ilike(threads.subject, likePattern(q)), ilike(threads.content, likePattern(q))) : undefined,
+  )
+}
 
 export class ThreadRepository {
   async create(input: CreateThreadInput): Promise<ThreadEntity> {
@@ -249,15 +265,30 @@ export class ThreadRepository {
     boardId: number,
     limit: number = 50,
     offset: number = 0,
-    sortBy: "bump" | "new" | "replies" | "images" = "bump"
+    sortBy: "bump" | "new" | "replies" | "images" = "bump",
+    search?: string,
   ): Promise<
     (ThreadEntity & { replyCount: number; imageCount: number; replies: any[] })[]
   > {
     // 1. Fetch threads with specific columns only (exclude deletionPassword)
     const orderBy = [];
     orderBy.push(desc(threads.isPinned));
+    // Correlated counts; idx_replies_thread_view (thread_id, is_deleted, ...) keeps these cheap
+    const replyCountSql = sql<number>`(
+      select count(*) from ${replies}
+      where ${replies.threadId} = ${threads.id} and ${replies.isDeleted} = false
+    )`;
+    const imageCountSql = sql<number>`((
+      select count(${replies.image}) from ${replies}
+      where ${replies.threadId} = ${threads.id} and ${replies.isDeleted} = false
+    ) + case when ${threads.image} is not null then 1 else 0 end)`;
+
     if (sortBy === "new") {
       orderBy.push(desc(threads.createdAt));
+    } else if (sortBy === "replies") {
+      orderBy.push(desc(replyCountSql), desc(threads.bumpedAt));
+    } else if (sortBy === "images") {
+      orderBy.push(desc(imageCountSql), desc(threads.bumpedAt));
     } else {
       orderBy.push(desc(threads.bumpedAt));
     }
@@ -284,11 +315,7 @@ export class ThreadRepository {
         capcode: threads.capcode,
       })
       .from(threads)
-      .where(and(
-        eq(threads.boardId, boardId),
-        eq(threads.isDeleted, false),
-        eq(threads.isArchived, false)
-      ))
+      .where(activeBoardThreadsWhere(boardId, search))
       .orderBy(...orderBy)
       .limit(limit)
       .offset(offset)
@@ -388,21 +415,44 @@ export class ThreadRepository {
     })
   }
 
-  async countByBoardId(boardId: number): Promise<number> {
+  async countByBoardId(boardId: number, search?: string): Promise<number> {
     const result = await db
       .select({
         count: sql<number>`count(*)`,
       })
       .from(threads)
-      .where(
-        and(
-          eq(threads.boardId, boardId),
-          eq(threads.isDeleted, false),
-          eq(threads.isArchived, false),
-        ),
-      )
+      .where(activeBoardThreadsWhere(boardId, search))
 
     return Number(result[0]?.count ?? 0)
+  }
+
+  /** Lightweight per-thread counters for the thread watcher (one query for many threads). */
+  async getWatchStatuses(ids: number[]): Promise<
+    { id: number; isDeleted: boolean; replyCount: number; imageCount: number; lastActivityAt: Date }[]
+  > {
+    if (ids.length === 0) return []
+    const rows = await db
+      .select({
+        id: threads.id,
+        isDeleted: threads.isDeleted,
+        hasImage: sql<boolean>`${threads.image} is not null`,
+        createdAt: threads.createdAt,
+        replyCount: sql<number>`count(${replies.id})`,
+        replyImageCount: sql<number>`count(${replies.image})`,
+        lastReplyAt: sql<Date | null>`max(${replies.createdAt})`,
+      })
+      .from(threads)
+      .leftJoin(replies, and(eq(replies.threadId, threads.id), eq(replies.isDeleted, false)))
+      .where(inArray(threads.id, ids))
+      .groupBy(threads.id)
+
+    return rows.map((r) => ({
+      id: r.id,
+      isDeleted: r.isDeleted ?? false,
+      replyCount: Number(r.replyCount ?? 0),
+      imageCount: Number(r.replyImageCount ?? 0) + (r.hasImage ? 1 : 0),
+      lastActivityAt: r.lastReplyAt ? new Date(r.lastReplyAt) : r.createdAt!,
+    }))
   }
 
   async findArchivedByBoardId(boardId: number, limit: number): Promise<ArchivedThreadSummary[]> {

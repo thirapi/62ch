@@ -1,7 +1,7 @@
 "use client";
 
 import React, { createContext, useContext, useState, useEffect, useCallback, useRef } from "react";
-import { getThreadDetail } from "@/lib/actions/thread.actions";
+import { getThreadDetail, getWatchedThreadStatuses } from "@/lib/actions/thread.actions";
 
 export interface WatchedThread {
   id: number;
@@ -138,106 +138,106 @@ export function ThreadWatcherProvider({ children }: { children: React.ReactNode 
     }));
   }, []);
 
-  // Polling logic
+  // Polling logic: one cheap batched status query for every watched thread;
+  // full thread detail is fetched only for threads that actually changed.
   const checkThreads = useCallback(async () => {
-    // Basic guard: if empty or already fetching, skip
     if (watchedThreads.length === 0 || isFetchingRef.current) return;
 
     isFetchingRef.current = true;
     try {
+      const statuses = await getWatchedThreadStatuses(watchedThreads.map((t) => t.id));
+      if (!statuses) return; // network/server error — keep current state
+      const byId = new Map(statuses.map((st) => [st.id, st]));
       const myPostSet = new Set(myPosts);
-    const updatedThreads = await Promise.all(watchedThreads.map(async (wt) => {
-      try {
-        const detail = await getThreadDetail(wt.id);
-        if (!detail) {
-          return { ...wt, isDeleted: true };
-        }
 
-        const currentReplyCount = detail.replies.length;
-        const currentImageCount = detail.replies.filter(r => !!r.image).length + (detail.thread.image ? 1 : 0);
+      const updatedThreads = await Promise.all(watchedThreads.map(async (wt): Promise<WatchedThread> => {
+        const st = byId.get(wt.id);
+        if (!st || st.isDeleted) return { ...wt, isDeleted: true };
+
         let hasNewReplyToMe = wt.hasNewReplyToMe;
         let firstUnreadPostNumber = wt.firstUnreadPostNumber;
+        const grew = st.replyCount > wt.currentReplyCount;
+        const needsFirstUnread = st.replyCount > wt.lastReadReplyCount && !firstUnreadPostNumber;
 
-        // If there are new replies since our LAST read (not poll), set the first unread if not set
-        if (currentReplyCount > wt.lastReadReplyCount && !firstUnreadPostNumber) {
-          // The first unread post is at index 'lastReadReplyCount'
-          const firstUnread = detail.replies[wt.lastReadReplyCount];
-          if (firstUnread) {
-            firstUnreadPostNumber = firstUnread.postNumber;
-          }
-        }
+        if (grew || needsFirstUnread) {
+          try {
+            const detail = await getThreadDetail(wt.id);
+            if (!detail) return { ...wt, isDeleted: true };
 
-        // If there are new replies since our last poll, check for mentions
-        if (currentReplyCount > wt.currentReplyCount) {
-          const newRepliesSincePoll = detail.replies.slice(wt.currentReplyCount);
-          for (const reply of newRepliesSincePoll) {
-            const mentions = reply.content.match(/>>(\d+)/g);
-            if (mentions) {
-              for (const mention of mentions) {
-                const postNum = parseInt(mention.substring(2));
-                if (myPostSet.has(postNum)) {
-                  hasNewReplyToMe = true;
-                  break;
-                }
-              }
+            if (needsFirstUnread) {
+              firstUnreadPostNumber = detail.replies[wt.lastReadReplyCount]?.postNumber ?? null;
             }
-            if (hasNewReplyToMe) break;
+            if (grew && myPostSet.size > 0) {
+              const newReplies = detail.replies.slice(wt.currentReplyCount);
+              hasNewReplyToMe ||= newReplies.some((reply) =>
+                Array.from(reply.content.matchAll(/>>(\d+)/g)).some((m) => myPostSet.has(Number(m[1]))),
+              );
+            }
+          } catch (e) {
+            console.error(`Failed to check thread ${wt.id}`, e);
+            return wt;
           }
         }
 
         return {
           ...wt,
-          currentReplyCount,
-          currentImageCount,
+          currentReplyCount: st.replyCount,
+          currentImageCount: st.imageCount,
           firstUnreadPostNumber,
           hasNewReplyToMe,
           isDeleted: false,
-          lastUpdateAt: detail.replies.length > 0 
-            ? new Date(detail.replies[detail.replies.length - 1].createdAt).getTime()
-            : new Date(detail.thread.createdAt).getTime()
+          lastUpdateAt: st.lastActivityAt,
         };
-      } catch (e) {
-        console.error(`Failed to check thread ${wt.id}`, e);
-        return wt;
-      }
-    }));
+      }));
 
-    // Only update state if something actually changed to avoid re-renders
-    setWatchedThreads(prev => {
-      const isChanged = updatedThreads.some((ut, idx) => 
-        ut.currentReplyCount !== prev[idx]?.currentReplyCount || 
-        ut.currentImageCount !== prev[idx]?.currentImageCount ||
-        ut.firstUnreadPostNumber !== prev[idx]?.firstUnreadPostNumber ||
-        ut.hasNewReplyToMe !== prev[idx]?.hasNewReplyToMe ||
-        ut.isDeleted !== prev[idx]?.isDeleted ||
-        ut.lastUpdateAt !== prev[idx]?.lastUpdateAt
-      );
-      return isChanged ? updatedThreads : prev;
-    });
+      // Only update state if something actually changed to avoid re-renders.
+      // Merge by id: the user may have (un)watched threads while we were fetching.
+      setWatchedThreads(prev => {
+        const updatedById = new Map(updatedThreads.map((t) => [t.id, t]));
+        let changed = false;
+        const next = prev.map((p) => {
+          const ut = updatedById.get(p.id);
+          if (!ut) return p;
+          const differs =
+            ut.currentReplyCount !== p.currentReplyCount ||
+            ut.currentImageCount !== p.currentImageCount ||
+            ut.firstUnreadPostNumber !== p.firstUnreadPostNumber ||
+            ut.hasNewReplyToMe !== p.hasNewReplyToMe ||
+            ut.isDeleted !== p.isDeleted ||
+            ut.lastUpdateAt !== p.lastUpdateAt;
+          if (!differs) return p;
+          changed = true;
+          // Keep read-state fields from prev (markAsRead may have run meanwhile)
+          return { ...ut, lastReadReplyCount: p.lastReadReplyCount };
+        });
+        return changed ? next : prev;
+      });
     } finally {
       isFetchingRef.current = false;
     }
   }, [watchedThreads, myPosts]);
 
 
-  // Polling management with recursive timeout to prevent race conditions
+  // Polling management. checkThreads changes identity on every state update, so
+  // read it through a ref; the loop itself only restarts when the watch list grows/shrinks.
+  const checkThreadsRef = useRef(checkThreads);
+  checkThreadsRef.current = checkThreads;
+
   useEffect(() => {
+    let cancelled = false;
     const poll = async () => {
-      // Clear any existing timer just in case
       if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
-      
-      await checkThreads();
-      
-      // Schedule next poll only AFTER current one completes
-      pollTimerRef.current = setTimeout(poll, 60000);
+      await checkThreadsRef.current();
+      if (!cancelled) pollTimerRef.current = setTimeout(poll, 60000);
     };
 
     poll();
-    
+
     return () => {
+      cancelled = true;
       if (pollTimerRef.current) clearTimeout(pollTimerRef.current);
     };
-  }, [watchedThreads.length, myPosts.length, checkThreads]); 
+  }, [watchedThreads.length]);
 
   return (
     <ThreadWatcherContext.Provider value={{

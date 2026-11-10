@@ -82,10 +82,11 @@ export async function getThreadList(
   boardId: number,
   limit?: number,
   offset?: number,
-  sortBy?: "bump" | "new" | "replies" | "images"
+  sortBy?: "bump" | "new" | "replies" | "images",
+  search?: string,
 ) {
   try {
-    return await threadController.getThreadList(boardId, limit, offset, sortBy)
+    return await threadController.getThreadList(boardId, limit, offset, sortBy, search)
   } catch (error) {
     console.error(`Error fetching thread list for board ${boardId}:`, error)
     return { threads: [], totalPages: 0 }
@@ -118,6 +119,20 @@ export async function getThreadStatus(threadId: number) {
     }
   } catch (error) {
     console.error(`Error fetching thread status for thread ${threadId}:`, error)
+    return null
+  }
+}
+
+/** Batched, lightweight status for the thread watcher. Missing ids mean the thread is gone. */
+export async function getWatchedThreadStatuses(threadIds: number[]) {
+  try {
+    const ids = Array.from(new Set(threadIds))
+      .filter((id) => Number.isInteger(id) && id > 0)
+      .slice(0, 100)
+    const rows = await threadRepository.getWatchStatuses(ids)
+    return rows.map((r) => ({ ...r, lastActivityAt: r.lastActivityAt.getTime() }))
+  } catch (error) {
+    console.error("Error fetching watched thread statuses:", error)
     return null
   }
 }
