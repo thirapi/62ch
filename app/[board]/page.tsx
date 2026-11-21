@@ -9,7 +9,6 @@ import { BoardViewToggle } from "@/components/board-view-toggle";
 import { BoardBody } from "@/components/board-body";
 import { Suspense } from "react";
 import { ThreadListSkeleton } from "@/components/page-skeletons";
-import { AdBanner } from "@/components/ad-banner";
 
 // Menggunakan Action layer sesuai Clean Architecture
 import { getAuthUserCached, getBoardByCodeCached } from "@/lib/data/request-cache";
@@ -148,8 +147,6 @@ export default async function BoardPage({
         </p>
       </header>
 
-      <AdBanner />
-
       <Suspense fallback={<div className="px-3 sm:px-4 md:px-8 w-full"><ThreadListSkeleton /></div>}>
         <BoardContent 
           boardCode={boardCode}
@@ -158,8 +155,6 @@ export default async function BoardPage({
           sort={sort}
         />
       </Suspense>
-
-      <AdBanner />
       <SiteFooter />
     </div>
   );

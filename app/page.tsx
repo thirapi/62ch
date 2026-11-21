@@ -21,7 +21,6 @@ import { RecentImage } from "@/components/recent-image";
 import type { Metadata } from "next";
 import { BoardEntity, BoardCategoryEntity } from "@/lib/entities/board.entity";
 import { VerifiedLink } from "@/components/verified-link";
-import { AdBanner } from "@/components/ad-banner";
 
 export const metadata: Metadata = {
   title: "62chan",
@@ -86,10 +85,10 @@ export default async function HomePage() {
         <div className="container mx-auto px-4 relative">
           <h1 className="flex justify-center">
             <Image
-              src="/logo-62chan.png"
+              src="/logo-62chan.webp"
               alt="62chan"
-              width={1741}
-              height={1349}
+              width={640}
+              height={496}
               priority
               sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, 320px"
               className="w-56 sm:w-72 md:w-80 h-auto max-w-[80vw] object-contain"
@@ -98,8 +97,6 @@ export default async function HomePage() {
           </h1>
         </div>
       </header>
-
-      <AdBanner className="mt-2" />
 
       <main className="container mx-auto px-4 py-6 sm:py-8 flex-1 max-w-6xl">
         <HomeAnnouncement announcements={announcements} />
@@ -189,8 +186,6 @@ export default async function HomePage() {
           </div>
         )}
       </main>
-
-      <AdBanner />
       <SiteFooter />
     </div>
   );
