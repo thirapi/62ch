@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { Pin, Lock, X } from "lucide-react";
 import { FormattedText } from "@/components/formatted-text";
 import { FormattedDate } from "@/components/formatted-date";

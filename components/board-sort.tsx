@@ -1,5 +1,6 @@
 "use client";
 
+import { startNavigationProgress } from "@/components/navigation-progress";
 import { useRouter, useSearchParams } from "next/navigation";
 import {
   Select,
@@ -29,6 +30,7 @@ export function BoardSort() {
     // Reset to page 1 when sorting changes
     params.delete("page");
     const qs = params.toString();
+    startNavigationProgress();
     startTransition(() => {
       setShownSort(newSort);
       router.push(qs ? `?${qs}` : window.location.pathname, { scroll: false });

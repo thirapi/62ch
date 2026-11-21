@@ -1,5 +1,6 @@
 "use client";
 
+import { startNavigationProgress } from "@/components/navigation-progress";
 import { Input } from "@/components/ui/input";
 import { Search, X } from "lucide-react";
 import { useRouter, useSearchParams } from "next/navigation";
@@ -28,6 +29,7 @@ export function BoardSearch() {
     }
     const qs = params.toString();
     // replace, not push: typing shouldn't leave one history entry per query
+    startNavigationProgress();
     router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
   }, [debouncedValue, router, searchParams]);
 

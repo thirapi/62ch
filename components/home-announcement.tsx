@@ -1,7 +1,7 @@
 "use client"
 
 import { Megaphone, X } from "lucide-react"
-import Link from "next/link"
+import { IntentLink as Link } from "@/components/intent-link"
 import { useEffect, useState } from "react"
 import type { ThreadEntity } from "@/lib/entities/thread.entity"
 
