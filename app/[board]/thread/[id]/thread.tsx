@@ -209,6 +209,28 @@ export function ThreadClient({
     return true;
   }, []);
 
+  // Links like /board/thread/123#p456 (homepage "latest posts", quote links from
+  // other threads) must land on that post. Next.js resets scroll on client
+  // navigation, so jump after layout settles, and again on in-page hash changes.
+  useEffect(() => {
+    const jumpToHash = (smooth: boolean) => {
+      const m = window.location.hash.match(/^#p(\d+)$/);
+      if (!m) return;
+      const el = document.getElementById(`p${m[1]}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+      el.classList.add("ring-2", "ring-accent");
+      setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2500);
+    };
+    const t = setTimeout(() => jumpToHash(false), 50);
+    const onHash = () => jumpToHash(true);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, [thread.id]);
+
   const jumpToNew = useCallback(() => {
     const target = pendingNew?.first ?? dividerPost;
     if (target && scrollToPost(target)) {
