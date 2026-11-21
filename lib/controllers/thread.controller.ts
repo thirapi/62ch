@@ -63,6 +63,7 @@ export class ThreadController {
     offset?: number,
     sortBy?: "bump" | "new" | "replies" | "images",
     search?: string,
+    includePreviews?: boolean,
   ) {
     // Input validation only
     if (!boardId) {
@@ -70,7 +71,7 @@ export class ThreadController {
     }
 
     // Call use case
-    return await this.getThreadListUseCase.execute(boardId, limit, offset, sortBy, search)
+    return await this.getThreadListUseCase.execute(boardId, limit, offset, sortBy, search, includePreviews)
   }
 
   async getThreadDetail(threadId: number) {

@@ -1,7 +1,9 @@
 "use client";
 
 import React from "react";
-import Link, { LinkProps } from "next/link";
+import { LinkProps } from "next/link";
+import { IntentLink } from "./intent-link";
+import { cancelNavigationProgress } from "./navigation-progress";
 import { useAgeVerification } from "./age-verification-provider";
 
 interface VerifiedLinkProps extends LinkProps {
@@ -33,6 +35,7 @@ export function VerifiedLink({
 
     if (isRestricted && !isVerified) {
       e.preventDefault();
+      cancelNavigationProgress();
       setPendingPath(hrefString);
       setIsOpen(true);
       if (onBeforeNavigate) onBeforeNavigate();
@@ -45,8 +48,8 @@ export function VerifiedLink({
   };
 
   return (
-    <Link href={href} {...props} onClick={handleClick}>
+    <IntentLink href={href} {...props} onClick={handleClick}>
       {children}
-    </Link>
+    </IntentLink>
   );
 }
