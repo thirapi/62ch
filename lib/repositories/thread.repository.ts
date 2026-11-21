@@ -1,7 +1,7 @@
 import { db } from "@/lib/db"
 import { threads, replies, boards } from "@/lib/db/schema"
 import { asc, eq, desc, and, sql, inArray, or, ilike, type SQL } from "drizzle-orm"
-import type { ThreadEntity, CreateThreadInput, ArchivedThreadSummary } from "@/lib/entities/thread.entity"
+import type { ThreadEntity, CreateThreadInput } from "@/lib/entities/thread.entity"
 
 /** Escape LIKE wildcards so user input is matched literally. */
 function likePattern(query: string) {
@@ -452,44 +452,6 @@ export class ThreadRepository {
       replyCount: Number(r.replyCount ?? 0),
       imageCount: Number(r.replyImageCount ?? 0) + (r.hasImage ? 1 : 0),
       lastActivityAt: r.lastReplyAt ? new Date(r.lastReplyAt) : r.createdAt!,
-    }))
-  }
-
-  async findArchivedByBoardId(boardId: number, limit: number): Promise<ArchivedThreadSummary[]> {
-    const rows = await db
-      .select({
-        id: threads.id,
-        postNumber: threads.postNumber,
-        subject: threads.subject,
-        excerpt: sql<string>`left(${threads.content}, 160)`,
-        image: threads.image,
-        createdAt: threads.createdAt,
-        bumpedAt: threads.bumpedAt,
-        replyCount: sql<number>`(
-          select count(*) from ${replies}
-          where ${replies.threadId} = ${threads.id} and ${replies.isDeleted} = false
-        )`,
-      })
-      .from(threads)
-      .where(
-        and(
-          eq(threads.boardId, boardId),
-          eq(threads.isDeleted, false),
-          eq(threads.isArchived, true),
-        ),
-      )
-      .orderBy(desc(threads.bumpedAt))
-      .limit(limit)
-
-    return rows.map((row) => ({
-      id: row.id,
-      postNumber: row.postNumber!,
-      subject: row.subject,
-      excerpt: row.excerpt ?? "",
-      hasImage: !!row.image,
-      replyCount: Number(row.replyCount ?? 0),
-      createdAt: row.createdAt!,
-      bumpedAt: row.bumpedAt!,
     }))
   }
 

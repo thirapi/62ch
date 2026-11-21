@@ -1,5 +1,4 @@
 import { notFound } from "next/navigation";
-import Link from "next/link";
 import { Pagination } from "@/components/pagination";
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
@@ -76,13 +75,6 @@ async function BoardContent({
             <BoardSearch />
           </div>
           <div className="flex items-center justify-between gap-2 shrink-0 sm:justify-end">
-            <Link
-              href={`/${boardCode}/archive`}
-              className="text-muted-foreground hover:text-accent hover:underline whitespace-nowrap"
-              title="Thread yang sudah diarsipkan"
-            >
-              [Arsip]
-            </Link>
             <BoardSort />
             <BoardViewToggle />
           </div>

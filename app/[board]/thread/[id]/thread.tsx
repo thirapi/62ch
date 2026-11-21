@@ -415,9 +415,6 @@ export function ThreadClient({
         <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-muted/40 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
           <Archive className="h-3.5 w-3.5 shrink-0" />
           <span>Thread ini sudah diarsipkan dan tidak bisa dibalas lagi.</span>
-          <Link href={`/${boardCode}/archive`} className="text-accent hover:underline font-semibold">
-            Lihat arsip /{boardCode}/
-          </Link>
         </div>
       )}
 

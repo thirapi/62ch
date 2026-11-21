@@ -8,7 +8,7 @@ import { cookies } from "next/headers"
 import { getClientIp } from "@/lib/utils/get-ip"
 import { CaptchaService } from "@/lib/services/captcha.service"
 
-const { threadController, threadRepository, replyRepository, getArchivedThreadsUseCase } = container
+const { threadController, threadRepository, replyRepository } = container
 
 export async function createThread(formData: FormData) {
   try {
@@ -134,15 +134,6 @@ export async function getWatchedThreadStatuses(threadIds: number[]) {
   } catch (error) {
     console.error("Error fetching watched thread statuses:", error)
     return null
-  }
-}
-
-export async function getArchivedThreads(boardId: number) {
-  try {
-    return await getArchivedThreadsUseCase.execute(boardId)
-  } catch (error) {
-    console.error(`Error fetching archived threads for board ${boardId}:`, error)
-    return []
   }
 }
 
