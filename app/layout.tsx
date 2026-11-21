@@ -2,8 +2,7 @@ import type React from "react";
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
-import { Toaster } from "@/components/ui/toaster";
-import { Toaster as SonnerToaster } from "@/components/ui/sonner";
+import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
 
 const _geist = Geist({ subsets: ["latin"] });
@@ -131,7 +130,7 @@ import { BoardNav } from "@/components/board-nav";
 import { AgeVerificationProvider } from "@/components/age-verification-provider";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ScrollButtons } from "@/components/scroll-buttons";
-import { PostHogProvider } from "./posthog-provider";
+import { PostHogPageView } from "@/components/posthog-page-view";
 import { ThreadWatcherProvider } from "@/components/thread-watcher-provider";
 import { ThreadWatcher } from "@/components/thread-watcher";
 import { Suspense } from "react";
@@ -154,7 +153,7 @@ export default function RootLayout({
         ))}
       </head>
       <body className={`font-sans antialiased`}>
-        <PostHogProvider>
+        <PostHogPageView />
           <ThemeProvider
             attribute="class"
             defaultTheme="system"
@@ -177,7 +176,6 @@ export default function RootLayout({
                       </div>
 
                       <Toaster />
-                      <SonnerToaster />
                       <ThreadWatcher />
                       <Analytics />
                       <ScrollButtons />
@@ -188,7 +186,6 @@ export default function RootLayout({
             </NavProvider>
           </ThemeProvider>
 
-        </PostHogProvider>
       </body>
     </html>
   );

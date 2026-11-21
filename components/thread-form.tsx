@@ -11,7 +11,7 @@ import { useRouter } from "next/navigation";
 import { createThread, getCaptcha } from "@/lib/actions/thread.actions";
 import { ImageUploader } from "./image-uploader";
 import { Checkbox } from "@/components/ui/checkbox";
-import posthog from "posthog-js";
+import { track } from "@/lib/analytics";
 import { useThreadWatcher } from "./thread-watcher-provider";
 import { uploadImageClient } from "@/lib/utils/cloudinary-client";
 import { useDefaultPassword } from "@/hooks/use-default-password";
@@ -173,7 +173,7 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
         router.push(`/${boardCode}/thread/${result.threadId}`);
         router.refresh();
         
-        posthog.capture("thread created", {
+        track("thread created", {
           board_code: boardCode,
           has_subject: !!formData.get("subject"),
           is_nsfw: !!formData.get("isNsfw"),
