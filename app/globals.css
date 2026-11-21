@@ -1,4 +1,9 @@
-@import "tailwindcss";
+@import "tailwindcss" source(none);
+/* Only scan real UI code for class names (not docs, skills or DB migration JSON) */
+@source "../app";
+@source "../components";
+@source "../hooks";
+@source "../lib/**/*.{ts,tsx}";
 @import "tw-animate-css";
 
 @custom-variant dark (&:is(.dark *));
