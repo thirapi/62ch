@@ -15,7 +15,6 @@ import { track } from "@/lib/analytics";
 import { useThreadWatcher } from "./thread-watcher-provider";
 import { uploadImageClient } from "@/lib/utils/cloudinary-client";
 import { useDefaultPassword } from "@/hooks/use-default-password";
-import { useIsMobile } from "@/hooks/use-mobile";
 import { PostFormRow } from "./post-form-row";
 import { EmojiPicker } from "./emoji-picker";
 
@@ -27,7 +26,7 @@ interface ThreadFormProps {
 
 export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const [isMounted, setIsMounted] = useState(false);
-  const [isExpanded, setIsExpanded] = useState(true);
+  const [isExpanded, setIsExpanded] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [imageFile, setImageFile] = useState<File | null>(null);
@@ -37,7 +36,6 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   const formRef = useRef<HTMLFormElement>(null);
   const router = useRouter();
   const { addMyPost } = useThreadWatcher();
-  const isMobile = useIsMobile();
 
   const [content, setContent] = useState("");
   const [subject, setSubject] = useState("");
@@ -50,13 +48,15 @@ export function ThreadForm({ boardId, boardCode, userRole }: ThreadFormProps) {
   useEffect(() => {
     setIsMounted(true);
     const savedState = localStorage.getItem(`threadForm_expanded_${boardCode}`);
-    if (savedState !== null) {
-      setIsExpanded(savedState === "true");
-    } else {
-      // Collapsed by default on mobile to keep the thread list unobstructed
-      setIsExpanded(!isMobile);
-    }
-  }, [boardCode, isMobile]);
+    // Collapsed by default (like classic imageboards) so the thread list is on
+    // the first screen; reopen automatically when there is an unsent draft.
+    let hasDraft = false;
+    try {
+      const draft = JSON.parse(localStorage.getItem(draftKey) || "null");
+      hasDraft = !!(draft?.subject || draft?.content);
+    } catch {}
+    setIsExpanded(hasDraft || savedState === "true");
+  }, [boardCode, draftKey]);
 
   // Restore an unsent thread draft for this board
   useEffect(() => {

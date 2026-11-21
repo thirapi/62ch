@@ -19,10 +19,14 @@ export function ScrollButtons() {
           // Hide when the reply drawer / thread floating bar is open to avoid overlap
           const drawerOpen = document.body.classList.contains("reply-drawer-open");
           const fabOpen = document.body.classList.contains("thread-fab-open");
-          setShowTop(!drawerOpen && !fabOpen && window.scrollY > 300);
+          // Only appear once the reader has scrolled, so the buttons never sit
+          // on top of the first screen (board toolbar, catalog toggle).
+          const scrolled = window.scrollY > 300;
+          setShowTop(!drawerOpen && !fabOpen && scrolled);
           setShowBottom(
             !drawerOpen &&
               !fabOpen &&
+              scrolled &&
               window.innerHeight + window.scrollY <
                 document.documentElement.scrollHeight - 300
           );
@@ -62,17 +66,17 @@ export function ScrollButtons() {
   if (!showTop && !showBottom) return null;
 
   return (
-    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-[90] opacity-80 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none">
-      <div className="pointer-events-auto flex flex-col gap-1 rounded-2xl border border-accent/30 bg-accent/10 p-1 shadow-lg backdrop-blur-md">
+    <div className="fixed bottom-[calc(1rem+env(safe-area-inset-bottom,0px))] right-[calc(1rem+env(safe-area-inset-right,0px))] z-[90] opacity-60 hover:opacity-100 focus-within:opacity-100 transition-opacity duration-300 pointer-events-none">
+      <div className="pointer-events-auto flex flex-col rounded-sm border border-border bg-background">
         {showTop && (
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 rounded-xl text-accent hover:bg-accent/15 hover:text-accent"
+            className="size-8 rounded-none text-accent hover:bg-muted hover:text-accent"
             onClick={scrollToTop}
             title="Ke Paling Atas"
           >
-            <ArrowUp className="h-4 w-4" />
+            <ArrowUp className="h-3.5 w-3.5" />
             <span className="sr-only">Ke Atas</span>
           </Button>
         )}
@@ -80,11 +84,11 @@ export function ScrollButtons() {
           <Button
             variant="ghost"
             size="icon"
-            className="size-9 rounded-xl text-accent hover:bg-accent/15 hover:text-accent"
+            className="size-8 rounded-none text-accent hover:bg-muted hover:text-accent"
             onClick={scrollToBottom}
             title="Ke Paling Bawah"
           >
-            <ArrowDown className="h-4 w-4" />
+            <ArrowDown className="h-3.5 w-3.5" />
             <span className="sr-only">Ke Bawah</span>
           </Button>
         )}

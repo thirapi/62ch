@@ -209,6 +209,28 @@ export function ThreadClient({
     return true;
   }, []);
 
+  // Links like /board/thread/123#p456 (homepage "latest posts", quote links from
+  // other threads) must land on that post. Next.js resets scroll on client
+  // navigation, so jump after layout settles, and again on in-page hash changes.
+  useEffect(() => {
+    const jumpToHash = (smooth: boolean) => {
+      const m = window.location.hash.match(/^#p(\d+)$/);
+      if (!m) return;
+      const el = document.getElementById(`p${m[1]}`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: smooth ? "smooth" : "auto", block: "center" });
+      el.classList.add("ring-2", "ring-accent");
+      setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2500);
+    };
+    const t = setTimeout(() => jumpToHash(false), 50);
+    const onHash = () => jumpToHash(true);
+    window.addEventListener("hashchange", onHash);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("hashchange", onHash);
+    };
+  }, [thread.id]);
+
   const jumpToNew = useCallback(() => {
     const target = pendingNew?.first ?? dividerPost;
     if (target && scrollToPost(target)) {
@@ -409,8 +431,80 @@ export function ThreadClient({
     });
   };
 
+  // Classic thread navigation bar, rendered above the OP and below the replies
+  const renderNavBar = (position: "top" | "bottom") => (
+    <div
+      className={cn(
+        "flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap border-muted/40",
+        position === "top" ? "mb-3 pb-1.5 border-b" : "mb-2 pt-1.5 border-t"
+      )}
+    >
+      {position === "bottom" && (
+        <>
+          <Link href={`/${boardCode}`} className="hover:text-accent hover:underline">[Kembali]</Link>
+          <Link href={`/${boardCode}?view=catalog`} className="hover:text-accent hover:underline">[Katalog]</Link>
+        </>
+      )}
+      <button
+        type="button"
+        onClick={() =>
+          window.scrollTo({
+            top: position === "top" ? document.documentElement.scrollHeight : 0,
+            behavior: "smooth",
+          })
+        }
+        className="hover:text-accent hover:underline cursor-pointer"
+      >
+        [{position === "top" ? "Bawah" : "Atas"}]
+      </button>
+      <button
+        type="button"
+        onClick={updateNow}
+        disabled={isChecking}
+        className="hover:text-accent hover:underline disabled:opacity-60 cursor-pointer"
+        title="Periksa balasan baru (U)"
+      >
+        [{isChecking ? "Memeriksa…" : "Perbarui"}]
+      </button>
+      {!thread.isArchived && (
+        <button
+          type="button"
+          onClick={toggleAutoUpdateThread}
+          className="hover:text-accent hover:underline cursor-pointer"
+          title="Periksa balasan baru secara otomatis"
+        >
+          [{autoUpdateThread ? "✔" : "✘"} Otomatis]
+        </button>
+      )}
+      {isGone ? (
+        <span className="text-destructive">Thread ini sudah dihapus.</span>
+      ) : (
+        autoUpdateThread &&
+        !thread.isArchived && (
+          <span className="opacity-70 tabular-nums" aria-live={position === "bottom" ? "polite" : undefined}>
+            {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
+          </span>
+        )
+      )}
+      <span className="opacity-70 ml-auto tabular-nums">
+        Balasan: {visibleReplyCount} / Gambar: {imageCount}
+      </span>
+      {position === "bottom" && (
+        <button
+          type="button"
+          onClick={showShortcutHelp}
+          className="hidden sm:inline hover:text-accent hover:underline cursor-pointer"
+        >
+          [? Pintasan]
+        </button>
+      )}
+    </div>
+  );
+
   return (
     <InPagePostsProvider value={inPagePosts}>
+      {renderNavBar("top")}
+
       {thread.isArchived && (
         <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-muted/40 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
           <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -426,7 +520,7 @@ export function ThreadClient({
           highlightedId && thread.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015] rounded-sm"
         )}
       >
-        <div className="ib-post-metaline border-b border-muted/20 pb-1">
+        <div className="ib-post-metaline ib-post-head border-b border-muted/20 pb-1">
           <Button
             variant="ghost"
             size="icon"
@@ -521,7 +615,8 @@ export function ThreadClient({
 
         </div>
 
-        <div className="mt-1 block">
+        {/* flow-root contains the floated OP image so replies start below it */}
+        <div className="mt-1 flow-root">
           {thread.image && (
             <ExpandableImage
               src={thread.image}
@@ -549,7 +644,7 @@ export function ThreadClient({
             return (
               <div 
                 key={reply.id} 
-                className="ib-reply border border-muted/20 shadow-sm sm:table block w-fit max-w-full"
+                className="ib-reply sm:table block w-full sm:w-fit max-w-full"
               >
                 <div className="px-2 bg-muted/5 flex items-center gap-1 text-[10px] text-muted-foreground opacity-80">
                   <button 
@@ -577,20 +672,17 @@ export function ThreadClient({
               </div>
             )}
             <div className="flex items-start gap-1">
-              <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
-                &gt;&gt;
-              </span>
               <div
                 key={reply.id}
                 id={`p${reply.postNumber}`}
                 className={cn(
-                  "ib-reply border border-muted/20 shadow-sm relative group sm:table block w-fit max-w-full scroll-mt-14",
+                  "ib-reply relative group sm:table block w-full sm:w-fit max-w-full scroll-mt-14",
                   reply.isDeleted && "opacity-70 grayscale-[50%]",
                   quotesMe(reply.content) && "border-l-2 border-l-accent",
-                  highlightedId && reply.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015] rounded-sm"
+                  highlightedId && reply.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015]"
                 )}
               >
-                <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
+                <div className={`ib-post-metaline ib-post-head px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : ''}`}>
                   {reply.isDeleted && (
                     <span className="text-[10px] bg-red-500/10 text-red-500 px-1 mr-1 rounded font-bold border border-red-500/20">
                       DIHAPUS
@@ -676,58 +768,14 @@ export function ThreadClient({
 
         {replies.length === 0 && (
           <div className="flex items-start gap-1">
-            <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
-              &gt;&gt;
-            </span>
-            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 rounded-lg sm:table block w-fit max-w-full">
+            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 sm:table block w-fit max-w-full">
               Belum ada balasan. Jadilah yang pertama memberikan tanggapan!
             </div>
           </div>
         )}
       </div>
 
-      {/* Update bar */}
-      <div className="-mt-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
-        <button
-          type="button"
-          onClick={updateNow}
-          disabled={isChecking}
-          className="hover:text-accent hover:underline disabled:opacity-60 cursor-pointer"
-          title="Periksa balasan baru (U)"
-        >
-          [{isChecking ? "Memeriksa…" : "Perbarui"}]
-        </button>
-        {!thread.isArchived && (
-          <button
-            type="button"
-            onClick={toggleAutoUpdateThread}
-            className="hover:text-accent hover:underline cursor-pointer"
-            title="Periksa balasan baru secara otomatis"
-          >
-            [{autoUpdateThread ? "✔" : "✘"} Auto]
-          </button>
-        )}
-        {isGone ? (
-          <span className="text-destructive">Thread ini sudah dihapus.</span>
-        ) : (
-          autoUpdateThread &&
-          !thread.isArchived && (
-            <span className="opacity-70 tabular-nums" aria-live="polite">
-              {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
-            </span>
-          )
-        )}
-        <span className="opacity-70 ml-auto sm:ml-0 tabular-nums">
-          {visibleReplyCount} balasan · {imageCount} gambar
-        </span>
-        <button
-          type="button"
-          onClick={showShortcutHelp}
-          className="hidden sm:inline hover:text-accent hover:underline cursor-pointer"
-        >
-          [? Pintasan]
-        </button>
-      </div>
+      {renderNavBar("bottom")}
 
       {/* Floating "new replies" pill */}
       {pendingNew && (

@@ -1,7 +1,8 @@
 "use client";
+import { formatPostDate } from "@/components/formatted-date";
 
 import React, { useState, useEffect } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import {
   HoverCard,
   HoverCardContent,
@@ -351,7 +352,7 @@ function PostQuote({
             <div className="flex items-center justify-between text-[10px] font-mono border-b pb-1">
               <span className="font-bold text-accent">#{post.postNumber}</span>
               <span className="text-muted-foreground">
-                {new Date(post.createdAt).toLocaleString()}
+                {formatPostDate(new Date(post.createdAt))}
               </span>
             </div>
             <div className="flex gap-2">

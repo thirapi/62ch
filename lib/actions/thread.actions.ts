@@ -84,9 +84,10 @@ export async function getThreadList(
   offset?: number,
   sortBy?: "bump" | "new" | "replies" | "images",
   search?: string,
+  includePreviews?: boolean,
 ) {
   try {
-    return await threadController.getThreadList(boardId, limit, offset, sortBy, search)
+    return await threadController.getThreadList(boardId, limit, offset, sortBy, search, includePreviews)
   } catch (error) {
     console.error(`Error fetching thread list for board ${boardId}:`, error)
     return { threads: [], totalPages: 0 }

@@ -267,6 +267,7 @@ export class ThreadRepository {
     offset: number = 0,
     sortBy: "bump" | "new" | "replies" | "images" = "bump",
     search?: string,
+    includePreviews: boolean = true,
   ): Promise<
     (ThreadEntity & { replyCount: number; imageCount: number; replies: any[] })[]
   > {
@@ -341,7 +342,8 @@ export class ThreadRepository {
 
     // 3. Optimized: Fetch latest 3 replies for ALL threads in one query using window function
     // This solves the N+1 problem (was 50+ queries, now just 1)
-    const latestReplies = await db
+    // The catalog only needs counts, so it skips the reply-preview query
+    const latestReplies = !includePreviews ? [] : await db
       .select({
         id: replies.id,
         threadId: replies.threadId,

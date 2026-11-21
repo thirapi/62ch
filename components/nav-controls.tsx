@@ -16,6 +16,7 @@ import {
   Eye,
 } from "lucide-react";
 import { useTheme } from "next-themes";
+import { IB_STYLES, useIbStyle } from "@/hooks/use-ib-style";
 import { cn } from "@/lib/utils";
 import { useNav } from "./nav-provider";
 import { useRouter } from "next/navigation";
@@ -42,6 +43,7 @@ interface NavControlsProps {
 
 export function NavControls({ user }: NavControlsProps) {
   const { resolvedTheme, setTheme } = useTheme();
+  const { style, setStyle } = useIbStyle();
   const {
     position,
     togglePosition,
@@ -162,13 +164,31 @@ export function NavControls({ user }: NavControlsProps) {
 
           <DropdownMenuSeparator />
 
+          <SettingsGroupLabel>Gaya</SettingsGroupLabel>
+          {IB_STYLES.map((s) => (
+            <DropdownMenuItem
+              key={s.id}
+              onClick={() => setStyle(s.id)}
+              onSelect={(e) => e.preventDefault()}
+              className="cursor-pointer h-[26px] py-0"
+              role="menuitemradio"
+              aria-checked={style === s.id}
+            >
+              <span>{s.label}</span>
+              {style === s.id && <span className="ml-auto font-bold text-accent">●</span>}
+            </DropdownMenuItem>
+          ))}
+
+          <DropdownMenuSeparator />
           <SettingsGroupLabel>Tampilan</SettingsGroupLabel>
-          <SettingToggle
-            label="Mode Gelap"
-            hint="Ganti tema terang/gelap"
-            checked={resolvedTheme === "dark"}
-            onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
-          />
+          {style === "hijau" && (
+            <SettingToggle
+              label="Mode Gelap"
+              hint="Ganti tema terang/gelap"
+              checked={resolvedTheme === "dark"}
+              onToggle={() => setTheme(resolvedTheme === "dark" ? "light" : "dark")}
+            />
+          )}
           <SettingToggle
             label="Nav Tetap"
             hint="Bar navigasi tetap terlihat saat menggulir"

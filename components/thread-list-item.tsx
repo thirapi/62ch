@@ -1,6 +1,6 @@
 "use client";
 
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { Pin, Lock, X } from "lucide-react";
 import { FormattedText } from "@/components/formatted-text";
 import { FormattedDate } from "@/components/formatted-date";
@@ -36,7 +36,7 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
   return (
     <div id={`p${thread.postNumber}`} className="ib-post py-1 first:pt-0 scroll-mt-14">
       {/* Meta line */}
-      <div className="ib-post-metaline items-center">
+      <div className="ib-post-metaline ib-post-head items-center">
         {thread.isPinned && (
           <Pin className="h-3 w-3 text-accent fill-accent" />
         )}
@@ -116,14 +116,11 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
               .reverse()
               .map((reply: any) => (
                 <div key={reply.id} className="flex items-start gap-1">
-                  <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
-                    &gt;&gt;
-                  </span>
                   <div
                     id={`p${reply.postNumber}`}
-                    className="ib-reply shadow-sm border border-muted/20 flex-1 min-w-0 max-w-full sm:flex-none sm:table sm:max-w-none sm:w-auto scroll-mt-14"
+                    className="ib-reply flex-1 min-w-0 max-w-full sm:flex-none sm:table sm:max-w-none sm:w-auto scroll-mt-14"
                   >
-                    <div className="ib-post-metaline text-xs px-2 pt-1 border-b border-muted/5 bg-muted/5">
+                    <div className="ib-post-metaline ib-post-head text-xs px-2 pt-1 border-b border-muted/5">
                       <div className="flex items-baseline gap-1">
                         <TripcodeDisplay
                           author={reply.author || "Awanama"}
@@ -185,6 +182,15 @@ export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
           </div>
         )}
         <div className="clear-both" />
+        {/* Phones: explicit way into the thread (desktop uses [Balas] / No.) */}
+        <div className="sm:hidden mt-1.5 -mx-1 flex justify-end border-t border-ib-border bg-[var(--ib-mobile-info-bg)] px-2 py-1">
+          <Link
+            href={`/${boardCode}/thread/${thread.id}`}
+            className="font-mono text-xs font-bold text-accent"
+          >
+            [Lihat Utas]
+          </Link>
+        </div>
       </div>
     </div>
   );

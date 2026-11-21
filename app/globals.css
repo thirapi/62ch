@@ -43,6 +43,24 @@
   --sidebar-accent-foreground: oklch(0.205 0 0);
   --sidebar-border: oklch(0.922 0 0);
   --sidebar-ring: oklch(0.708 0 0);
+
+  /* --- Imageboard tokens (62 Hijau, light) --- */
+  --ib-reply-bg: #e6edda;
+  --ib-reply-border: #c3d2a9;
+  --ib-hr: #c3d2a9;
+  --ib-title: #4d7c0f;
+  --ib-name: #117743;
+  --ib-subject: #0f0c5d;
+  --ib-quotelink: #4d7c0f;
+  --ib-greentext: #789922;
+  --ib-mobile-info-bg: #d9e5c4;
+  --ib-box-bg: #ffffff;
+  --ib-box-border: #4d7c0f;
+  --ib-box-bar-bg: #d4e3b9;
+  --ib-box-bar-text: #2d4a0b;
+  --ib-infobox-bar-bg: #4d7c0f;
+  --ib-infobox-bar-text: #ffffff;
+  --ib-top-fade: transparent;
 }
 
 .dark {
@@ -78,6 +96,153 @@
   --sidebar-accent-foreground: oklch(0.985 0 0);
   --sidebar-border: oklch(0.269 0 0);
   --sidebar-ring: oklch(0.439 0 0);
+
+  /* --- Imageboard tokens (62 Hijau, dark) --- */
+  --ib-reply-bg: #22261e;
+  --ib-reply-border: #333a2b;
+  --ib-hr: #333a2b;
+  --ib-title: #8bc34a;
+  --ib-name: #5cb85c;
+  --ib-subject: #a9a9ed;
+  --ib-quotelink: #8bc34a;
+  --ib-greentext: #8fb339;
+  --ib-mobile-info-bg: #1b1f17;
+  --ib-box-bg: #191c16;
+  --ib-box-border: #3a4530;
+  --ib-box-bar-bg: #232a1c;
+  --ib-box-bar-text: #b5d28a;
+  --ib-infobox-bar-bg: #3d5a14;
+  --ib-infobox-bar-text: #eef5e4;
+}
+
+
+/* ---------------------------------------------------------------------------
+   Classic imageboard styles, picked in Settings (stored as ib-style and set on
+   <html data-style>). 62 Hijau is the default when no data-style is present.
+   Values follow the well-known Yotsuba / Yotsuba B / Tomorrow palettes.
+--------------------------------------------------------------------------- */
+:root[data-style="yotsuba"] {
+  color-scheme: light;
+  --background: #ffffee;
+  --foreground: #800000;
+  --card: #f0e0d6;
+  --card-foreground: #800000;
+  --popover: #f0e0d6;
+  --popover-foreground: #800000;
+  --primary: #800000;
+  --primary-foreground: #ffffff;
+  --secondary: #f0e0d6;
+  --secondary-foreground: #800000;
+  --muted: #f0e0d6;
+  --muted-foreground: #89584a;
+  --accent: #800000;
+  --accent-foreground: #ffffff;
+  --border: #d9bfb7;
+  --input: #aaaaaa;
+  --ring: #eeaa88;
+  --ib-reply-bg: #f0e0d6;
+  --ib-reply-border: #d9bfb7;
+  --ib-hr: #d9bfb7;
+  --ib-title: #af0a0f;
+  --ib-name: #117743;
+  --ib-subject: #cc1105;
+  --ib-quotelink: #000080;
+  --ib-greentext: #789922;
+  --ib-mobile-info-bg: #ead6ca;
+  --ib-box-bg: #ffffff;
+  --ib-box-border: #800000;
+  --ib-box-bar-bg: #ffccaa;
+  --ib-box-bar-text: #800000;
+  --ib-infobox-bar-bg: #800000;
+  --ib-infobox-bar-text: #ffffff;
+  --ib-top-fade: #ffccaa;
+}
+
+:root[data-style="yotsuba-b"] {
+  color-scheme: light;
+  --background: #eef2ff;
+  --foreground: #000000;
+  --card: #d6daf0;
+  --card-foreground: #000000;
+  --popover: #d6daf0;
+  --popover-foreground: #000000;
+  --primary: #34345c;
+  --primary-foreground: #ffffff;
+  --secondary: #d6daf0;
+  --secondary-foreground: #000000;
+  --muted: #d6daf0;
+  --muted-foreground: #57577a;
+  --accent: #34345c;
+  --accent-foreground: #ffffff;
+  --border: #b7c5d9;
+  --input: #aaaaaa;
+  --ring: #9988ee;
+  --ib-reply-bg: #d6daf0;
+  --ib-reply-border: #b7c5d9;
+  --ib-hr: #b7c5d9;
+  --ib-title: #af0a0f;
+  --ib-name: #117743;
+  --ib-subject: #0f0c5d;
+  --ib-quotelink: #dd0000;
+  --ib-greentext: #789922;
+  --ib-mobile-info-bg: #c9cde8;
+  --ib-box-bg: #ffffff;
+  --ib-box-border: #000000;
+  --ib-box-bar-bg: #9988ee;
+  --ib-box-bar-text: #000000;
+  --ib-infobox-bar-bg: #9988ee;
+  --ib-infobox-bar-text: #000000;
+  --ib-top-fade: #d1d5ee;
+}
+
+:root[data-style="tomorrow"] {
+  color-scheme: dark;
+  --background: #1d1f21;
+  --foreground: #c5c8c6;
+  --card: #282a2e;
+  --card-foreground: #c5c8c6;
+  --popover: #282a2e;
+  --popover-foreground: #c5c8c6;
+  --primary: #81a2be;
+  --primary-foreground: #1d1f21;
+  --secondary: #282a2e;
+  --secondary-foreground: #c5c8c6;
+  --muted: #282a2e;
+  --muted-foreground: #969896;
+  --accent: #81a2be;
+  --accent-foreground: #1d1f21;
+  --border: #2d2f33;
+  --input: #3a3d42;
+  --ring: #515151;
+  --ib-reply-bg: #282a2e;
+  --ib-reply-border: #2d2f33;
+  --ib-hr: #282a2e;
+  --ib-title: #c5c8c6;
+  --ib-name: #c5c8c6;
+  --ib-subject: #b294bb;
+  --ib-quotelink: #5f89ac;
+  --ib-greentext: #b5bd68;
+  --ib-mobile-info-bg: #212326;
+  --ib-box-bg: #282a2e;
+  --ib-box-border: #2d2f33;
+  --ib-box-bar-bg: #212326;
+  --ib-box-bar-text: #c5c8c6;
+  --ib-infobox-bar-bg: #212326;
+  --ib-infobox-bar-text: #c5c8c6;
+  --ib-top-fade: transparent;
+}
+
+/* Classic styles use the classic chan typefaces everywhere */
+:root[data-style] body,
+:root[data-style] .font-sans,
+:root[data-style] .font-mono,
+:root[data-style] .ib-post-number,
+:root[data-style] .quote-link {
+  font-family: arial, helvetica, sans-serif;
+}
+:root[data-style] .ib-board-title {
+  font-family: tahoma, sans-serif;
+  letter-spacing: -1px;
 }
 
 @theme inline {
@@ -119,6 +284,14 @@
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-ring: var(--sidebar-ring);
+  --color-ib-reply: var(--ib-reply-bg);
+  --color-ib-border: var(--ib-reply-border);
+  --color-ib-hr: var(--ib-hr);
+  --color-ib-title: var(--ib-title);
+  --color-ib-box: var(--ib-box-bg);
+  --color-ib-box-border: var(--ib-box-border);
+  --color-ib-bar: var(--ib-box-bar-bg);
+  --color-ib-bar-text: var(--ib-box-bar-text);
 
   @keyframes marquee {
     from {
@@ -140,12 +313,14 @@
 
   body {
     @apply bg-background text-foreground min-h-screen flex flex-col;
+    background-image: linear-gradient(to bottom, var(--ib-top-fade, transparent), transparent 220px);
+    background-repeat: no-repeat;
   }
 }
 
 @layer components {
   .greentext {
-    color: #789922;
+    color: var(--ib-greentext);
   }
 
   .spoiler {
@@ -153,7 +328,8 @@
   }
 
   .quote-link {
-    @apply text-accent hover:underline cursor-pointer font-mono;
+    @apply hover:underline cursor-pointer font-mono;
+    color: var(--ib-quotelink);
   }
 
   .url-link {
@@ -170,16 +346,56 @@
   }
 
   .ib-subject {
-    @apply font-bold text-[#0f0c5d] dark:text-[#a9a9ed];
+    @apply font-bold;
+    color: var(--ib-subject);
   }
 
   .ib-author {
-    @apply font-bold text-[#117743] dark:text-[#5cb85c];
+    @apply font-bold;
+    color: var(--ib-name);
   }
 
+  /* Flat reply box (classic imageboard): tinted background, hairline
+     right/bottom border, no shadow or rounded corners. */
   .ib-reply {
-    @apply bg-muted/20 border-l border-muted pl-2.5 sm:pl-4 py-1.5 sm:py-2 my-1 sm:my-2 rounded-r-md max-w-full sm:max-w-4xl min-w-0 sm:min-w-[300px];
-    background-color: color-mix(in oklch, var(--muted), transparent 40%);
+    @apply border-r border-b my-1 max-w-full sm:max-w-4xl min-w-0 sm:min-w-[300px];
+    background-color: var(--ib-reply-bg);
+    border-color: var(--ib-reply-border);
+  }
+
+  /* On phones every post gets a full-width header strip so post boundaries
+     stay obvious while scrolling fast. */
+  .ib-post-head {
+    @apply max-sm:px-2 max-sm:py-1;
+  }
+  @media (width < 40rem) {
+    .ib-post-head {
+      background-color: var(--ib-mobile-info-bg);
+      border-bottom: 1px solid var(--ib-reply-border);
+    }
+  }
+
+  /* Board title: "/code/ - Name" in one colour, like classic boards */
+  .ib-board-title {
+    @apply font-bold tracking-tight;
+    color: var(--ib-title);
+  }
+
+  /* Homepage boxes (classic front page) */
+  .ib-box {
+    @apply border;
+    background-color: var(--ib-box-bg);
+    border-color: var(--ib-box-border);
+  }
+  .ib-box-bar {
+    @apply flex items-center justify-between px-2 py-1 font-bold text-[15px];
+    background-color: var(--ib-box-bar-bg);
+    color: var(--ib-box-bar-text);
+  }
+  .ib-infobox-bar {
+    @apply flex items-center justify-between px-2 py-1 font-bold text-[15px];
+    background-color: var(--ib-infobox-bar-bg);
+    color: var(--ib-infobox-bar-text);
   }
 
   .ib-post-number {

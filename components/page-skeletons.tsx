@@ -31,9 +31,8 @@ export function ThreadListSkeleton({ count = 5 }: { count?: number }) {
 export function BoardPageSkeleton() {
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      <header className="py-5 sm:py-10 px-3 sm:px-4 border-b mb-1 sm:mb-4 flex flex-col items-center gap-2 bg-muted/5">
-        <Bone className="h-9 w-24" />
-        <Bone className="h-5 w-48" />
+      <header className="py-3 sm:py-5 px-3 sm:px-4 border-b mb-1 sm:mb-3 flex flex-col items-center gap-2">
+        <Bone className="h-8 w-72 max-w-[80vw]" />
         <Bone className="h-3 w-64" />
       </header>
       <main className="px-3 sm:px-4 md:px-8 w-full">

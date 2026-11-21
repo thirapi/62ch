@@ -10,7 +10,7 @@ import {
   RotateCw 
 } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
-import Link from "next/link";
+import { IntentLink as Link } from "@/components/intent-link";
 import { cn } from "@/lib/utils";
 import { Button } from "./ui/button";
 

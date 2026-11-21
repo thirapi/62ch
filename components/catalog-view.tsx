@@ -1,25 +1,50 @@
 "use client";
 
-import Link from "next/link";
-import { MessageSquare, ImageIcon, Pin, Lock } from "lucide-react";
+import { IntentLink as Link } from "@/components/intent-link";
+import { Pin, Lock } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { getThumbnailUrl } from "@/lib/utils/image";
 import { FormattedText } from "@/components/formatted-text";
 import { useNav } from "./nav-provider";
-import { Play, X, Plus } from "lucide-react";
 import { useHiding } from "@/hooks/use-hiding";
-import { FormEvent, useState } from "react";
+import { FormEvent, useEffect, useState } from "react";
 
 interface CatalogViewProps {
   threads: any[];
   boardCode: string;
 }
 
+type ThumbSize = "small" | "large";
+
+const SIZE = {
+  small: { col: "minmax(150px,1fr)", img: "max-w-[150px] max-h-[150px]", px: 250 },
+  large: { col: "minmax(250px,1fr)", img: "max-w-[250px] max-h-[250px]", px: 400 },
+} as const;
+
+function usePref<T extends string>(key: string, fallback: T): [T, (v: T) => void] {
+  const [value, setValue] = useState<T>(fallback);
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem(key) as T | null;
+      if (saved) setValue(saved);
+    } catch {}
+  }, [key]);
+  const update = (v: T) => {
+    setValue(v);
+    try {
+      localStorage.setItem(key, v);
+    } catch {}
+  };
+  return [value, update];
+}
+
+/** Classic catalog: uncropped thumbnails, R/I counts, subject + OP teaser. */
 export function CatalogView({ threads, boardCode }: CatalogViewProps) {
   const { autoPlayGif } = useNav();
   const { isThreadHidden, hideThread, unhideThread } = useHiding();
   const [showHiddenOnly, setShowHiddenOnly] = useState(false);
-
+  const [size, setSize] = usePref<ThumbSize>("ib-catalog-size", "small");
+  const [teaser, setTeaser] = usePref<"on" | "off">("ib-catalog-teaser", "on");
 
   const handleHide = (e: FormEvent, id: number) => {
     e.preventDefault();
@@ -33,129 +58,131 @@ export function CatalogView({ threads, boardCode }: CatalogViewProps) {
     setShowHiddenOnly(false);
   }
 
-  const visibleThreads = threads.filter((t) => 
-    showHiddenOnly ? isThreadHidden(t.id) : !isThreadHidden(t.id)
+  const visibleThreads = threads.filter((t) =>
+    showHiddenOnly ? isThreadHidden(t.id) : !isThreadHidden(t.id),
+  );
+
+  const option = (active: boolean, label: string, onClick: () => void) => (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={active ? "font-bold text-foreground cursor-default" : "text-accent hover:underline cursor-pointer"}
+    >
+      [{label}]
+    </button>
   );
 
   return (
-    <div className="flex flex-col gap-2">
-      {/* Hidden Threads Navbar */}
-      {hiddenThreadsCount > 0 && (
-        <div className="flex justify-end border-b border-muted/20 pb-1">
-          <div className="text-[10px] text-muted-foreground flex items-center">
-            Hidden threads: {hiddenThreadsCount}
-            <button
-              onClick={() => setShowHiddenOnly(!showHiddenOnly)}
-              className="text-accent font-bold hover:underline ml-1"
-            >
-              [{showHiddenOnly ? "Hide" : "Show"}]
-            </button>
-          </div>
-        </div>
-      )}
+    <div className="flex flex-col gap-3">
+      {/* Catalog options */}
+      <div className="flex flex-wrap items-center justify-end gap-x-4 gap-y-1 font-mono text-[11px] text-muted-foreground">
+        <span className="flex items-center gap-1">
+          Ukuran: {option(size === "small", "Kecil", () => setSize("small"))}
+          {option(size === "large", "Besar", () => setSize("large"))}
+        </span>
+        <span className="flex items-center gap-1">
+          Teks OP: {option(teaser === "on", "Tampil", () => setTeaser("on"))}
+          {option(teaser === "off", "Sembunyi", () => setTeaser("off"))}
+        </span>
+        {hiddenThreadsCount > 0 && (
+          <span className="flex items-center gap-1">
+            Disembunyikan: {hiddenThreadsCount}
+            {option(showHiddenOnly, showHiddenOnly ? "Kembali" : "Lihat", () => setShowHiddenOnly(!showHiddenOnly))}
+          </span>
+        )}
+      </div>
 
-      {/* Catalog Grid */}
-      <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-3 gap-y-6">
+      {/* Catalog grid */}
+      <div
+        className="grid gap-x-2 gap-y-5"
+        style={{ gridTemplateColumns: `repeat(auto-fill, ${SIZE[size].col})` }}
+      >
         {visibleThreads.map((thread) => {
+          const hiddenImage = thread.isNsfw || thread.isSpoiler;
+          const isGif = thread.image?.toLowerCase().endsWith(".gif");
           return (
-            <Link
-              key={thread.id}
-              href={`/${boardCode}/thread/${thread.id}`}
-              className="group flex flex-col items-center"
-            >
-            {/* Thumbnail Container */}
-            <div className="relative w-full aspect-square bg-muted/20 border border-muted/40 rounded shadow-sm overflow-hidden transition-all duration-200 group-hover:scale-[1.02] group-hover:border-accent group-hover:shadow-md">
-              {thread.image ? (
-                <div className="relative w-full h-full">
-                  <img
-                    src={getThumbnailUrl(thread.image, 250, 250, "fill", !autoPlayGif)}
-                    alt={thread.subject || "Thread image"}
-                    className={cn(
-                      "w-full h-full object-cover transition-all duration-500",
-                      (thread.isNsfw || thread.isSpoiler) && "blur-xl scale-110",
-                    )}
-                    loading="lazy"
-                  />
-                  {thread.image.toLowerCase().endsWith(".gif") && !autoPlayGif && !thread.isNsfw && !thread.isSpoiler && (
-                    <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
-                      <div className="absolute bottom-1 right-1 bg-black/80 text-white text-[9px] font-bold px-1 rounded border border-white/20">
-                        GIF
-                      </div>
-                    </div>
-                  )}
-                  {(thread.isNsfw || thread.isSpoiler) && (
-                    <div className="absolute inset-0 flex items-center justify-center bg-black/40">
-                      <span className="bg-black/80 border border-white/20 px-1.5 py-0.5 text-[10px] font-bold text-white uppercase tracking-tighter">
-                        {thread.isNsfw ? "NSFW" : "Spoiler"}
+            <div key={thread.id} className="group relative flex flex-col items-center text-center">
+              <Link href={`/${boardCode}/thread/${thread.id}`} className="relative inline-block">
+                {thread.image ? (
+                  <span className="relative block overflow-hidden shadow-[0_0_5px_rgba(0,0,0,0.25)]">
+                    <img
+                      src={getThumbnailUrl(thread.image, SIZE[size].px, SIZE[size].px, "fit", !autoPlayGif)}
+                      alt={thread.subject || "Thread image"}
+                      className={cn(
+                        "block w-auto h-auto object-contain",
+                        SIZE[size].img,
+                        hiddenImage && "blur-xl scale-110",
+                      )}
+                      loading="lazy"
+                    />
+                    {hiddenImage && (
+                      <span className="absolute inset-0 flex items-center justify-center bg-black/40">
+                        <span className="bg-black/80 px-1.5 py-0.5 text-[10px] font-bold text-white">
+                          {thread.isNsfw ? "NSFW" : "Spoiler"}
+                        </span>
                       </span>
-                    </div>
-                  )}
-                </div>
-              ) : (
-                <div className="w-full h-full flex flex-col items-center justify-center gap-2 text-muted-foreground/20 bg-muted/5 font-mono">
-                  <ImageIcon className="h-10 w-10 stroke-[1px]" />
-                  <span className="text-[10px] uppercase font-bold tracking-widest">
-                    No Image
+                    )}
+                    {isGif && !autoPlayGif && !hiddenImage && (
+                      <span className="absolute bottom-1 right-1 bg-black/80 px-1 text-[9px] font-bold text-white">
+                        GIF
+                      </span>
+                    )}
                   </span>
-                </div>
-              )}
-
-              {/* Badges (Pinned/Locked) */}
-              <div className="absolute top-1 right-1 flex flex-col gap-1 z-10">
-                {thread.isPinned && (
-                  <div className="bg-accent text-white p-1 rounded-sm shadow-md backdrop-blur-sm">
-                    <Pin className="h-3 w-3 fill-white" />
-                  </div>
-                )}
-                {thread.isLocked && (
-                  <div className="bg-black/60 text-white p-1 rounded-sm shadow-md backdrop-blur-sm">
-                    <Lock className="h-3 w-3 fill-white" />
-                  </div>
-                )}
-                {/* Hide / Unhide Button */}
-                {!showHiddenOnly ? (
-                  <button
-                    onClick={(e) => handleHide(e, thread.id)}
-                    className="bg-black/60 hover:bg-black/90 text-white p-1 rounded-sm shadow-md backdrop-blur-sm transition-colors group/hide"
-                    title="Sembunyikan thread"
-                  >
-                    <X className="h-3 w-3" />
-                  </button>
                 ) : (
-                  <button
-                    onClick={(e) => {
-                      e.preventDefault();
-                      e.stopPropagation();
-                      unhideThread(thread.id);
-                    }}
-                    className="bg-accent/80 hover:bg-accent text-white p-1 rounded-sm shadow-md backdrop-blur-sm transition-colors group/hide"
-                    title="Tampilkan thread ini kembali"
-                  >
-                    <Plus className="h-3 w-3" />
-                  </button>
+                  <span className="flex h-[100px] w-[100px] items-center justify-center border border-ib-border bg-ib-reply font-mono text-[10px] text-muted-foreground">
+                    tanpa gambar
+                  </span>
                 )}
-              </div>
-            </div>
+              </Link>
 
-            {/* Statistics below image */}
-            <div className="mt-1 w-full text-center text-[10px] font-bold text-muted-foreground/80 font-mono">
-              R: {thread.replyCount} / I: {thread.imageCount ?? 0}
-            </div>
+              {/* Hide / unhide: on hover for pointer devices, always on touch screens */}
+              <button
+                type="button"
+                onClick={(e) => {
+                  if (showHiddenOnly) {
+                    e.preventDefault();
+                    unhideThread(thread.id);
+                  } else {
+                    handleHide(e, thread.id);
+                  }
+                }}
+                className="absolute top-0 right-1 font-mono text-[11px] text-accent hover:underline [@media(hover:hover)]:opacity-0 group-hover:opacity-100 focus-visible:opacity-100"
+                title={showHiddenOnly ? "Tampilkan thread ini kembali" : "Sembunyikan thread"}
+              >
+                [{showHiddenOnly ? "+" : "−"}]
+              </button>
 
-            {/* Metadata / Text */}
-            <div className="mt-0.5 w-full text-center px-1 font-sans">
-              {thread.subject && (
-                <h3 className="text-[12px] font-bold line-clamp-2 leading-snug text-accent group-hover:underline decoration-1 underline-offset-2 mb-0.5 break-words">
-                  {thread.subject}
-                </h3>
-              )}
-              <div className="text-[11px] text-muted-foreground line-clamp-4 overflow-hidden leading-snug font-medium opacity-90 group-hover:opacity-100 transition-opacity break-words text-center">
-                <FormattedText content={thread.content} preview={true} disableEmbeds={true} />
+              {/* Counts and status */}
+              <div className="mt-1 flex items-center justify-center gap-1 text-[11px] text-muted-foreground">
+                {thread.isPinned && <Pin className="h-3 w-3 text-accent" aria-label="Disematkan" />}
+                {thread.isLocked && <Lock className="h-3 w-3" aria-label="Dikunci" />}
+                <span>
+                  R: <b className="text-foreground">{thread.replyCount}</b>
+                  {(thread.imageCount ?? 0) > 0 && (
+                    <>
+                      {" "}/ I: <b className="text-foreground">{thread.imageCount}</b>
+                    </>
+                  )}
+                </span>
               </div>
+
+              {/* Subject + OP teaser */}
+              <Link
+                href={`/${boardCode}/thread/${thread.id}`}
+                className="mt-0.5 w-full px-1 text-[12px] leading-snug break-words hover:underline line-clamp-6"
+              >
+                {thread.subject && <b className="ib-subject">{thread.subject}</b>}
+                {thread.subject && teaser === "on" && ": "}
+                {teaser === "on" && (
+                  <span className="text-foreground">
+                    <FormattedText content={thread.content} preview={true} disableEmbeds={true} />
+                  </span>
+                )}
+              </Link>
             </div>
-          </Link>
-        );
-      })}
+          );
+        })}
       </div>
     </div>
   );

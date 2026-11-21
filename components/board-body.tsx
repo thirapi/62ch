@@ -37,7 +37,7 @@ export function BoardBody({ threads, boardCode, query, form, toolbar, footer }: 
         {isCatalog ? (
           <CatalogView threads={threads} boardCode={boardCode} />
         ) : (
-          <div className="divide-y divide-muted/30">
+          <div className="divide-y divide-ib-hr">
             {threads.map((thread) => (
               <ThreadListItem key={thread.id} thread={thread} boardCode={boardCode} />
             ))}
