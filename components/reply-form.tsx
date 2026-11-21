@@ -16,7 +16,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { ShieldAlert, AlertTriangle, RefreshCcw } from "lucide-react";
 import { useReply } from "./reply-context";
 import { useThreadWatcher } from "./thread-watcher-provider";
-import posthog from "posthog-js";
+import { track } from "@/lib/analytics";
 import { uploadImageClient } from "@/lib/utils/cloudinary-client";
 import { PostFormRow } from "./post-form-row";
 import { EmojiPicker } from "./emoji-picker";
@@ -120,7 +120,7 @@ export function ReplyForm({
         router.refresh();
 
         // Track reply creation
-        posthog.capture("reply created", {
+        track("reply created", {
           thread_id: threadId,
           board_code: boardCode,
           has_image: !!state.imageFile,
