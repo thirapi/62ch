@@ -17,9 +17,7 @@ interface ThreadListItemProps {
 }
 
 export function ThreadListItem({ thread, boardCode }: ThreadListItemProps) {
-  const { isThreadHidden, hideThread, unhideThread, isLoaded } = useHiding();
-
-  if (!isLoaded) return null;
+  const { isThreadHidden, hideThread, unhideThread } = useHiding();
 
   if (isThreadHidden(thread.id)) {
     return (

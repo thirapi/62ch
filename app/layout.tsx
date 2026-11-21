@@ -86,7 +86,7 @@ export const metadata: Metadata = {
       { url: "/favicon-32x32.png", sizes: "32x32", type: "image/png" },
     ],
     apple: [
-      { url: "/logo-62chan.png", sizes: "180x180", type: "image/png" },
+      { url: "/apple-touch-icon.png", sizes: "180x180", type: "image/png" },
     ],
   },
   manifest: "/site.webmanifest",
@@ -134,7 +134,6 @@ import { ScrollButtons } from "@/components/scroll-buttons";
 import { PostHogProvider } from "./posthog-provider";
 import { ThreadWatcherProvider } from "@/components/thread-watcher-provider";
 import { ThreadWatcher } from "@/components/thread-watcher";
-import { AdBanner } from "@/components/ad-banner";
 import { Suspense } from "react";
 
 export default function RootLayout({    
@@ -142,8 +141,6 @@ export default function RootLayout({
 }: Readonly<{
   children: React.ReactNode;
 }>) {
-  const publisherId = process.env.NEXT_PUBLIC_ADSENSE_PUBLISHER_ID;
-
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
@@ -155,15 +152,6 @@ export default function RootLayout({
             dangerouslySetInnerHTML={{ __html: JSON.stringify(schema).replace(/</g, "\\u003c") }}
           />
         ))}
-        {publisherId && (
-          <script
-            key="adsense-script"
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${publisherId}`}
-            crossOrigin="anonymous"
-            suppressHydrationWarning
-          />
-        )}
       </head>
       <body className={`font-sans antialiased`}>
         <PostHogProvider>

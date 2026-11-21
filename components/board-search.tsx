@@ -26,7 +26,9 @@ export function BoardSearch() {
     } else {
       params.delete("q");
     }
-    router.push(`?${params.toString()}`);
+    const qs = params.toString();
+    // replace, not push: typing shouldn't leave one history entry per query
+    router.replace(qs ? `?${qs}` : window.location.pathname, { scroll: false });
   }, [debouncedValue, router, searchParams]);
 
   return (

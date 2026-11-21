@@ -17,18 +17,9 @@ interface CatalogViewProps {
 
 export function CatalogView({ threads, boardCode }: CatalogViewProps) {
   const { autoPlayGif } = useNav();
-  const { isThreadHidden, hideThread, unhideThread, isLoaded } = useHiding();
+  const { isThreadHidden, hideThread, unhideThread } = useHiding();
   const [showHiddenOnly, setShowHiddenOnly] = useState(false);
 
-  if (!isLoaded) {
-    return (
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(150px,1fr))] gap-x-3 gap-y-6 opacity-0 animate-in fade-in duration-300">
-        {threads.map((thread) => (
-          <div key={thread.id} className="aspect-square bg-muted/10 rounded animate-pulse" />
-        ))}
-      </div>
-    );
-  }
 
   const handleHide = (e: FormEvent, id: number) => {
     e.preventDefault();

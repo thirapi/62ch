@@ -92,26 +92,3 @@ export function ThreadPageSkeleton() {
   );
 }
 
-export function ArchivePageSkeleton() {
-  return (
-    <div className="min-h-screen bg-background" aria-busy="true" aria-label="Memuat arsip">
-      <header className="py-1.5 px-3 sm:px-4 border-b flex items-center justify-between bg-muted/5">
-        <Bone className="h-4 w-40" />
-        <Bone className="h-4 w-24" />
-      </header>
-      <main className="mx-auto w-full max-w-4xl px-3 sm:px-4 py-6 sm:py-8">
-        <Bone className="h-7 w-48 mb-2" />
-        <Bone className="h-3 w-72 mb-5" />
-        <div className="border border-muted/30 rounded-md divide-y divide-muted/20">
-          {Array.from({ length: 10 }).map((_, i) => (
-            <div key={i} className="flex gap-4 px-3 py-2.5">
-              <Bone className="h-3 w-16" />
-              <Bone className="h-3 flex-1 max-w-md" />
-              <Bone className="h-3 w-10 ml-auto hidden sm:block" />
-            </div>
-          ))}
-        </div>
-      </main>
-    </div>
-  );
-}

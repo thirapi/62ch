@@ -2,10 +2,9 @@
 
 import { Button } from "@/components/ui/button";
 import { Grid, List } from "lucide-react";
-import { useRouter, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 
 export function BoardViewToggle() {
-  const router = useRouter();
   const searchParams = useSearchParams();
   const view = searchParams.get("view") || "list";
 
@@ -16,7 +15,10 @@ export function BoardViewToggle() {
     } else {
       params.set("view", newView);
     }
-    router.push(`?${params.toString()}`);
+    const qs = params.toString();
+    // Same data, different layout: update the URL without asking the server
+    // to re-render. Next.js syncs useSearchParams with the History API.
+    window.history.pushState(null, "", qs ? `?${qs}` : window.location.pathname);
   };
 
   return (

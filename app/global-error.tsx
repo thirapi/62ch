@@ -1,6 +1,5 @@
 "use client";
 
-import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { ErrorDisplay } from "@/components/error-display";
 
@@ -10,7 +9,8 @@ export default function GlobalError({
   error: Error & { digest?: string };
 }) {
   useEffect(() => {
-    Sentry.captureException(error);
+    // Server-side errors are reported by Sentry via onRequestError (instrumentation.ts)
+    console.error(error);
   }, [error]);
 
   return (
