@@ -1,18 +1,16 @@
 import { notFound } from "next/navigation";
 import Link from "next/link";
-import { cn } from "@/lib/utils";
 import { Pagination } from "@/components/pagination";
 import type { Metadata } from "next";
 import { SiteFooter } from "@/components/site-footer";
-import { ThreadListItem } from "@/components/thread-list-item";
-import { AdBanner } from "@/components/ad-banner";
 import { ThreadForm } from "@/components/thread-form";
 import { BoardSearch } from "@/components/board-search";
 import { BoardSort } from "@/components/board-sort";
 import { BoardViewToggle } from "@/components/board-view-toggle";
-import { CatalogView } from "@/components/catalog-view";
+import { BoardBody } from "@/components/board-body";
 import { Suspense } from "react";
 import { ThreadListSkeleton } from "@/components/page-skeletons";
+import { AdBanner } from "@/components/ad-banner";
 
 // Menggunakan Action layer sesuai Clean Architecture
 import { getAuthUserCached, getBoardByCodeCached } from "@/lib/data/request-cache";
@@ -20,13 +18,11 @@ import { getThreadList } from "@/lib/actions/thread.actions";
 
 async function BoardContent({
   boardCode,
-  view,
   query,
   page,
   sort,
 }: {
   boardCode: string;
-  view: string;
   query: string;
   page: string;
   sort: string;
@@ -48,8 +44,8 @@ async function BoardContent({
     notFound();
   }
 
-  // Memanggil Action untuk mengambil data thread
-  // Search runs in the database across the whole board, not just this page
+  // Sort, search and paging span the whole board (up to 128 threads), so they
+  // run in the database. The list/catalog view is switched on the client.
   const { threads, totalPages } = await getThreadList(
     board.id,
     limit,
@@ -58,28 +54,23 @@ async function BoardContent({
     query || undefined,
   );
 
-  const isCatalog = view === "catalog";
-
   return (
-    <main
-      className={cn(
-        "mx-auto pb-2 flex-1 w-full",
-        isCatalog
-          ? "px-6 md:px-12 lg:px-20 max-w-none"
-          : "px-3 sm:px-4 md:px-8 max-w-none",
-      )}
-    >
-      <div className="flex flex-col items-center mb-1 sm:mb-4">
-        <div className="w-full max-w-2xl">
-          <ThreadForm
-            boardId={board.id}
-            boardCode={board.code}
-            userRole={user?.role}
-          />
+    <BoardBody
+      threads={threads || []}
+      boardCode={boardCode}
+      query={query}
+      form={
+        <div className="flex flex-col items-center mb-1 sm:mb-4">
+          <div className="w-full max-w-2xl">
+            <ThreadForm
+              boardId={board.id}
+              boardCode={board.code}
+              userRole={user?.role}
+            />
+          </div>
         </div>
-      </div>
-
-      <div className="pt-0">
+      }
+      toolbar={
         <div className="flex flex-col gap-2 mb-4 py-2 border-y font-mono text-xs w-full sm:flex-row sm:items-center sm:justify-between">
           <div className="w-full sm:flex-1">
             <BoardSearch />
@@ -96,29 +87,8 @@ async function BoardContent({
             <BoardViewToggle />
           </div>
         </div>
-
-        {isCatalog ? (
-          <CatalogView threads={threads || []} boardCode={boardCode} />
-        ) : (
-          <div className="divide-y divide-muted/30">
-            {threads?.map((thread) => (
-              <ThreadListItem
-                key={thread.id}
-                thread={thread}
-                boardCode={boardCode}
-              />
-            ))}
-
-            {threads?.length === 0 && (
-              <div className="py-20 text-center text-muted-foreground italic">
-                {query
-                  ? `Tidak ada thread yang cocok dengan pencarian "${query}".`
-                  : "Belum ada thread. Jadilah yang pertama memulai diskusi!"}
-              </div>
-            )}
-          </div>
-        )}
-
+      }
+      footer={
         <div className="mt-8">
           <Pagination
             totalPages={totalPages}
@@ -126,8 +96,8 @@ async function BoardContent({
             baseUrl={`/${boardCode}`}
           />
         </div>
-      </div>
-    </main>
+      }
+    />
   );
 }
 
@@ -155,14 +125,12 @@ export default async function BoardPage({
 }: {
   params: Promise<{ board: string }>;
   searchParams: Promise<{
-    view?: string;
     q?: string;
     page?: string;
     sort?: string;
   }>;
 }) {
   const [{ board: boardCode }, {
-    view = "list",
     q: query = "",
     page = "1",
     sort = "bump",
@@ -193,7 +161,6 @@ export default async function BoardPage({
       <Suspense fallback={<div className="px-3 sm:px-4 md:px-8 w-full"><ThreadListSkeleton /></div>}>
         <BoardContent 
           boardCode={boardCode}
-          view={view}
           query={query}
           page={page}
           sort={sort}
