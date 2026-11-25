@@ -647,7 +647,9 @@ export function ThreadClient({
             </Link>
             <span
               className="ib-post-number cursor-pointer"
-              onMouseDown={(e) => handleQuote(thread.postNumber, e)}
+              // mousedown only keeps any selected text (for "quote selection"); the
+              // click inserts the quote. Both used to call handleQuote -> double >>N.
+              onMouseDown={(e) => e.preventDefault()}
               onClick={(e) => handleQuote(thread.postNumber, e)}
               title="Balas postingan ini"
             >
@@ -779,7 +781,9 @@ export function ThreadClient({
                     </Link>
                     <span
                       className="ib-post-number cursor-pointer"
-                      onMouseDown={(e) => handleQuote(reply.postNumber, e)}
+                      // mousedown only keeps any selected text (for "quote selection"); the
+                      // click inserts the quote. Both used to call handleQuote -> double >>N.
+                      onMouseDown={(e) => e.preventDefault()}
                       onClick={(e) => handleQuote(reply.postNumber, e)}
                       title="Balas postingan ini"
                     >
