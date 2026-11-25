@@ -223,10 +223,15 @@ export function ThreadClient({
       setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2500);
     };
     const t = setTimeout(() => jumpToHash(false), 50);
+    // On a full page load the browser jumps to the anchor again once images
+    // finish loading (top-aligned), so centre it again after that.
+    const onLoad = () => jumpToHash(false);
+    if (document.readyState !== "complete") window.addEventListener("load", onLoad, { once: true });
     const onHash = () => jumpToHash(true);
     window.addEventListener("hashchange", onHash);
     return () => {
       clearTimeout(t);
+      window.removeEventListener("load", onLoad);
       window.removeEventListener("hashchange", onHash);
     };
   }, [thread.id]);
@@ -243,6 +248,31 @@ export function ThreadClient({
   const [fabCanScroll, setFabCanScroll] = useState(false);
   const [fabAtTop, setFabAtTop] = useState(true);
   const [fabAtBottom, setFabAtBottom] = useState(false);
+
+  // The floating bar hides once the bottom nav bar is on screen (it offers the
+  // same actions there, and the inline reply form replaces its Balas button) and
+  // while the user is typing, so it never sits over the form or the keyboard.
+  const bottomNavRef = useRef<HTMLDivElement>(null);
+  const [bottomNavVisible, setBottomNavVisible] = useState(false);
+  const [isTyping, setIsTyping] = useState(false);
+
+  useEffect(() => {
+    if (!isMobile) return;
+    const isField = (t: EventTarget | null) =>
+      t instanceof HTMLTextAreaElement ||
+      t instanceof HTMLSelectElement ||
+      (t instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit", "file"].includes(t.type));
+    const onIn = (e: FocusEvent) => setIsTyping(isField(e.target));
+    const onOut = () => setIsTyping(false);
+    document.addEventListener("focusin", onIn);
+    document.addEventListener("focusout", onOut);
+    return () => {
+      document.removeEventListener("focusin", onIn);
+      document.removeEventListener("focusout", onOut);
+    };
+  }, [isMobile]);
+
+  const fabHidden = bottomNavVisible || isTyping;
 
   useEffect(() => {
     if (!isMobile) return;
@@ -261,6 +291,9 @@ export function ThreadClient({
         window.innerHeight + window.scrollY >=
           document.documentElement.scrollHeight - 300
       );
+      // Bottom nav bar on screen or already scrolled past (reply form, footer)
+      const nav = bottomNavRef.current;
+      setBottomNavVisible(!!nav && nav.getBoundingClientRect().top < window.innerHeight);
     };
     check();
     window.addEventListener("scroll", check, { passive: true });
@@ -431,75 +464,93 @@ export function ThreadClient({
     });
   };
 
-  // Classic thread navigation bar, rendered above the OP and below the replies
-  const renderNavBar = (position: "top" | "bottom") => (
+  // Classic thread navigation bar (5chan-style "[Return] [Catalog] [Bottom] [Update]"),
+  // rendered above the OP and below the replies. Brackets are plain text; only the
+  // label is the link, like the classic layout.
+  const navItem = "text-accent hover:underline cursor-pointer disabled:opacity-60";
+  // On phones the two bars split the work so each fits on one line:
+  // top = orientation (back, catalog, jump down, counts),
+  // bottom = checking for new replies (update, auto). Desktop shows everything in both.
+  const renderNavBar = (position: "top" | "bottom") => {
+    const top = position === "top";
+    const desktopOnlyOnTop = top ? "hidden sm:inline-flex" : "inline-flex";
+    const desktopOnlyOnBottom = top ? "inline-flex" : "hidden sm:inline-flex";
+    return (
     <div
+      ref={top ? undefined : bottomNavRef}
       className={cn(
-        "flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap border-muted/40",
+        "flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs sm:text-[13px] text-muted-foreground whitespace-nowrap border-ib-hr",
         position === "top" ? "mb-3 pb-1.5 border-b" : "mb-2 pt-1.5 border-t"
       )}
     >
-      {position === "bottom" && (
-        <>
-          <Link href={`/${boardCode}`} className="hover:text-accent hover:underline">[Kembali]</Link>
-          <Link href={`/${boardCode}?view=catalog`} className="hover:text-accent hover:underline">[Katalog]</Link>
-        </>
-      )}
-      <button
-        type="button"
-        onClick={() =>
-          window.scrollTo({
-            top: position === "top" ? document.documentElement.scrollHeight : 0,
-            behavior: "smooth",
-          })
-        }
-        className="hover:text-accent hover:underline cursor-pointer"
-      >
-        [{position === "top" ? "Bawah" : "Atas"}]
-      </button>
-      <button
-        type="button"
-        onClick={updateNow}
-        disabled={isChecking}
-        className="hover:text-accent hover:underline disabled:opacity-60 cursor-pointer"
-        title="Periksa balasan baru (U)"
-      >
-        [{isChecking ? "Memeriksa…" : "Perbarui"}]
-      </button>
-      {!thread.isArchived && (
-        <button
+      <span>[<Link href={`/${boardCode}`} className={navItem}>Kembali</Link>]</span>
+      <span className={desktopOnlyOnBottom}>[<Link href={`/${boardCode}?view=catalog`} className={navItem}>Katalog</Link>]</span>
+      <span>
+        [<button
           type="button"
-          onClick={toggleAutoUpdateThread}
-          className="hover:text-accent hover:underline cursor-pointer"
+          onClick={() =>
+            window.scrollTo({
+              top: position === "top" ? document.documentElement.scrollHeight : 0,
+              behavior: "smooth",
+            })
+          }
+          className={navItem}
+        >
+          {position === "top" ? "Bawah" : "Atas"}
+        </button>]
+      </span>
+      <span className={desktopOnlyOnTop}>
+        [<button
+          type="button"
+          onClick={updateNow}
+          disabled={isChecking}
+          className={navItem}
+          title="Periksa balasan baru (U)"
+        >
+          {isChecking ? "Memeriksa…" : "Perbarui"}
+        </button>]
+      </span>
+      {!thread.isArchived && (
+        <label
+          className={cn(desktopOnlyOnTop, "items-center gap-1 cursor-pointer")}
           title="Periksa balasan baru secara otomatis"
         >
-          [{autoUpdateThread ? "✔" : "✘"} Otomatis]
-        </button>
+          [<input
+            type="checkbox"
+            checked={autoUpdateThread}
+            onChange={toggleAutoUpdateThread}
+            className="size-3 cursor-pointer accent-accent"
+          />
+          <span className="text-accent">Otomatis</span>]
+        </label>
       )}
       {isGone ? (
         <span className="text-destructive">Thread ini sudah dihapus.</span>
       ) : (
         autoUpdateThread &&
         !thread.isArchived && (
-          <span className="opacity-70 tabular-nums" aria-live={position === "bottom" ? "polite" : undefined}>
-            {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
-          </span>
+          // While checking, the [Memeriksa…] button already says so
+          !isChecking && (
+            <span className={cn(desktopOnlyOnTop, "tabular-nums")} aria-live={top ? undefined : "polite"}>
+              <AutoUpdateCountdown target={nextCheckAt} />
+            </span>
+          )
         )
       )}
-      <span className="opacity-70 ml-auto tabular-nums">
-        Balasan: {visibleReplyCount} / Gambar: {imageCount}
+      <span className={cn(desktopOnlyOnBottom, "ml-auto tabular-nums")}>
+        <span className="sm:hidden">{visibleReplyCount} balasan / {imageCount} gambar</span>
+        <span className="hidden sm:inline">Balasan: {visibleReplyCount} / Gambar: {imageCount}</span>
       </span>
       {position === "bottom" && (
-        <button
-          type="button"
-          onClick={showShortcutHelp}
-          className="hidden sm:inline hover:text-accent hover:underline cursor-pointer"
-        >
-          [? Pintasan]
-        </button>
+        <span className="hidden sm:inline">
+          [<button type="button" onClick={showShortcutHelp} className={navItem}>
+            Pintasan
+          </button>]
+        </span>
       )}
     </div>
-  );
+    );
+  };
 
   return (
     <InPagePostsProvider value={inPagePosts}>
@@ -848,7 +899,15 @@ export function ThreadClient({
 
       {/* Mobile Floating Bottom Bar */}
       {isMobile && (
-        <div className="fixed bottom-3 left-1/2 max-w-[calc(100vw-1.5rem)] -translate-x-1/2 z-40 bg-card/90 backdrop-blur-md border border-border shadow-xl rounded-full px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto">
+        <div
+          inert={fabHidden}
+          aria-hidden={fabHidden || undefined}
+          className={cn(
+            "fixed bottom-3 left-1/2 max-w-[calc(100vw-1.5rem)] -translate-x-1/2 z-40 bg-card/90 backdrop-blur-md border border-border shadow-xl rounded-full px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto",
+            "transition-[opacity,translate] duration-200 motion-reduce:transition-none",
+            fabHidden && "opacity-0 translate-y-4 pointer-events-none",
+          )}
+        >
           <Link
             href={`/${boardCode}`}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-xs font-semibold whitespace-nowrap"

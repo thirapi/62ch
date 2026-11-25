@@ -137,6 +137,7 @@ import { IB_STYLE_BOOT_SCRIPT } from "@/lib/ib-style";
 import { ThreadWatcherProvider } from "@/components/thread-watcher-provider";
 import { ThreadWatcher } from "@/components/thread-watcher";
 import { Suspense } from "react";
+import { ScrollReset } from "@/components/scroll-reset";
 
 export default function RootLayout({    
   children,
@@ -160,6 +161,7 @@ export default function RootLayout({
         <PostHogPageView />
         <Suspense fallback={null}>
           <NavigationProgress />
+          <ScrollReset />
         </Suspense>
           <ThemeProvider
             attribute="class"
