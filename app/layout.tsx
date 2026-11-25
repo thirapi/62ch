@@ -133,11 +133,9 @@ import { AgeVerificationProvider } from "@/components/age-verification-provider"
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { ScrollButtons } from "@/components/scroll-buttons";
 import { PostHogPageView } from "@/components/posthog-page-view";
-import { IB_STYLE_BOOT_SCRIPT } from "@/lib/ib-style";
 import { ThreadWatcherProvider } from "@/components/thread-watcher-provider";
 import { ThreadWatcher } from "@/components/thread-watcher";
 import { Suspense } from "react";
-import { ScrollReset } from "@/components/scroll-reset";
 
 export default function RootLayout({    
   children,
@@ -147,7 +145,6 @@ export default function RootLayout({
   return (
     <html lang="id" suppressHydrationWarning>
       <head>
-        <script dangerouslySetInnerHTML={{ __html: IB_STYLE_BOOT_SCRIPT }} />
         {jsonLd.map((schema, i) => (
           <script
             key={`jsonld-${i}`}
@@ -161,7 +158,6 @@ export default function RootLayout({
         <PostHogPageView />
         <Suspense fallback={null}>
           <NavigationProgress />
-          <ScrollReset />
         </Suspense>
           <ThemeProvider
             attribute="class"

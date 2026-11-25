@@ -78,9 +78,11 @@ async function BoardContent({
         </div>
       }
       toolbar={
-        <div className="flex flex-col gap-1.5 mb-3 py-1.5 border-y border-ib-hr font-mono text-xs w-full sm:flex-row sm:items-center sm:justify-between sm:gap-4">
-          <BoardSearch />
-          <div className="flex items-center justify-between gap-4 sm:justify-end">
+        <div className="flex flex-col gap-2 mb-4 py-2 border-y font-mono text-xs w-full sm:flex-row sm:items-center sm:justify-between">
+          <div className="w-full sm:flex-1">
+            <BoardSearch />
+          </div>
+          <div className="flex items-center justify-between gap-2 shrink-0 sm:justify-end">
             <BoardSort />
             <BoardViewToggle />
           </div>
@@ -144,15 +146,16 @@ export default async function BoardPage({
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col">
-      <header className="py-3 sm:py-5 px-3 sm:px-4 text-center border-b border-ib-hr mb-1 sm:mb-3 flex flex-col items-center">
-        <h1 className="ib-board-title text-2xl sm:text-[28px] max-w-3xl">
-          /{board.code}/ - {board.name}
+      <header className="py-5 sm:py-10 px-3 sm:px-4 text-center border-b mb-1 sm:mb-4 flex flex-col items-center bg-muted/5">
+        <h1 className="text-3xl sm:text-3xl lg:text-4xl font-bold text-accent tracking-tight">
+          /{board.code}/
         </h1>
-        {board.description && (
-          <p className="text-xs sm:text-sm text-muted-foreground italic max-w-2xl line-clamp-2 mt-1">
-            {board.description}
-          </p>
-        )}
+        <p className="text-base sm:text-lg font-semibold text-foreground max-w-2xl line-clamp-2 mt-1">
+          {board.name}
+        </p>
+        <p className="text-xs sm:text-sm text-muted-foreground italic max-w-2xl line-clamp-2 mt-2">
+          {board.description}
+        </p>
       </header>
 
       <Suspense fallback={<div className="px-3 sm:px-4 md:px-8 w-full"><ThreadListSkeleton /></div>}>
