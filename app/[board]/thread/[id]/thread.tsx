@@ -223,15 +223,10 @@ export function ThreadClient({
       setTimeout(() => el.classList.remove("ring-2", "ring-accent"), 2500);
     };
     const t = setTimeout(() => jumpToHash(false), 50);
-    // On a full page load the browser jumps to the anchor again once images
-    // finish loading (top-aligned), so centre it again after that.
-    const onLoad = () => jumpToHash(false);
-    if (document.readyState !== "complete") window.addEventListener("load", onLoad, { once: true });
     const onHash = () => jumpToHash(true);
     window.addEventListener("hashchange", onHash);
     return () => {
       clearTimeout(t);
-      window.removeEventListener("load", onLoad);
       window.removeEventListener("hashchange", onHash);
     };
   }, [thread.id]);
@@ -248,31 +243,6 @@ export function ThreadClient({
   const [fabCanScroll, setFabCanScroll] = useState(false);
   const [fabAtTop, setFabAtTop] = useState(true);
   const [fabAtBottom, setFabAtBottom] = useState(false);
-
-  // The floating bar hides once the bottom nav bar is on screen (it offers the
-  // same actions there, and the inline reply form replaces its Balas button) and
-  // while the user is typing, so it never sits over the form or the keyboard.
-  const bottomNavRef = useRef<HTMLDivElement>(null);
-  const [bottomNavVisible, setBottomNavVisible] = useState(false);
-  const [isTyping, setIsTyping] = useState(false);
-
-  useEffect(() => {
-    if (!isMobile) return;
-    const isField = (t: EventTarget | null) =>
-      t instanceof HTMLTextAreaElement ||
-      t instanceof HTMLSelectElement ||
-      (t instanceof HTMLInputElement && !["checkbox", "radio", "button", "submit", "file"].includes(t.type));
-    const onIn = (e: FocusEvent) => setIsTyping(isField(e.target));
-    const onOut = () => setIsTyping(false);
-    document.addEventListener("focusin", onIn);
-    document.addEventListener("focusout", onOut);
-    return () => {
-      document.removeEventListener("focusin", onIn);
-      document.removeEventListener("focusout", onOut);
-    };
-  }, [isMobile]);
-
-  const fabHidden = bottomNavVisible || isTyping;
 
   useEffect(() => {
     if (!isMobile) return;
@@ -291,9 +261,6 @@ export function ThreadClient({
         window.innerHeight + window.scrollY >=
           document.documentElement.scrollHeight - 300
       );
-      // Bottom nav bar on screen or already scrolled past (reply form, footer)
-      const nav = bottomNavRef.current;
-      setBottomNavVisible(!!nav && nav.getBoundingClientRect().top < window.innerHeight);
     };
     check();
     window.addEventListener("scroll", check, { passive: true });
@@ -464,98 +431,8 @@ export function ThreadClient({
     });
   };
 
-  // Classic thread navigation bar (5chan-style "[Return] [Catalog] [Bottom] [Update]"),
-  // rendered above the OP and below the replies. Brackets are plain text; only the
-  // label is the link, like the classic layout.
-  const navItem = "text-accent hover:underline cursor-pointer disabled:opacity-60";
-  // On phones the two bars split the work so each fits on one line:
-  // top = orientation (back, catalog, jump down, counts),
-  // bottom = checking for new replies (update, auto). Desktop shows everything in both.
-  const renderNavBar = (position: "top" | "bottom") => {
-    const top = position === "top";
-    const desktopOnlyOnTop = top ? "hidden sm:inline-flex" : "inline-flex";
-    const desktopOnlyOnBottom = top ? "inline-flex" : "hidden sm:inline-flex";
-    return (
-    <div
-      ref={top ? undefined : bottomNavRef}
-      className={cn(
-        "flex flex-wrap items-center gap-x-1.5 gap-y-1 text-xs sm:text-[13px] text-muted-foreground whitespace-nowrap border-ib-hr",
-        position === "top" ? "mb-3 pb-1.5 border-b" : "mb-2 pt-1.5 border-t"
-      )}
-    >
-      <span>[<Link href={`/${boardCode}`} className={navItem}>Kembali</Link>]</span>
-      <span className={desktopOnlyOnBottom}>[<Link href={`/${boardCode}?view=catalog`} className={navItem}>Katalog</Link>]</span>
-      <span>
-        [<button
-          type="button"
-          onClick={() =>
-            window.scrollTo({
-              top: position === "top" ? document.documentElement.scrollHeight : 0,
-              behavior: "smooth",
-            })
-          }
-          className={navItem}
-        >
-          {position === "top" ? "Bawah" : "Atas"}
-        </button>]
-      </span>
-      <span className={desktopOnlyOnTop}>
-        [<button
-          type="button"
-          onClick={updateNow}
-          disabled={isChecking}
-          className={navItem}
-          title="Periksa balasan baru (U)"
-        >
-          {isChecking ? "Memeriksa…" : "Perbarui"}
-        </button>]
-      </span>
-      {!thread.isArchived && (
-        <label
-          className={cn(desktopOnlyOnTop, "items-center gap-1 cursor-pointer")}
-          title="Periksa balasan baru secara otomatis"
-        >
-          [<input
-            type="checkbox"
-            checked={autoUpdateThread}
-            onChange={toggleAutoUpdateThread}
-            className="size-3 cursor-pointer accent-accent"
-          />
-          <span className="text-accent">Otomatis</span>]
-        </label>
-      )}
-      {isGone ? (
-        <span className="text-destructive">Thread ini sudah dihapus.</span>
-      ) : (
-        autoUpdateThread &&
-        !thread.isArchived && (
-          // While checking, the [Memeriksa…] button already says so
-          !isChecking && (
-            <span className={cn(desktopOnlyOnTop, "tabular-nums")} aria-live={top ? undefined : "polite"}>
-              <AutoUpdateCountdown target={nextCheckAt} />
-            </span>
-          )
-        )
-      )}
-      <span className={cn(desktopOnlyOnBottom, "ml-auto tabular-nums")}>
-        <span className="sm:hidden">{visibleReplyCount} balasan / {imageCount} gambar</span>
-        <span className="hidden sm:inline">Balasan: {visibleReplyCount} / Gambar: {imageCount}</span>
-      </span>
-      {position === "bottom" && (
-        <span className="hidden sm:inline">
-          [<button type="button" onClick={showShortcutHelp} className={navItem}>
-            Pintasan
-          </button>]
-        </span>
-      )}
-    </div>
-    );
-  };
-
   return (
     <InPagePostsProvider value={inPagePosts}>
-      {renderNavBar("top")}
-
       {thread.isArchived && (
         <div className="mb-3 flex flex-wrap items-center gap-x-2 gap-y-1 rounded-md border border-muted/40 bg-muted/10 px-3 py-2 text-xs text-muted-foreground">
           <Archive className="h-3.5 w-3.5 shrink-0" />
@@ -571,7 +448,7 @@ export function ThreadClient({
           highlightedId && thread.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015] rounded-sm"
         )}
       >
-        <div className="ib-post-metaline ib-post-head border-b border-muted/20 pb-1">
+        <div className="ib-post-metaline border-b border-muted/20 pb-1">
           <Button
             variant="ghost"
             size="icon"
@@ -668,8 +545,7 @@ export function ThreadClient({
 
         </div>
 
-        {/* flow-root contains the floated OP image so replies start below it */}
-        <div className="mt-1 flow-root">
+        <div className="mt-1 block">
           {thread.image && (
             <ExpandableImage
               src={thread.image}
@@ -697,7 +573,7 @@ export function ThreadClient({
             return (
               <div 
                 key={reply.id} 
-                className="ib-reply sm:table block w-full sm:w-fit max-w-full"
+                className="ib-reply border border-muted/20 shadow-sm sm:table block w-fit max-w-full"
               >
                 <div className="px-2 bg-muted/5 flex items-center gap-1 text-[10px] text-muted-foreground opacity-80">
                   <button 
@@ -725,17 +601,20 @@ export function ThreadClient({
               </div>
             )}
             <div className="flex items-start gap-1">
+              <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
+                &gt;&gt;
+              </span>
               <div
                 key={reply.id}
                 id={`p${reply.postNumber}`}
                 className={cn(
-                  "ib-reply relative group sm:table block w-full sm:w-fit max-w-full scroll-mt-14",
+                  "ib-reply border border-muted/20 shadow-sm relative group sm:table block w-fit max-w-full scroll-mt-14",
                   reply.isDeleted && "opacity-70 grayscale-[50%]",
                   quotesMe(reply.content) && "border-l-2 border-l-accent",
-                  highlightedId && reply.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015]"
+                  highlightedId && reply.posterId === highlightedId && "ring-1 ring-accent/30 bg-accent/[0.015] rounded-sm"
                 )}
               >
-                <div className={`ib-post-metaline ib-post-head px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : ''}`}>
+                <div className={`ib-post-metaline px-2 pt-1 border-b ${reply.isDeleted ? 'bg-red-500/5' : 'bg-muted/5'}`}>
                   {reply.isDeleted && (
                     <span className="text-[10px] bg-red-500/10 text-red-500 px-1 mr-1 rounded font-bold border border-red-500/20">
                       DIHAPUS
@@ -823,14 +702,58 @@ export function ThreadClient({
 
         {replies.length === 0 && (
           <div className="flex items-start gap-1">
-            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 sm:table block w-fit max-w-full">
+            <span className="text-muted-foreground/20 font-serif select-none mt-2 hidden lg:inline-block">
+              &gt;&gt;
+            </span>
+            <div className="px-6 py-8 text-center text-muted-foreground italic border border-dashed border-muted/50 rounded-lg sm:table block w-fit max-w-full">
               Belum ada balasan. Jadilah yang pertama memberikan tanggapan!
             </div>
           </div>
         )}
       </div>
 
-      {renderNavBar("bottom")}
+      {/* Update bar */}
+      <div className="-mt-4 mb-2 flex flex-wrap items-center gap-x-3 gap-y-1 text-[11px] text-muted-foreground font-mono whitespace-nowrap">
+        <button
+          type="button"
+          onClick={updateNow}
+          disabled={isChecking}
+          className="hover:text-accent hover:underline disabled:opacity-60 cursor-pointer"
+          title="Periksa balasan baru (U)"
+        >
+          [{isChecking ? "Memeriksa…" : "Perbarui"}]
+        </button>
+        {!thread.isArchived && (
+          <button
+            type="button"
+            onClick={toggleAutoUpdateThread}
+            className="hover:text-accent hover:underline cursor-pointer"
+            title="Periksa balasan baru secara otomatis"
+          >
+            [{autoUpdateThread ? "✔" : "✘"} Auto]
+          </button>
+        )}
+        {isGone ? (
+          <span className="text-destructive">Thread ini sudah dihapus.</span>
+        ) : (
+          autoUpdateThread &&
+          !thread.isArchived && (
+            <span className="opacity-70 tabular-nums" aria-live="polite">
+              {isChecking ? "memeriksa…" : <AutoUpdateCountdown target={nextCheckAt} />}
+            </span>
+          )
+        )}
+        <span className="opacity-70 ml-auto sm:ml-0 tabular-nums">
+          {visibleReplyCount} balasan · {imageCount} gambar
+        </span>
+        <button
+          type="button"
+          onClick={showShortcutHelp}
+          className="hidden sm:inline hover:text-accent hover:underline cursor-pointer"
+        >
+          [? Pintasan]
+        </button>
+      </div>
 
       {/* Floating "new replies" pill */}
       {pendingNew && (
@@ -903,15 +826,7 @@ export function ThreadClient({
 
       {/* Mobile Floating Bottom Bar */}
       {isMobile && (
-        <div
-          inert={fabHidden}
-          aria-hidden={fabHidden || undefined}
-          className={cn(
-            "fixed bottom-3 left-1/2 max-w-[calc(100vw-1.5rem)] -translate-x-1/2 z-40 bg-card/90 backdrop-blur-md border border-border shadow-xl rounded-full px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto",
-            "transition-[opacity,translate] duration-200 motion-reduce:transition-none",
-            fabHidden && "opacity-0 translate-y-4 pointer-events-none",
-          )}
-        >
+        <div className="fixed bottom-3 left-1/2 max-w-[calc(100vw-1.5rem)] -translate-x-1/2 z-40 bg-card/90 backdrop-blur-md border border-border shadow-xl rounded-full px-2.5 py-1.5 flex items-center gap-1 overflow-x-auto">
           <Link
             href={`/${boardCode}`}
             className="p-2 text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1 text-xs font-semibold whitespace-nowrap"

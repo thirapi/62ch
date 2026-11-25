@@ -1,5 +1,6 @@
 "use client"
 
+import { Megaphone, X } from "lucide-react"
 import { IntentLink as Link } from "@/components/intent-link"
 import { useEffect, useState } from "react"
 import type { ThreadEntity } from "@/lib/entities/thread.entity"
@@ -28,32 +29,46 @@ export function HomeAnnouncement({ announcements }: HomeAnnouncementProps) {
     if (!isMounted || !announcements || announcements.length === 0 || isDismissed) return null;
 
     return (
-        <section className="ib-box mb-3">
-            <div className="ib-infobox-bar">
-                <h2>Pengumuman</h2>
+        <section className="mb-8 overflow-hidden rounded-xl border border-border/60 bg-accent/5">
+            <div className="flex items-center justify-between border-b border-border/50 px-4 py-2">
+                <div className="flex items-center gap-2">
+                    <Megaphone className="h-4 w-4 text-accent" />
+
+                    <h2 className="text-sm font-semibold text-accent">
+                        Pengumuman
+                    </h2>
+                </div>
+
                 <button
                     onClick={handleDismiss}
-                    className="font-mono text-xs font-normal opacity-80 hover:opacity-100"
+                    className="rounded-md p-1 opacity-60 transition-opacity hover:bg-accent/10 hover:opacity-100"
                     title="Sembunyikan"
                 >
-                    [×]
+                    <X className="h-4 w-4" />
                 </button>
             </div>
 
-            <ul className="divide-y divide-ib-hr px-2 text-[13px]">
+            <div className="divide-y divide-border/40">
                 {announcements.map((announcement) => (
-                    <li key={announcement.id} className="py-1.5">
-                        <Link href={`/tlg/thread/${announcement.id}`} className="group block">
+                    <Link
+                        key={announcement.id}
+                        href={`/tlg/thread/${announcement.id}`}
+                        className="group flex items-center gap-3 px-4 py-3 transition-colors hover:bg-accent/5"
+                    >
+                        <div className="min-w-0 flex-1">
                             {announcement.subject && (
-                                <span className="ib-subject mr-1 group-hover:underline">{announcement.subject}</span>
+                                <p className="truncate text-sm font-medium text-foreground transition-colors group-hover:text-accent">
+                                    {announcement.subject}
+                                </p>
                             )}
-                            <span className="line-clamp-3 sm:line-clamp-2 text-foreground/90">
+
+                            <p className="line-clamp-3 text-xs text-muted-foreground sm:line-clamp-1">
                                 {announcement.content}
-                            </span>
-                        </Link>
-                    </li>
+                            </p>
+                        </div>
+                    </Link>
                 ))}
-            </ul>
+            </div>
         </section>
     )
 }

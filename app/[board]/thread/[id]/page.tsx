@@ -168,22 +168,29 @@ export default async function ThreadPage({
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/</g, "\\u003c") }}
       />
-      {/* Same board banner as the board index, so board and thread read as one site */}
-      <header className="py-3 sm:py-5 px-3 sm:px-4 text-center border-b border-ib-hr mb-1 sm:mb-3 flex flex-col items-center">
-        <Link href={`/${boardCode}`} className="hover:no-underline">
-          {/* Not an h1: the OP subject is the page's h1 */}
-          <div className="ib-board-title text-2xl sm:text-[28px] max-w-3xl">
-            /{board.code}/ - {board.name}
-          </div>
-        </Link>
-        {board.description && (
-          <p className="text-xs sm:text-sm text-muted-foreground italic max-w-2xl line-clamp-2 mt-1">
-            {board.description}
-          </p>
-        )}
+      <header className="py-1.5 px-3 sm:px-4 border-b flex items-center justify-between gap-2 bg-muted/5 text-xs sm:text-sm">
+        <div className="flex items-center gap-2 font-mono">
+          <Link
+            href={`/${boardCode}`}
+            className="text-accent hover:underline font-bold whitespace-nowrap"
+          >
+            <span className="hidden sm:inline">[ Kembali ke /{boardCode}/ ]</span>
+            <span className="sm:hidden">[ Kembali ]</span>
+          </Link>
+          <Link
+            href={`/${boardCode}?view=catalog`}
+            className="text-accent hover:underline font-bold whitespace-nowrap"
+          >
+            [ Katalog ]
+          </Link>
+        </div>
+        <div className="font-bold text-accent truncate max-w-[50%] sm:max-w-none text-right">
+          <span className="hidden sm:inline">/{board.code}/ - {board.name}</span>
+          <span className="sm:hidden">/{board.code}/</span>
+        </div>
       </header>
 
-      <main className="mx-auto px-3 sm:px-4 md:px-8 py-2 sm:py-3 w-full max-w-none">
+      <main className="mx-auto px-3 sm:px-4 md:px-8 py-4 sm:py-8 w-full max-w-none">
         <ThreadPageWrapper
           thread={thread}
           replies={replies || []}

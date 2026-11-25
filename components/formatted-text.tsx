@@ -1,5 +1,4 @@
 "use client";
-import { formatPostDate } from "@/components/formatted-date";
 
 import React, { useState, useEffect } from "react";
 import { IntentLink as Link } from "@/components/intent-link";
@@ -352,7 +351,7 @@ function PostQuote({
             <div className="flex items-center justify-between text-[10px] font-mono border-b pb-1">
               <span className="font-bold text-accent">#{post.postNumber}</span>
               <span className="text-muted-foreground">
-                {formatPostDate(new Date(post.createdAt))}
+                {new Date(post.createdAt).toLocaleString()}
               </span>
             </div>
             <div className="flex gap-2">
