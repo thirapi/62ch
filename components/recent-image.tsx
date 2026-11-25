@@ -17,7 +17,7 @@ export function RecentImage({ imageUrl, isSpoiler, isNsfw, boardCode }: RecentIm
   const isStaticGif = isGif && !autoPlayGif;
 
   return (
-    <div className="overflow-hidden rounded border border-muted/50 group-hover:border-accent transition-all bg-muted/20 relative">
+    <div className="overflow-hidden border border-ib-border group-hover:border-accent transition-colors bg-ib-reply relative">
       <img
         src={getThumbnailUrl(imageUrl, 300, 0, 'scale', !autoPlayGif)}
         alt={`Gambar terbaru di 62chan - ${boardCode}`}

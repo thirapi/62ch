@@ -147,10 +147,10 @@ export function ExpandableImage({
           isExpanded
             ? "w-full cursor-zoom-out mb-4 clear-both block"
             : cn(
-                "float-left mr-4 mb-2",
+                "float-left mr-3 sm:mr-4 mb-2",
                 isOP
-                  ? "max-w-[200px] sm:max-w-[300px]"
-                  : "max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px]",
+                  ? "max-w-[120px] sm:max-w-[300px]"
+                  : "max-w-[100px] max-h-[100px] sm:max-w-[180px] sm:max-h-[180px]",
               ),
         )}
         onClick={() => {
@@ -177,8 +177,8 @@ export function ExpandableImage({
               : cn(
                   "object-contain",
                   isOP
-                    ? "max-w-[200px] max-h-[200px] sm:max-w-[300px] sm:max-h-[300px]"
-                    : "max-w-[150px] max-h-[150px] sm:max-w-[180px] sm:max-h-[180px]",
+                    ? "max-w-[120px] max-h-[120px] sm:max-w-[300px] sm:max-h-[300px]"
+                    : "max-w-[100px] max-h-[100px] sm:max-w-[180px] sm:max-h-[180px]",
                 ),
           )}
         />

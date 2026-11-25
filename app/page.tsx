@@ -77,11 +77,7 @@ export default async function HomePage() {
 
   return (
     <div className="min-h-screen flex flex-col bg-background">
-      <header
-        className="relative py-8 sm:py-10 text-center overflow-hidden 
-             bg-gradient-to-b from-accent/15 to-transparent 
-             dark:from-accent/5 dark:to-transparent"
-      >
+      <header className="pt-5 pb-2 sm:pt-8 sm:pb-4 text-center">
         <div className="container mx-auto px-4 relative">
           <h1 className="flex justify-center">
             <Image
@@ -90,99 +86,93 @@ export default async function HomePage() {
               width={640}
               height={496}
               priority
-              sizes="(max-width: 640px) 224px, (max-width: 768px) 288px, 320px"
-              className="w-56 sm:w-72 md:w-80 h-auto max-w-[80vw] object-contain"
+              sizes="(max-width: 640px) 176px, (max-width: 768px) 256px, 288px"
+              className="w-44 sm:w-64 md:w-72 h-auto max-w-[70vw] object-contain"
             />
             <span className="sr-only">62chan</span>
           </h1>
         </div>
       </header>
 
-      <main className="container mx-auto px-4 py-6 sm:py-8 flex-1 max-w-6xl">
+      <main className="mx-auto w-full max-w-[960px] px-3 sm:px-4 pt-2 pb-6 sm:pt-3 sm:pb-8 flex-1 space-y-3">
         <HomeAnnouncement announcements={announcements} />
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-x-12 gap-y-8 md:gap-y-10">
-          {categoryNames.map((categoryName) => (
-              <section key={categoryName}>
-              <h2 className="text-xl font-semibold mb-3 text-accent border-b pb-1">
-                {categoryName}
-              </h2>
-                <div className="grid grid-cols-2 md:grid-cols-1 gap-x-4 gap-y-2 md:gap-y-1 text-sm">
-                {groupedBoards.get(categoryName)!.map((board) => (
-                  <div key={board.id} className="leading-relaxed">
-                    <BoardLink
-                      boardCode={board.code}
-                      className="hover:underline hover:text-accent group flex flex-col md:inline text-left"
-                    >
-                      <span className="text-accent font-bold leading-none">
-                        /{board.code}/
-                      </span>
-                      <span className="text-foreground/90 md:hidden text-[11px] leading-tight mt-0.5 font-medium break-words">
-                        {board.name}
-                      </span>
-                      <span className="text-foreground md:inline hidden md:ml-1">
-                        {" "}
-                        - {board.name}
-                      </span>
-                    </BoardLink>
-                  </div>
-                ))}
+
+        {/* Boards */}
+        <section className="ib-box">
+          <h2 className="ib-box-bar">Board</h2>
+          {/* Desktop: one equal column per category. Phones: categories stacked,
+              boards inside each category split into two columns. */}
+          <div
+            className="grid grid-cols-1 gap-y-3 gap-x-6 px-3 py-2.5 sm:grid-cols-[repeat(var(--cols),minmax(0,1fr))]"
+            style={{ "--cols": Math.min(Math.max(categoryNames.length, 1), 4) } as React.CSSProperties}
+          >
+            {categoryNames.map((categoryName) => (
+              <div key={categoryName}>
+                <h3 className="mb-1 font-bold underline underline-offset-2 text-[13px] text-ib-bar-text">
+                  {categoryName}
+                </h3>
+                <ul className="grid grid-cols-2 gap-x-3 gap-y-1.5 text-[13px] leading-tight sm:block sm:leading-[1.45]">
+                  {groupedBoards.get(categoryName)!.map((board) => (
+                    <li key={board.id}>
+                      <BoardLink boardCode={board.code} className="group flex flex-col sm:inline hover:underline">
+                        <span className="font-bold text-accent">/{board.code}/</span>
+                        <span className="hidden sm:inline"> </span>
+                        <span className="truncate text-[12px] sm:text-[13px] text-foreground/85 sm:text-foreground group-hover:text-accent">
+                          {board.name}
+                        </span>
+                      </BoardLink>
+                    </li>
+                  ))}
+                </ul>
               </div>
-            </section>
-          ))}
-        </div>
+            ))}
+          </div>
+        </section>
 
-        {/* Activity Section */}
+        {/* Activity */}
         {(latestPosts.length > 0 || recentImages.length > 0) && (
-          <div className="border-t mt-12 pt-8">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-              {/* Latest Posts */}
-              {latestPosts.length > 0 && (
-                <LatestPosts initialPosts={latestPosts} isMobile={isMobile} />
-              )}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-3">
+            {latestPosts.length > 0 && (
+              <LatestPosts initialPosts={latestPosts} isMobile={isMobile} />
+            )}
 
-              {/* Recent Images */}
-              {recentImages.length > 0 && (
-                <section className="lg:col-span-7 flex flex-col h-full">
-                  <h2 className="text-lg font-semibold mb-3 text-accent border-b pb-1">
-                    Gambar Terbaru
-                  </h2>
-
-                  <div className="relative flex-1">
-                    <div className="overflow-y-auto max-h-[440px] sm:max-h-[642px] pr-2 custom-scrollbar">
-                      <div className="columns-2 sm:columns-3 gap-2">
-                        {recentImages.map((image) => (
-                          <div key={`img-wrap-${image.postNumber}-${image.id}`} className="break-inside-avoid mb-2 w-full">
-                            <ThreadPreview
-                              key={`img-preview-${image.id}`}
-                              subject={image.threadSubject}
-                              excerpt={image.threadExcerpt}
-                              boardCode={image.boardCode}
-                              isNsfw={image.isNsfw}
-                              isSpoiler={image.isSpoiler}
+            {recentImages.length > 0 && (
+              <section className="ib-box flex flex-col">
+                <h2 className="ib-box-bar">Gambar Terbaru</h2>
+                <div className="relative flex-1 p-1.5">
+                  <div className="overflow-y-auto max-h-[440px] sm:max-h-[600px] pr-1 custom-scrollbar">
+                    <div className="columns-2 sm:columns-3 gap-1.5">
+                      {recentImages.map((image) => (
+                        <div key={`img-wrap-${image.postNumber}-${image.id}`} className="break-inside-avoid mb-1.5 w-full">
+                          <ThreadPreview
+                            key={`img-preview-${image.id}`}
+                            subject={image.threadSubject}
+                            excerpt={image.threadExcerpt}
+                            boardCode={image.boardCode}
+                            isNsfw={image.isNsfw}
+                            isSpoiler={image.isSpoiler}
+                          >
+                            <VerifiedLink
+                              key={`${image.id}-${image.imageUrl}`}
+                              href={`/${image.boardCode}/thread/${image.threadId}#p${image.postNumber}`}
+                              className="group block w-full"
                             >
-                              <VerifiedLink
-                                key={`${image.id}-${image.imageUrl}`}
-                                href={`/${image.boardCode}/thread/${image.threadId}#p${image.postNumber}`}
-                                className="group block w-full"
-                              >
-                                <RecentImage
-                                  imageUrl={image.imageUrl}
-                                  isNsfw={image.isNsfw}
-                                  isSpoiler={image.isSpoiler}
-                                  boardCode={image.boardCode}
-                                />
-                              </VerifiedLink>
-                            </ThreadPreview>
-                          </div>
-                        ))}
-                      </div>
+                              <RecentImage
+                                imageUrl={image.imageUrl}
+                                isNsfw={image.isNsfw}
+                                isSpoiler={image.isSpoiler}
+                                boardCode={image.boardCode}
+                              />
+                            </VerifiedLink>
+                          </ThreadPreview>
+                        </div>
+                      ))}
                     </div>
-                    {/* Fade gradient hint */}
-                    <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent" />
                   </div>
-                </section>
-              )}
-            </div>
+                  <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-ib-box to-transparent" />
+                </div>
+              </section>
+            )}
           </div>
         )}
       </main>

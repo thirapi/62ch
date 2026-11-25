@@ -82,12 +82,10 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
   if (posts.length === 0) return null
 
   return (
-    <section className="lg:col-span-5 flex flex-col h-full">
-      <h2 className="text-lg font-semibold mb-3 text-accent border-b pb-1">
-        Postingan Terbaru
-      </h2>
-      
-      <div className="relative flex-1">
+    <section className="ib-box flex flex-col h-full">
+      <h2 className="ib-box-bar">Postingan Terbaru</h2>
+
+      <div className="relative flex-1 p-1">
         <div className="space-y-0.5 flex-col flex overflow-y-auto max-h-[440px] sm:max-h-[642px] pr-2 custom-scrollbar">
 
         {posts.map((post) => (
@@ -103,7 +101,7 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
             <VerifiedLink
               key={`latest-${post.id}-${post.type}`}
               href={`/${post.boardCode}/thread/${post.threadId}#p${post.postNumber}`}
-              className="block text-sm hover:bg-accent/5 px-2 py-0.5 rounded transition-colors w-full"
+              className="block text-sm hover:bg-ib-reply px-2 py-0.5 transition-colors w-full"
             >
               <div className="flex items-start gap-1">
                 <div className="min-w-0 flex-1">
@@ -150,7 +148,7 @@ export function LatestPosts({ initialPosts, isMobile }: LatestPostsProps) {
         </div>
 
         {/* Fade gradient hint */}
-        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-10 bg-gradient-to-t from-background to-transparent" />
+        <div className="pointer-events-none absolute bottom-0 left-0 right-0 h-8 bg-gradient-to-t from-ib-box to-transparent" />
       </div>
     </section>
   )

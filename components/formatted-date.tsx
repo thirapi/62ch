@@ -8,25 +8,31 @@ interface FormattedDateProps {
   compact?: boolean;
 }
 
+const DAYS = ["Min", "Sen", "Sel", "Rab", "Kam", "Jum", "Sab"];
+const pad = (n: number) => n.toString().padStart(2, "0");
+
+/**
+ * Fixed imageboard-style format, independent of the browser locale:
+ *   full:    21/11/26 (Sab) 23:18:05
+ *   compact: 21/11/26 23:18
+ * Formatted on the client so it uses the viewer's timezone.
+ */
+export function formatPostDate(d: Date, compact = false): string {
+  const date = `${pad(d.getDate())}/${pad(d.getMonth() + 1)}/${d.getFullYear().toString().slice(-2)}`;
+  const time = `${pad(d.getHours())}:${pad(d.getMinutes())}`;
+  if (compact) return `${date} ${time}`;
+  return `${date} (${DAYS[d.getDay()]}) ${time}:${pad(d.getSeconds())}`;
+}
+
 export function FormattedDate({ date, className, compact }: FormattedDateProps) {
   const [formatted, setFormatted] = useState<string>("");
 
   useEffect(() => {
     const d = typeof date === "string" ? new Date(date) : date;
-    if (compact) {
-      const pad = (n: number) => n.toString().padStart(2, "0");
-      const mm = pad(d.getMonth() + 1);
-      const dd = pad(d.getDate());
-      const yy = d.getFullYear().toString().slice(-2);
-      const hh = pad(d.getHours());
-      const min = pad(d.getMinutes());
-      setFormatted(`${mm}/${dd}/${yy} ${hh}:${min}`);
-    } else {
-      setFormatted(d.toLocaleString());
-    }
+    setFormatted(formatPostDate(d, compact));
   }, [date, compact]);
 
-  // Return an empty span or a placeholder during SSR to prevent hydration mismatch
+  // Return a placeholder during SSR to prevent hydration mismatch
   if (!formatted) {
     return <span className={className}>...</span>;
   }
